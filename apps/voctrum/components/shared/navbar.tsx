@@ -33,7 +33,8 @@ export default function Navbar() {
   }
 
   const handleGetStarted = () => {
-    router.push("/products/register")
+    // router.push("/products/register")
+    router.push("/get-started")
   }
 
   return (
