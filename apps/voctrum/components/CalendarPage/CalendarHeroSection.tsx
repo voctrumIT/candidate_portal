@@ -7,13 +7,20 @@ import Link from "next/link"
 import { TypewriterEffect } from "@/components/ui/typewriter-effect"
 
 const weekDays = ["S", "M", "T", "W", "T", "F", "S"]
-const calendarDates = Array.from({ length: 35 }, (_, index) => index + 1)
+// May 2026 starts on Friday (index 5), 31 days
+const may2026 = [
+  { day: 27, faded: true }, { day: 28, faded: true }, { day: 29, faded: true }, { day: 30, faded: true }, { day: 1, faded: false }, { day: 2, faded: false }, { day: 3, faded: false },
+  { day: 4, faded: false }, { day: 5, faded: false }, { day: 6, faded: false }, { day: 7, faded: false }, { day: 8, faded: false }, { day: 9, faded: false }, { day: 10, faded: false },
+  { day: 11, faded: false }, { day: 12, faded: false }, { day: 13, faded: false }, { day: 14, faded: false }, { day: 15, faded: false }, { day: 16, faded: false }, { day: 17, faded: false },
+  { day: 18, faded: false }, { day: 19, faded: false }, { day: 20, faded: false }, { day: 21, faded: false }, { day: 22, faded: false }, { day: 23, faded: false }, { day: 24, faded: false },
+  { day: 25, faded: false }, { day: 26, faded: false }, { day: 27, faded: false }, { day: 28, faded: false }, { day: 29, faded: false }, { day: 30, faded: false }, { day: 31, faded: false },
+]
 const years = ["2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030", "2031", "2032"]
 
 const CalendarHeroSection = () => {
   return (
     <section className="bg-white px-1.5 py-3 sm:px-2">
-      <div className="relative mx-auto min-h-[725px] max-w-[1582px] overflow-hidden rounded-[28px] border border-[#c9ddff] px-5 pt-[92px] shadow-[0_24px_70px_rgba(8,38,118,0.11)] sm:rounded-[30px] sm:px-9">
+      <div className="relative mx-auto min-h-[760px] max-w-[1582px] overflow-hidden rounded-[28px] border border-[#c9ddff] px-5 pt-[92px] shadow-[0_24px_70px_rgba(8,38,118,0.11)] sm:rounded-[30px] sm:px-9">
         <Image
           src="/CalendarBgImg.png"
           alt=""
@@ -99,7 +106,7 @@ const CalendarHeroSection = () => {
             initial={{ opacity: 0, x: -36 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.56 }}
-            className="absolute -left-5 top-[140px] z-20 h-70 w-[285px] overflow-hidden rounded-[22px] bg-white/96 shadow-[0_30px_70px_rgba(42,71,146,0.18)] backdrop-blur-md sm:w-[285px]"
+            className="absolute -left-5 top-[140px] z-20 w-[285px] overflow-hidden rounded-[22px] bg-white/96 shadow-[0_30px_70px_rgba(42,71,146,0.18)] backdrop-blur-md"
           >
             <ScheduleBoard />
           </motion.div>
@@ -117,7 +124,7 @@ const CalendarHeroSection = () => {
             initial={{ opacity: 0, x: 36 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.58 }}
-            className="absolute -right-5 top-[142px] z-20 w-[285px] rounded-[22px] bg-white/96 p-4 shadow-[0_30px_70px_rgba(42,71,146,0.18)] backdrop-blur-md"
+            className="absolute -right-10 top-[142px] z-20 w-[305px] rounded-[22px] bg-white/96 p-4 shadow-[0_30px_70px_rgba(42,71,146,0.18)] backdrop-blur-md"
           >
             <DatePickerCard />
           </motion.div>
@@ -128,40 +135,40 @@ const CalendarHeroSection = () => {
 }
 
 const ScheduleBoard = () => (
-  <div className="p-4">
-    <div className="mb-3 flex items-center gap-2">
-      <span className="rounded-full bg-[#456cff] px-3 py-1 text-[9px] font-semibold text-white">Calendar</span>
-      <span className="text-[9px] font-semibold text-[#456cff]">Schedule &amp; Event Management</span>
+  <div className="p-3">
+    <div className="mb-2 flex items-center gap-1.5">
+      <span className="rounded-full bg-[#456cff] px-2.5 py-0.5 text-[8px] font-semibold text-white">Calendar</span>
+      <span className="text-[8px] font-semibold text-[#456cff]">Schedule &amp; Event Management</span>
       <span className="grid h-3 w-3 place-items-center rounded-full border border-[#9cb2ff] text-[8px] font-bold text-[#456cff]">i</span>
     </div>
 
-    <div className="mb-3 flex items-center gap-2">
-      <span className="rounded-md border border-[#dfe5f3] px-2 py-1 text-[9px] font-medium text-[#52617c]">May 2026</span>
-      <span className="rounded-md bg-[#456cff] px-2 py-1 text-[9px] font-semibold text-white">24h</span>
-      <span className="rounded-md border border-[#dfe5f3] px-2 py-1 text-[9px] font-medium text-[#52617c]">12h</span>
-      <span className="rounded-md bg-[#456cff] px-3 py-1 text-[9px] font-semibold text-white">Today</span>
+    <div className="mb-2 flex items-center gap-1.5">
+      <span className="rounded-md border border-[#dfe5f3] px-1.5 py-0.5 text-[8px] font-medium text-[#52617c]">May 2026</span>
+      <span className="rounded-md bg-[#456cff] px-1.5 py-0.5 text-[8px] font-semibold text-white">24h</span>
+      <span className="rounded-md border border-[#dfe5f3] px-1.5 py-0.5 text-[8px] font-medium text-[#52617c]">12h</span>
+      <span className="rounded-md bg-[#456cff] px-2 py-0.5 text-[8px] font-semibold text-white">Today</span>
       <span className="text-[10px] font-bold text-[#9aa6bf]">&lt;</span>
       <span className="text-[10px] font-bold text-[#9aa6bf]">&gt;</span>
     </div>
 
-    <div className="grid grid-cols-[46px_repeat(4,1fr)] border-t border-l border-[#e8edf6] text-[9px] text-[#8a96ad]">
-      <div className="border-r border-b border-[#e8edf6] bg-[#fbfcff] p-2" />
+    <div className="grid grid-cols-[40px_repeat(4,1fr)] border-t border-l border-[#e8edf6] text-[8px] text-[#8a96ad]">
+      <div className="border-r border-b border-[#e8edf6] bg-[#fbfcff] p-1.5" />
       {["10", "11", "12", "13"].map((day) => (
-        <div key={day} className="border-r border-b border-[#e8edf6] bg-[#fbfcff] p-2 text-center">
+        <div key={day} className="border-r border-b border-[#e8edf6] bg-[#fbfcff] p-1.5 text-center">
           <p className="font-bold text-[#404a60]">{day}</p>
           <p className="mt-0.5 text-[7px]">MON</p>
         </div>
       ))}
 
-      {["00:00", "04:00", "08:00", "12:00"].map((time, row) => (
+      {["00:00", "04:00", "08:00"].map((time, row) => (
         <div key={time} className="contents">
-          <div className="h-12 border-r border-b border-[#e8edf6] p-2 text-[8px]">
+          <div className="h-11 border-r border-b border-[#e8edf6] p-2 text-[7px]">
             {time}
           </div>
           {Array.from({ length: 4 }, (_, column) => (
-            <div key={`${time}-${column}`} className="relative h-12 border-r border-b border-[#e8edf6] bg-white">
+            <div key={`${time}-${column}`} className="relative h-11 border-r border-b border-[#e8edf6] bg-white">
               {row === 1 && column === 2 ? (
-                <span className="absolute left-2 right-2 top-2 rounded-sm bg-[#456cff] px-2 py-1 text-[8px] font-semibold text-white">
+                <span className="absolute left-1 right-1 top-1 rounded-sm bg-[#456cff] px-1.5 py-0.5 text-[7px] font-semibold text-white">
                   Review meeting
                 </span>
               ) : null}
@@ -176,36 +183,36 @@ const ScheduleBoard = () => (
 const DatePickerCard = () => (
   <div className="grid grid-cols-[1fr_120px] gap-5">
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between">
         <p className="text-sm font-bold text-[#26314a]">May 2026</p>
-        <span className="text-xs font-bold text-[#9aa6bf]">^v</span>
+        <span className="text-xs text-[#9aa6bf]">&#8249; &#8250;</span>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 text-center text-[8px] font-bold text-[#66748c]">
+      <div className="grid grid-cols-7 gap-x-2 gap-y-1 text-center text-[8px] font-bold text-[#66748c]">
         {weekDays.map((day, index) => (
           <span key={`${day}-${index}`}>{day}</span>
         ))}
-        {calendarDates.map((date) => (
+        {may2026.map((item, index) => (
           <span
-            key={date}
-            className={`grid h-5 place-items-center rounded-full ${
-              date === 30 ? "bg-[#456cff] text-white" : date < 6 ? "text-[#c5ccd8]" : "text-[#67738a]"
+            key={index}
+            className={`grid h-4 place-items-center rounded-full ${
+              item.day === 30 && !item.faded ? "bg-[#456cff] text-white" : item.faded ? "text-[#c5ccd8]" : "text-[#67738a]"
             }`}
           >
-            {date}
+            {item.day}
           </span>
         ))}
       </div>
     </div>
 
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between">
         <p className="text-sm font-bold text-[#26314a]">2026</p>
-        <span className="text-xs font-bold text-[#9aa6bf]">^v</span>
+        <span className="text-xs text-[#9aa6bf]">&#8249; &#8250;</span>
       </div>
-      <div className="grid grid-cols-3 gap-x-3 gap-y-5 text-center text-[9px] font-semibold text-[#52617c]">
+      <div className="grid grid-cols-3 gap-x-3 gap-y-3 text-center text-[9px] font-semibold text-[#52617c]">
         {years.map((year) => (
-          <span key={year} className={year === "2026" ? "rounded-md bg-[#456cff] px-2 py-2 text-white" : ""}>
+          <span key={year} className={year === "2026" ? "rounded-md bg-[#456cff] px-2 py-0 text-white" : ""}>
             {year}
           </span>
         ))}

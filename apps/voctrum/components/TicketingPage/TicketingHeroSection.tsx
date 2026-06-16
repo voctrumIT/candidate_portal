@@ -82,7 +82,7 @@ export default function TicketingHeroSection() {
           className="absolute inset-x-0 bottom-0 z-[2] mx-auto h-[388px] max-w-[1050px]"
         >
           {/* Center phone */}
-          <div className="absolute inset-x-0 bottom-[-40px] mx-auto h-[496px] w-[315px] sm:w-[380px]">
+          <div className="absolute inset-x-0 bottom-0 mx-auto h-[496px] w-[315px] sm:w-[380px]">
             <div className="absolute inset-x-[14px] bottom-0 top-[130px] rounded-t-[36px] bg-[#ede8f8] sm:inset-x-[18px] sm:top-[142px] sm:rounded-t-[44px]" />
             <Image
               src="/CrmHeroSectionImg.png"
@@ -113,11 +113,11 @@ export default function TicketingHeroSection() {
             initial={{ opacity: 0, x: -34 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.58, delay: 0.54 }}
-            className="absolute left-20 top-[140px] w-[300px] rounded-[26px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute left-20 top-[100px] w-[320px] rounded-[26px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-bold text-[#172283]">Performance Trends</p>
-              <span className="flex items-center gap-1 rounded-lg border border-[#e0e4f0] px-2 py-5 text-[9px] text-[#8b95ad]">
+              <span className="flex items-center gap-1 rounded-lg border border-[#e0e4f0] px-2 py-1 text-[9px] text-[#8b95ad]">
                 Select Year ▾
               </span>
             </div>
@@ -126,14 +126,23 @@ export default function TicketingHeroSection() {
               <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" />Resolved</span>
             </div>
             {/* Simple line chart */}
-            <svg viewBox="0 0 260 80" className="w-full" preserveAspectRatio="none">
-              <polyline points="0,60 22,45 44,55 66,30 88,40 110,25 132,35 154,45 176,30 198,50 220,40 242,55 260,45" fill="none" stroke="#456cff" strokeWidth="2" strokeLinejoin="round" />
-              <polyline points="0,70 22,60 44,65 66,50 88,55 110,45 132,50 154,60 176,45 198,65 220,55 242,60 260,55" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 2" strokeLinejoin="round" />
-            </svg>
-            <div className="mt-1 flex justify-between">
-              {months.map((m) => (
-                <span key={m} className="text-[6px] text-[#b0b8cc]">{m}</span>
-              ))}
+            <div className="flex gap-2">
+              <div className="flex flex-col justify-between pb-4 text-right">
+                {["250", "200", "150", "100", "50", "0"].map((v) => (
+                  <span key={v} className="text-[7px] text-[#9ca8cc]">{v}</span>
+                ))}
+              </div>
+              <div className="flex-1">
+                <svg viewBox="0 0 260 120" className="w-full" preserveAspectRatio="none">
+                  <polyline points="0,100 22,70 44,85 66,30 88,52 110,22 132,45 154,30 176,15 198,45 220,22 242,60 260,38" fill="none" stroke="#456cff" strokeWidth="2" strokeLinejoin="round" />
+                  <polyline points="0,108 22,85 44,95 66,60 88,75 110,57 132,72 154,57 176,42 198,75 220,57 242,82 260,63" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 2" strokeLinejoin="round" />
+                </svg>
+                <div className="mt-1 flex justify-between">
+                  {months.map((m) => (
+                    <span key={m} className="text-[6px] text-[#b0b8cc]">{m}</span>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
 

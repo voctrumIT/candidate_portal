@@ -45,16 +45,6 @@ const GetADemo = () => {
           <OpportunityCard />
         </div>
       </div>
-
-      <div className="absolute inset-x-0 bottom-[-1px] h-[94px] bg-[#050844]">
-        <div className="absolute inset-0 bg-[url('/BackgroundImg2.jpg')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,58,0.92),rgba(10,18,72,0.72),rgba(31,73,190,0.2))]" />
-      </div>
-
-      <div
-        className="absolute bottom-[25px] left-1/2 h-[68px] w-[min(92vw,720px)] -translate-x-1/2 bg-[#eef2f7]"
-        style={{ clipPath: "polygon(0 0, 100% 0, 72% 100%, 28% 100%)" }}
-      />
     </section>
   )
 }
