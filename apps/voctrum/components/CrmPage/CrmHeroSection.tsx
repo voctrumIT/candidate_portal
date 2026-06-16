@@ -55,7 +55,16 @@ const taskItems = [
 const CrmHeroSection = () => {
   return (
     <section className="bg-white px-1.5 py-3 sm:px-2">
-      <div className="relative mx-auto min-h-[762px] max-w-[1582px] overflow-hidden rounded-[28px] border border-[#d6defd] bg-[linear-gradient(132deg,#f7faff_0%,#eef2f8_48%,#8298ec_100%)] px-5 pt-24 shadow-[0_24px_70px_rgba(69,108,255,0.12)] sm:rounded-[30px] sm:px-9">
+      <div className="relative mx-auto min-h-[760px] max-w-[1582px] overflow-hidden rounded-[28px] border border-[#d6defd] px-5 pt-24 shadow-[0_24px_70px_rgba(69,108,255,0.12)] sm:rounded-[30px] sm:px-9">
+        <Image
+          src="/CrmBgImg.png"
+          alt=""
+          fill
+          priority
+          className="pointer-events-none object-cover object-center"
+          sizes="100vw"
+        />
+
         <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center text-center">
           <motion.span
             initial={{ opacity: 0, y: 14 }}
@@ -115,9 +124,9 @@ const CrmHeroSection = () => {
           initial={{ opacity: 0, y: 56 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.38 }}
-          className="absolute inset-x-0 bottom-0 z-0 mx-auto h-[368px] max-w-[920px]"
+          className="absolute inset-x-0 bottom-0 z-[2] mx-auto h-[368px] max-w-[920px]"
         >
-          <div className="absolute inset-x-0 bottom-[-40px] mx-auto h-[496px] w-[315px] sm:w-[380px]">
+          <div className="absolute inset-x-0 bottom-0 mx-auto h-[496px] w-[315px] sm:w-[380px]">
             <div className="absolute inset-x-[14px] bottom-0 top-[130px] rounded-t-[36px] bg-[#edf2f8] sm:inset-x-[18px] sm:top-[142px] sm:rounded-t-[44px]" />
             <Image
               src="/CrmHeroSectionImg.png"
@@ -147,7 +156,7 @@ const CrmHeroSection = () => {
             initial={{ opacity: 0, x: -34 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.58, delay: 0.54 }}
-            className="absolute left-[1px] top-[106px] w-[344px] rounded-[26px] bg-white/95 px-6 py-7 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute left-[1px] top-[86px] w-[344px] rounded-[26px] bg-white/95 px-6 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
             <div className="mb-4 flex items-center gap-3 text-[#343c54]">
               <span className="grid grid-cols-2 gap-0.5 text-[#9ba7c7]">
@@ -182,7 +191,7 @@ const CrmHeroSection = () => {
             initial={{ opacity: 0, x: 34 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.58, delay: 0.6 }}
-            className="absolute right-[1px] top-[106px] w-[344px] rounded-[26px] bg-white/95 px-6 py-7 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute right-[1px] top-[80px] w-[344px] rounded-[26px] bg-white/95 px-6 py-3 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-3 text-[#343c54]">
@@ -224,7 +233,6 @@ const CrmHeroSection = () => {
           </motion.div>
         </motion.div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-white/35 to-transparent" />
       </div>
     </section>
   )

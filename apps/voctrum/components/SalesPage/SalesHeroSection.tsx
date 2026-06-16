@@ -60,7 +60,7 @@ export default function SalesHeroSection() {
           className="absolute inset-x-0 bottom-0 z-[2] mx-auto h-[388px] max-w-[1050px]"
         >
           {/* Center phone */}
-          <div className="absolute inset-x-0 bottom-[-40px] mx-auto h-[496px] w-[315px] sm:w-[380px]">
+          <div className="absolute inset-x-0 bottom-0 mx-auto h-[496px] w-[315px] sm:w-[380px]">
             <div className="absolute inset-x-[14px] bottom-0 top-[130px] rounded-t-[36px] bg-[#edf2f8] sm:inset-x-[18px] sm:top-[142px] sm:rounded-t-[44px]" />
             <Image src="/CrmHeroSectionImg.png" alt="Sales mobile workspace" fill priority className="object-contain object-bottom" sizes="(max-width: 640px) 320px, 395px" />
             <Image src="/CrmHeroSectionBar.png" alt="" width={280} height={28} className="absolute left-1/2 top-[142px] z-10 h-auto w-[224px] -translate-x-1/2 sm:top-[155px] sm:w-[270px]" />
@@ -70,7 +70,7 @@ export default function SalesHeroSection() {
           {/* Leads card — left */}
           <motion.div
             initial={{ opacity: 0, x: -34 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.58, delay: 0.54 }}
-            className="absolute left-[90px] top-[140px] w-[300px] rounded-[22px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute left-[90px] top-[100px] w-[300px] rounded-[22px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
             <div className="mb-3 flex items-center justify-between">
               <p className="text-[13px] font-bold text-[#172283]">Leads</p>
@@ -78,13 +78,16 @@ export default function SalesHeroSection() {
             </div>
             <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-[#9ca8cc]">Lead Sources</p>
             <div className="flex items-center gap-4">
-              {/* Pie chart */}
-              <svg viewBox="0 0 36 36" className="h-[70px] w-[70px] shrink-0 -rotate-90">
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#eef2ff" strokeWidth="5" />
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#456cff" strokeWidth="5" strokeDasharray="37 87.96" />
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#22c55e" strokeWidth="5" strokeDasharray="17.6 87.96" strokeDashoffset="-37" />
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#f59e0b" strokeWidth="5" strokeDasharray="22 87.96" strokeDashoffset="-54.6" />
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#a78bfa" strokeWidth="5" strokeDasharray="11.4 87.96" strokeDashoffset="-76.6" />
+              {/* Filled pie chart */}
+              <svg viewBox="0 0 100 100" className="h-[90px] w-[90px] shrink-0">
+                {/* Website 42% — blue, top-right */}
+                <path d="M50,50 L50,5 A45,45 0 0,1 95,50 Z" fill="#456cff" />
+                {/* Email 20% — green */}
+                <path d="M50,50 L95,50 A45,45 0 0,1 63.5,91.5 Z" fill="#22c55e" />
+                {/* Referral 25% — amber */}
+                <path d="M50,50 L63.5,91.5 A45,45 0 0,1 5,50 Z" fill="#f59e0b" />
+                {/* Social 13% — purple */}
+                <path d="M50,50 L5,50 A45,45 0 0,1 50,5 Z" fill="#a78bfa" />
               </svg>
               <div className="space-y-1.5">
                 {[["Website", "42%", "#456cff"], ["Email", "20%", "#22c55e"], ["Referral", "25%", "#f59e0b"], ["Social", "13%", "#a78bfa"]].map(([label, pct, color]) => (
@@ -96,7 +99,11 @@ export default function SalesHeroSection() {
                 ))}
               </div>
             </div>
-            <div className="mt-3 border-t border-[#edf0f6] pt-3">
+            <div className="mt-3 border-t border-[#edf0f6] pt-2">
+              <div className="mb-2 flex gap-3">
+                <span className="border-b-2 border-[#456cff] pb-1 text-[9px] font-bold text-[#456cff]">Hot Leads</span>
+                <span className="pb-1 text-[9px] text-[#9ca8cc]">Unassigned</span>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#456cff] text-[9px] font-bold text-white">JD</span>
                 <div>
@@ -111,7 +118,7 @@ export default function SalesHeroSection() {
           {/* Sales Overview card — right */}
           <motion.div
             initial={{ opacity: 0, x: 34 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.58, delay: 0.6 }}
-            className="absolute right-[120px] top-[170px] z-20 w-[260px] rounded-[22px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute right-[120px] top-[120px] z-20 w-[260px] rounded-[22px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
             <p className="mb-3 text-[11px] font-bold text-[#172283]">Sales Overview</p>
             <div className="flex gap-3">
@@ -123,7 +130,7 @@ export default function SalesHeroSection() {
               </div>
               {/* Bars */}
               <div className="flex flex-1 flex-col gap-1">
-                <div className="flex items-end justify-between gap-1.5 h-[90px]">
+                <div className="flex items-end justify-between gap-1.5 h-[160px]">
                   {[
                     { h: 28, label: "JAN" }, { h: 50, label: "FEB" }, { h: 35, label: "MAR" },
                     { h: 80, label: "APR" }, { h: 68, label: "MAY" },

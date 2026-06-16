@@ -96,7 +96,7 @@ export default function InventoryHeroSection() {
           className="absolute inset-x-0 bottom-0 z-[2] mx-auto h-[388px] max-w-[1050px]"
         >
           {/* Center phone */}
-          <div className="absolute inset-x-0 bottom-[-40px] mx-auto h-[496px] w-[315px] sm:w-[380px]">
+          <div className="absolute inset-x-0 bottom-0 mx-auto h-[496px] w-[315px] sm:w-[380px]">
             <div className="absolute inset-x-[14px] bottom-0 top-[130px] rounded-t-[36px] bg-transparent sm:inset-x-[18px] sm:top-[142px] sm:rounded-t-[44px]" />
             <Image
               src="/CrmHeroSectionImg.png"
@@ -127,9 +127,9 @@ export default function InventoryHeroSection() {
             initial={{ opacity: 0, x: -34 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.58, delay: 0.54 }}
-            className="absolute left-30 top-[120px] w-[300px] rounded-[22px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute left-25 top-[100px] w-[300px] rounded-[22px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
-            <p className="mb-3 text-[9px] font-bold uppercase tracking-widest text-[#9ca8cc]">Top Products</p>
+            <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-[#9ca8cc]">Top Products</p>
             <div className="space-y-2.5">
               {topProducts.map((p) => (
                 <div key={p.name} className="flex items-center gap-3">
@@ -155,9 +155,9 @@ export default function InventoryHeroSection() {
             initial={{ opacity: 0, x: 34 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.58, delay: 0.6 }}
-            className="absolute right-30 top-[160px] w-[270px] rounded-[22px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute right-30 top-[130px] w-[270px] rounded-[22px] bg-white/95 px-5 py-9 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
-            <p className="mb-3 text-[9px] font-bold uppercase tracking-widest text-[#9ca8cc]">Category Breakdown</p>
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[#9ca8cc]">Category Breakdown</p>
             <div className="flex items-center gap-4">
               {/* Donut */}
               <div className="relative flex h-[72px] w-[72px] shrink-0 items-center justify-center">

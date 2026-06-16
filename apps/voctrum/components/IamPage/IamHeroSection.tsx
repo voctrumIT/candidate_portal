@@ -68,7 +68,7 @@ export default function IamHeroSection() {
           className="absolute inset-x-0 bottom-0 z-[2] mx-auto h-[388px] max-w-[1050px]"
         >
           {/* Phone */}
-          <div className="absolute inset-x-0 bottom-[-40px] mx-auto h-[496px] w-[315px] sm:w-[380px]">
+          <div className="absolute inset-x-0 bottom-0 mx-auto h-[496px] w-[315px] sm:w-[380px]">
             <div className="absolute inset-x-[14px] bottom-0 top-[130px] rounded-t-[36px] bg-[#edf2f8] sm:inset-x-[18px] sm:top-[142px] sm:rounded-t-[44px]" />
             <Image src="/CrmHeroSectionImg.png" alt="IAM mobile workspace" fill priority className="object-contain object-bottom" sizes="(max-width: 640px) 320px, 395px" />
             <Image src="/CrmHeroSectionBar.png" alt="" width={280} height={28} className="absolute left-1/2 top-[142px] z-10 h-auto w-[224px] -translate-x-1/2 sm:top-[155px] sm:w-[270px]" />
@@ -78,7 +78,7 @@ export default function IamHeroSection() {
           {/* Users By Type — left */}
           <motion.div
             initial={{ opacity: 0, x: -34 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.58, delay: 0.54 }}
-            className="absolute left-[100px] top-[130px] w-[310px] rounded-[26px] bg-white/95 px-6 py-5 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute left-[100px] top-[110px] w-[310px] rounded-[26px] bg-white/95 px-6 py-5 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
             <p className="mb-5 text-[16px] font-bold text-[#172283]">Users By Type</p>
             <div className="space-y-4">
@@ -99,7 +99,7 @@ export default function IamHeroSection() {
           {/* User Access Overview — right */}
           <motion.div
             initial={{ opacity: 0, x: 34 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.58, delay: 0.6 }}
-            className="absolute right-[150px] top-[150px] w-[230px] rounded-[26px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute right-[150px] top-[130px] w-[230px] rounded-[26px] bg-white/95 px-5 py-4 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
             <p className="mb-3 text-[15px] font-bold text-[#172283]">User Access Overview</p>
             <div className="flex items-center justify-center">

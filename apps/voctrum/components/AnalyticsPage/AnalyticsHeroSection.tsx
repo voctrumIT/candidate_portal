@@ -60,7 +60,7 @@ export default function AnalyticsHeroSection() {
           className="absolute inset-x-0 bottom-0 z-[2] mx-auto h-[388px] max-w-[1050px]"
         >
           {/* Phone */}
-          <div className="absolute inset-x-0 bottom-[-40px] mx-auto h-[496px] w-[315px] sm:w-[380px]">
+          <div className="absolute inset-x-0 bottom-0 mx-auto h-[496px] w-[315px] sm:w-[380px]">
             <div className="absolute inset-x-[14px] bottom-0 top-[130px] rounded-t-[36px] bg-[#edf2f8] sm:inset-x-[18px] sm:top-[142px] sm:rounded-t-[44px]" />
             <Image src="/CrmHeroSectionImg.png" alt="Analytics mobile workspace" fill priority className="object-contain object-bottom" sizes="(max-width: 640px) 320px, 395px" />
             <Image src="/CrmHeroSectionBar.png" alt="" width={280} height={28} className="absolute left-1/2 top-[142px] z-10 h-auto w-[224px] -translate-x-1/2 sm:top-[155px] sm:w-[270px]" />
@@ -70,9 +70,9 @@ export default function AnalyticsHeroSection() {
           {/* Analytics image — right */}
           <motion.div
             initial={{ opacity: 0, x: 34 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.58, delay: 0.6 }}
-            className="absolute right-[210px] top-[110px] z-20 max-md:hidden"
+            className="absolute right-[150px] top-[80px] z-20 max-md:hidden"
           >
-            <Image src="/AnalyticsImg1.png" alt="Analytics Overview" width={640} height={740} className="h-[260px] w-auto object-contain" />
+            <Image src="/AnalyticsImg1.png" alt="Analytics Overview" width={640} height={740} className="h-[300px] w-auto object-contain" />
           </motion.div>
         </motion.div>
       </div>

@@ -11,15 +11,13 @@ const HrmHeroSection = () => {
     <section className="bg-white px-1.5 py-3 sm:px-2">
       <div className="relative mx-auto min-h-[760px] max-w-[1582px] overflow-hidden rounded-[28px] border border-[#d6defd] bg-white px-5 pt-24 shadow-[0_24px_70px_rgba(234,110,0,0.11)] sm:rounded-[30px] sm:px-9">
         <Image
-          src="/HrmBgImg.jpg"
+          src="/HrmBgImg.png"
           alt=""
           fill
           priority
           className="pointer-events-none object-cover object-center"
           sizes="100vw"
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-32 bg-gradient-to-t from-white via-white/95 to-transparent" />
-
         <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center text-center">
           <motion.span
             initial={{ opacity: 0, y: 14 }}
@@ -74,7 +72,7 @@ const HrmHeroSection = () => {
           transition={{ duration: 0.7, delay: 0.38 }}
           className="absolute inset-x-0 bottom-0 z-[2] mx-auto h-[388px] max-w-[1050px]"
         >
-          <div className="absolute inset-x-0 bottom-[-40px] mx-auto h-[496px] w-[315px] sm:w-[380px]">
+          <div className="absolute inset-x-0 bottom-0 mx-auto h-[496px] w-[315px] sm:w-[380px]">
             <div className="absolute inset-x-[14px] bottom-0 top-[130px] rounded-t-[36px] bg-[#edf2f8] sm:inset-x-[18px] sm:top-[142px] sm:rounded-t-[44px]" />
             <Image
               src="/CrmHeroSectionImg.png"
@@ -104,13 +102,13 @@ const HrmHeroSection = () => {
             initial={{ opacity: 0, x: -34 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.58, delay: 0.54 }}
-            className="absolute left-10 top-[92px] w-[348px] rounded-[26px] bg-white/95 px-5 py-5 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
+            className="absolute left-25 top-[88px] w-[288px] rounded-[22px] bg-white/95 px-5 py-3 shadow-[0_28px_65px_rgba(48,73,154,0.18)] backdrop-blur-md max-md:hidden"
           >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-bold text-[#1b2238]">Team Performance</h2>
-              <span className="inline-flex items-center gap-1 rounded-md border border-[#cdd3df] px-2 py-1 text-[10px] text-[#8b95ad]">
+            <div className="mb-2.5 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-[#1b2238]">Team Performance</h2>
+              <span className="inline-flex items-center gap-1 rounded-md border border-[#cdd3df] px-2 py-0.5 text-[9px] text-[#8b95ad]">
                 dd-mm-yyyy
-                <CalendarDays className="h-3 w-3" />
+                <CalendarDays className="h-2.5 w-2.5" />
               </span>
             </div>
             <PerformanceRow name="Irfan Yousuf" role="Software Development" team="Designers" value="90%" color="bg-[#49b95a]" />
@@ -162,24 +160,24 @@ const PerformanceRow = ({
   value: string
   color: string
 }) => (
-  <div className="mb-2 rounded-[16px] border border-[#d8dde8] p-4 last:mb-0">
-    <div className="grid grid-cols-[36px_1fr_1fr] items-center gap-2">
-      <span className="h-7 w-7 rounded-full bg-[#d9dee8]" />
+  <div className="mb-1.5 rounded-[14px] border border-[#d8dde8] p-2.5 last:mb-0">
+    <div className="grid grid-cols-[30px_1fr_1fr] items-center gap-2">
+      <span className="h-6 w-6 rounded-full bg-[#d9dee8]" />
       <div>
-        <p className="text-xs font-bold text-[#1b2238]">Team Leader</p>
-        <p className="text-[10px] text-[#8993aa]">{name}</p>
+        <p className="text-[11px] font-bold text-[#1b2238]">Team Leader</p>
+        <p className="text-[9px] text-[#8993aa]">{name}</p>
       </div>
       <div>
-        <p className="text-xs font-bold text-[#1b2238]">Department</p>
-        <p className="text-[10px] text-[#8993aa]">{role}</p>
+        <p className="text-[11px] font-bold text-[#1b2238]">Department</p>
+        <p className="text-[9px] text-[#8993aa]">{role}</p>
       </div>
     </div>
-    <p className="mt-3 text-[10px] text-[#8993aa]">{team}</p>
-    <div className="mt-2 flex items-center gap-2">
-      <span className="h-2 flex-1 rounded-full bg-[#e8e9eb]">
-        <span className={`block h-2 rounded-full ${color}`} style={{ width: value }} />
+    <p className="mt-1.5 text-[9px] text-[#8993aa]">{team}</p>
+    <div className="mt-1 flex items-center gap-2">
+      <span className="h-1.5 flex-1 rounded-full bg-[#e8e9eb]">
+        <span className={`block h-1.5 rounded-full ${color}`} style={{ width: value }} />
       </span>
-      <span className="text-[10px] text-[#7abf76]">{value}</span>
+      <span className="text-[9px] text-[#7abf76]">{value}</span>
     </div>
   </div>
 )
