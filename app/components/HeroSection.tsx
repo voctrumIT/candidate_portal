@@ -50,7 +50,7 @@ export default function HeroSection() {
                 <Search size={20} className="flex-shrink-0 text-blue-700" aria-hidden />
                 <input
                   placeholder="Enter skills / designations / companies"
-                  className="h-12 min-w-0 w-full bg-transparent text-sm outline-none"
+                  className="h-12 min-w-0 w-full bg-transparent text-sm outline-none !text-black placeholder:text-gray-600"
                 />
               </label>
 
@@ -60,7 +60,7 @@ export default function HeroSection() {
                 <MapPin size={18} className="flex-shrink-0 text-blue-700" aria-hidden />
                 <input
                   placeholder="Enter Location"
-                  className="h-12 min-w-0 w-full bg-transparent text-sm outline-none"
+                  className="h-12 min-w-0 w-full bg-transparent text-sm outline-none !text-black placeholder:text-gray-600"
                 />
               </label>
 

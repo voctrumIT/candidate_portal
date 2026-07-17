@@ -36,7 +36,7 @@ export default function Navbar() {
             <Link
               key={label}
               href={href}
-              className="text-[15px] font-semibold text-slate-700 transition hover:text-blue-700"
+              className="text-[15px] font-semibold !text-black transition hover:!text-blue-700"
             >
               {label}
             </Link>
@@ -44,7 +44,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3 md:gap-4">
-          <span className="hidden text-[15px] font-medium text-slate-500 lg:inline">
+          <span className="hidden text-[15px] font-medium !text-gray-600 lg:inline">
             Already have an account ?
           </span>
           <Link
