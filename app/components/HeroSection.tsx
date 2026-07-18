@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-[#f7f8fb]">
+    <section className="relative overflow-hidden bg-[#f7f8fb] dark:bg-[#0a0a0a]">
 
       {/* Top Left Pattern */}
       <div className="absolute left-0 top-0 h-80 w-96 rounded-br-[100%] bg-[repeating-radial-gradient(circle_at_0_0,rgba(15,23,42,0.12)_0,rgba(15,23,42,0.12)_1px,transparent_2px,transparent_8px)] opacity-25" />
@@ -25,18 +25,18 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-semibold italic text-slate-600">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white dark:bg-[#1a1a1a] px-4 py-1.5 text-sm font-semibold italic text-slate-600">
               <span className="h-3 w-3 rounded-full bg-blue-800 ring-2 ring-blue-100" />
               Inclusive workplace for all
             </div>
 
-            <h1 className="text-[54px] font-black leading-[1.05] text-slate-950 lg:text-[68px]">
+            <h1 className="text-[54px] font-black leading-[1.05] text-slate-950 dark:text-white lg:text-[68px]">
               Find Jobs where
               <br />
-              <span className="text-blue-700">Diversity</span> Thrives
+              <span className="text-blue-700 dark:text-blue-500">Diversity</span> Thrives
             </h1>
 
-            <p className="mt-7 max-w-[620px] text-lg leading-8 text-slate-600">
+            <p className="mt-7 max-w-[620px] text-lg leading-8 text-slate-600 dark:text-slate-400">
               Search for roles in organizations where your values,
               personality, and potential matter — not just your resume.
               Connect with workplaces that appreciate your individuality
@@ -44,23 +44,23 @@ export default function HeroSection() {
             </p>
 
             {/* Search Box */}
-            <div className="mt-10 flex flex-col gap-4 rounded-[28px] bg-[#E9EDFB] p-3 shadow-[0_8px_20px_rgba(15,23,42,0.14)] items-stretch justify-center md:flex-row relative z-10">
+            <div className="mt-10 flex flex-col gap-4 rounded-[28px] bg-[#E9EDFB] dark:bg-slate-800/80 p-3 shadow-[0_8px_20px_rgba(15,23,42,0.14)] items-stretch justify-center md:flex-row relative z-10">
 
               <label className="flex min-w-0 flex-1 items-center gap-3 px-3">
-                <Search size={20} className="flex-shrink-0 text-blue-700" aria-hidden />
+                <Search size={20} className="flex-shrink-0 text-blue-700 dark:text-blue-400" aria-hidden />
                 <input
                   placeholder="Enter skills / designations / companies"
-                  className="h-12 min-w-0 w-full bg-transparent text-sm outline-none !text-black placeholder:text-gray-600"
+                  className="h-12 min-w-0 w-full bg-transparent text-sm outline-none !text-black dark:!text-white placeholder:text-gray-600 dark:placeholder:text-slate-400"
                 />
               </label>
 
-              <div className="hidden h-10 w-[2px] bg-slate-600 md:block"></div>
+              <div className="hidden h-10 w-[2px] bg-slate-600 dark:bg-slate-700 md:block"></div>
 
               <label className="flex min-w-0 flex-1 items-center gap-3 px-3">
-                <MapPin size={18} className="flex-shrink-0 text-blue-700" aria-hidden />
+                <MapPin size={18} className="flex-shrink-0 text-blue-700 dark:text-blue-400" aria-hidden />
                 <input
                   placeholder="Enter Location"
-                  className="h-12 min-w-0 w-full bg-transparent text-sm outline-none !text-black placeholder:text-gray-600"
+                  className="h-12 min-w-0 w-full bg-transparent text-sm outline-none !text-black dark:!text-white placeholder:text-gray-600 dark:placeholder:text-slate-400"
                 />
               </label>
 
@@ -73,11 +73,11 @@ export default function HeroSection() {
             <div className="mt-10 flex flex-col gap-6 sm:flex-row sm:items-center">
 
               <div>
-                <Link href="/register" className="inline-flex h-11 w-56 items-center justify-center rounded-md border-2 border-blue-700 bg-white font-bold !text-blue-700 shadow-sm transition hover:bg-blue-700 hover:!text-white hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
+                <Link href="/register" className="inline-flex h-11 w-56 items-center justify-center rounded-md border-2 border-blue-700 bg-white dark:bg-[#1a1a1a] font-bold !text-blue-700 shadow-sm transition hover:bg-blue-700 hover:!text-white hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
                   Register
                 </Link>
 
-                <p className="mt-3 text-sm italic text-slate-500">
+                <p className="mt-3 text-sm italic text-slate-500 dark:text-slate-400">
                   Get started in minutes with simple ease
                 </p>
               </div>
@@ -92,14 +92,14 @@ export default function HeroSection() {
                   ].map((color, index) => (
                     <span
                       key={color}
-                      className={`h-10 w-10 rounded-full border-2 border-white ${color}`}
+                      className={`h-10 w-10 rounded-full border-2 border-white dark:border-[#0a0a0a] ${color}`}
                       style={{ zIndex: 10 - index }}
                     />
                   ))}
                 </div>
 
                 <div>
-                  <p className="font-semibold text-slate-800">
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">
                     Trusted by 10k+ job seekers
                   </p>
 

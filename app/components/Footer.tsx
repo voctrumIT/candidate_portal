@@ -1,5 +1,6 @@
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter } from 'react-icons/fa6';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const footerColumns = [
   ['Company', 'About Us', 'Partners', 'Contact Us'],
@@ -30,9 +31,9 @@ export default function Footer() {
               <input
                 aria-label="Email for job alerts"
                 placeholder="Enter your email for job alerts"
-                className="h-12 w-[260px] rounded-lg bg-white px-4 text-[14px] text-slate-800 outline-none placeholder:text-[#9ca3af]"
+                className="h-12 w-[260px] rounded-lg bg-white dark:bg-[#1a1a1a] px-4 text-[14px] text-slate-800 outline-none placeholder:text-[#9ca3af]"
               />
-              <button className="h-12 rounded-lg bg-white px-7 text-[14px] font-bold text-[#172a78] transition hover:bg-slate-50">
+              <button className="h-12 rounded-lg bg-white dark:bg-[#1a1a1a] px-7 text-[14px] font-bold text-[#172a78] transition hover:bg-slate-50 dark:bg-slate-900">
                 Subscribe
               </button>
             </div>
@@ -44,13 +45,23 @@ export default function Footer() {
               <div key={title}>
                 <h3 className="text-[17px] font-bold text-white">{title}</h3>
                 <ul className="mt-6 space-y-4 text-[15px] text-[#b4c4e5]">
-                  {links.map((link) => (
-                    <li key={link}>
-                      <a href="#" className="transition hover:text-white">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
+                  {links.map((link) => {
+                    const getLinkHref = (name: string) => {
+                      if (name === 'About Us') return '/about';
+                      if (name === 'Partners') return '/partners';
+                      if (name === 'Help Center') return '/help-center';
+                      if (name === 'Blog') return '/blog';
+                      if (name === 'Contact Us') return '/contact-us';
+                      return '#';
+                    };
+                    return (
+                      <li key={link}>
+                        <Link href={getLinkHref(link)} className="transition hover:text-white">
+                          {link}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
@@ -58,12 +69,12 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-20 flex flex-col items-center justify-between gap-6 rounded-full bg-white px-8 py-4 text-[14px] md:flex-row">
+        <div className="mt-20 flex flex-col items-center justify-between gap-6 rounded-full bg-white dark:bg-[#1a1a1a] px-8 py-4 text-[14px] md:flex-row">
           
           <div className="flex items-center font-medium text-[#71717a]">
-            <a href="#" className="transition hover:text-slate-900">Terms of Service</a>
+            <a href="#" className="transition hover:text-slate-900 dark:text-white">Terms of Service</a>
             <span className="mx-3 text-[#d4d4d8]">|</span>
-            <a href="#" className="transition hover:text-slate-900">Privacy Policy</a>
+            <a href="#" className="transition hover:text-slate-900 dark:text-white">Privacy Policy</a>
           </div>
           
           <div className="text-[#a1a1aa]">

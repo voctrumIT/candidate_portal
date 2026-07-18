@@ -1,10 +1,11 @@
 import { MapPin, Clock, CalendarDays, Wallet, ExternalLink, Bookmark, Share2 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { JobListing } from '../../data';
 
 export default function JobDetailHeader({ job }: { job: JobListing }) {
   return (
-    <div className="border-b border-slate-200 pb-8">
+    <div className="border-b border-slate-200 dark:border-slate-700 pb-8">
       {/* Company Info */}
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 p-2">
@@ -14,7 +15,7 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
         <span className="text-[15px] font-medium text-slate-600">{job.company}</span>
       </div>
 
-      <h1 className="mt-4 text-3xl font-bold text-slate-900 md:text-4xl">{job.title}</h1>
+      <h1 className="mt-4 text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">{job.title}</h1>
 
       {/* Tags */}
       <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -29,7 +30,7 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
       </div>
 
       {/* Meta info */}
-      <div className="mt-6 flex flex-wrap items-center gap-6 text-[14px] text-slate-500">
+      <div className="mt-6 flex flex-wrap items-center gap-6 text-[14px] text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-blue-600" />
           <span>Location : {job.location}, USA</span>
@@ -51,10 +52,13 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
 
       {/* Action Buttons */}
       <div className="mt-8 flex flex-wrap items-center gap-4">
-        <button className="flex items-center gap-2 rounded-md bg-blue-700 px-8 py-2.5 text-[14px] font-semibold text-white shadow-sm transition hover:bg-blue-800">
+        <Link 
+          href="/login" 
+          className="flex items-center gap-2 rounded-md bg-blue-700 px-8 py-2.5 text-[14px] font-semibold !text-white shadow-sm transition hover:bg-blue-800"
+        >
           Apply
           <ExternalLink className="h-4 w-4" />
-        </button>
+        </Link>
 
         <button className="flex items-center gap-2 rounded-md border border-blue-600 px-6 py-2.5 text-[14px] font-semibold text-blue-700 transition hover:bg-blue-50">
           Save for Later

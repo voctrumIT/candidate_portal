@@ -85,7 +85,7 @@ const testimonials = [
 
 export default function TestimonialsAppSection() {
   return (
-    <section className="bg-white px-5 py-12 md:px-10 lg:px-16">
+    <section className="bg-white dark:bg-[#1a1a1a] px-5 py-12 md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1220px] overflow-hidden">
         <div className="text-center">
           <p className="section-kicker justify-center">Success Stories</p>
@@ -126,9 +126,9 @@ export default function TestimonialsAppSection() {
                 whileHover={{
                   y: -5,
                 }}
-                className="h-full rounded-xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300"
+                className="h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-7 shadow-sm transition-all duration-300"
               >
-                <h3 className="max-w-xs text-xl font-semibold leading-7 text-slate-900">
+                <h3 className="max-w-xs text-xl font-semibold leading-7 text-slate-900 dark:text-white">
                   {item.title}
                 </h3>
                 <p className="mt-6 text-sm leading-6 text-slate-400">
@@ -150,7 +150,7 @@ export default function TestimonialsAppSection() {
         </Swiper>
 
 
-        <div className="mt-20 grid items-center gap-10 rounded-lg bg-slate-50 px-7 py-10 md:grid-cols-[1.1fr_0.9fr] md:px-16">
+        <div className="mt-20 grid items-center gap-10 rounded-lg bg-slate-50 dark:bg-slate-900 px-7 py-10 md:grid-cols-[1.1fr_0.9fr] md:px-16">
           <div>
             <h2 className="max-w-xl text-3xl font-black leading-tight text-slate-950 md:text-4xl">
               Join thousands of users already using our{' '}
@@ -165,7 +165,7 @@ export default function TestimonialsAppSection() {
               <input
                 aria-label="Mobile number"
                 placeholder="Enter your mobile number"
-                className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-500"
+                className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-500 dark:text-slate-400"
               />
               <button className="h-9 shrink-0 rounded-full bg-blue-700 px-5 text-xs font-bold text-white">
                 Get App Link
@@ -179,7 +179,7 @@ export default function TestimonialsAppSection() {
               <span className="inline-flex h-12 items-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white">
                 Download on the&nbsp;<strong>App Store</strong>
               </span>
-              <span className="grid h-24 w-24 place-items-center border-2 border-dashed border-blue-400 bg-white text-xs font-bold text-slate-700">
+              <span className="grid h-24 w-24 place-items-center border-2 border-dashed border-blue-400 bg-white dark:bg-[#1a1a1a] text-xs font-bold text-slate-700 dark:text-slate-300">
                 QR
               </span>
             </div>

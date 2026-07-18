@@ -12,13 +12,13 @@ const benefits = [
 
 export default function ResumeBuilderSection() {
   return (
-    <section className="bg-white px-5 py-12 md:px-10 lg:px-16">
+    <section className="bg-white dark:bg-[#1a1a1a] px-5 py-12 md:px-10 lg:px-16">
       <motion.div
         initial={{ opacity: 0, y: 22 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.25 }}
         transition={{ duration: 0.55 }}
-        className="relative mx-auto min-h-[420px] max-w-[1220px] overflow-hidden rounded-lg bg-slate-50"
+        className="relative mx-auto min-h-[420px] max-w-[1220px] overflow-hidden rounded-lg bg-slate-50 dark:bg-slate-900"
       >
         <Image
           src="/homepage/section.png"

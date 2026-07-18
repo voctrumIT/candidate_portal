@@ -21,7 +21,7 @@ export default function CategoryPills() {
       {categories.map(({ name, icon: Icon }) => (
         <button
           key={name}
-          className="flex h-10 items-center justify-center gap-2 rounded-full border border-blue-500 bg-white px-5 text-[13px] font-medium text-blue-600 transition hover:bg-blue-50"
+          className="flex h-10 items-center justify-center gap-2 rounded-full border border-blue-500 bg-white dark:bg-[#1a1a1a] px-5 text-[13px] font-medium text-blue-600 transition hover:bg-blue-50"
         >
           <Icon className="h-4 w-4" />
           {name}

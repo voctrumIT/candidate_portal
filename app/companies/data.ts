@@ -1,0 +1,133 @@
+export type CompanyListing = {
+  id: string;
+  name: string;
+  type: string;
+  location: string;
+  employees: string;
+  openRoles: number;
+  rating: number;
+  activelyHiring: boolean;
+};
+
+export const dummyCompanies: CompanyListing[] = [
+  {
+    id: "comp-1",
+    name: "Wipro",
+    type: "IT Company",
+    location: "Pune, India",
+    employees: "10k+ Employees",
+    openRoles: 18,
+    rating: 4.0,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-2",
+    name: "Google",
+    type: "Finance, IT Company",
+    location: "Pune, India",
+    employees: "5k+ Employees",
+    openRoles: 28,
+    rating: 4.5,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-3",
+    name: "Microsoft",
+    type: "IT Company",
+    location: "Delhi, India",
+    employees: "10k+ Employees",
+    openRoles: 23,
+    rating: 4.0,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-4",
+    name: "Google",
+    type: "Finance, IT Company",
+    location: "Pune, India",
+    employees: "5k+ Employees",
+    openRoles: 28,
+    rating: 4.5,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-5",
+    name: "Google",
+    type: "Finance, IT Company",
+    location: "Pune, India",
+    employees: "5k+ Employees",
+    openRoles: 28,
+    rating: 4.5,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-6",
+    name: "Google",
+    type: "Finance, IT Company",
+    location: "Pune, India",
+    employees: "5k+ Employees",
+    openRoles: 28,
+    rating: 4.5,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-7",
+    name: "Google",
+    type: "Finance, IT Company",
+    location: "Pune, India",
+    employees: "5k+ Employees",
+    openRoles: 28,
+    rating: 4.5,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-8",
+    name: "Google",
+    type: "Finance, IT Company",
+    location: "Pune, India",
+    employees: "5k+ Employees",
+    openRoles: 28,
+    rating: 4.5,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-9",
+    name: "Google",
+    type: "Finance, IT Company",
+    location: "Pune, India",
+    employees: "5k+ Employees",
+    openRoles: 28,
+    rating: 4.5,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-10",
+    name: "Google",
+    type: "Finance, IT Company",
+    location: "Pune, India",
+    employees: "5k+ Employees",
+    openRoles: 28,
+    rating: 4.5,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-11",
+    name: "Microsoft",
+    type: "IT Company",
+    location: "Delhi, India",
+    employees: "10k+ Employees",
+    openRoles: 23,
+    rating: 4.0,
+    activelyHiring: true,
+  },
+  {
+    id: "comp-12",
+    name: "Wipro",
+    type: "IT Company",
+    location: "Pune, India",
+    employees: "10k+ Employees",
+    openRoles: 18,
+    rating: 4.0,
+    activelyHiring: true,
+  },
+];

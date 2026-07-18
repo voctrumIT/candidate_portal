@@ -28,11 +28,11 @@ const offers = [
 
 export default function WhatWeOfferSection() {
   return (
-    <section className="bg-white px-5 py-16 md:px-10 lg:px-16">
+    <section className="bg-white dark:bg-[#1a1a1a] px-5 py-16 md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1220px]">
 
         <div className="text-center">
-          <h2 className="text-4xl font-black text-slate-900 md:text-5xl">
+          <h2 className="text-4xl font-black text-slate-900 dark:text-white md:text-5xl">
             What We <span className="text-blue-700">Offer</span> ?
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-400">
@@ -56,7 +56,7 @@ export default function WhatWeOfferSection() {
                 <item.icon className="h-7 w-7 text-white" />
               </span>
               <div>
-                <h3 className="text-base font-bold text-slate-900">{item.title}</h3>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">{item.title}</h3>
                 <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.description}</p>
               </div>
             </motion.div>

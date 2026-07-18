@@ -81,7 +81,7 @@ function BrandMark({ name }: { name: string }) {
 
   if (name === 'amazon') {
     return (
-      <span className="text-3xl font-black lowercase text-slate-900">
+      <span className="text-3xl font-black lowercase text-slate-900 dark:text-white">
         a
       </span>
     );
@@ -110,7 +110,7 @@ function BrandMark({ name }: { name: string }) {
 
 export default function TopCompaniesHiring() {
   return (
-    <section className="bg-white px-5 py-16 md:px-10 lg:px-16">
+    <section className="bg-white dark:bg-[#1a1a1a] px-5 py-16 md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1220px] overflow-hidden">
 
         <div className="flex items-end justify-between gap-4">
@@ -126,7 +126,7 @@ export default function TopCompaniesHiring() {
 
           <a
             href="#"
-            className="mb-2 text-sm font-semibold text-slate-700 underline"
+            className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300 underline"
           >
             View all
           </a>
@@ -164,7 +164,7 @@ export default function TopCompaniesHiring() {
                 whileHover={{
                   y: -5,
                 }}
-                className="h-full rounded-xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300"
+                className="h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-7 shadow-sm transition-all duration-300"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
@@ -209,7 +209,7 @@ export default function TopCompaniesHiring() {
                   </span>
                 </div>
 
-                <div className="mt-7 flex justify-end border-t border-slate-200 pt-6">
+                <div className="mt-7 flex justify-end border-t border-slate-200 dark:border-slate-700 pt-6">
                   <button className="h-10 rounded-md bg-[#2952e3] px-6 text-sm font-semibold text-white transition hover:bg-[#1f45d4]">
                     View Open Roles
                   </button>

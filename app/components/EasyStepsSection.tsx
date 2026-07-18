@@ -25,7 +25,7 @@ const steps = [
 
 export default function EasyStepsSection() {
   return (
-    <section className="bg-white px-5 py-16 md:px-10 lg:px-16">
+    <section className="bg-white dark:bg-[#1a1a1a] px-5 py-16 md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1220px]">
         <div className="text-center">
           <p className="section-kicker justify-center">Easy Onboarding</p>

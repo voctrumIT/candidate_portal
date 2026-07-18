@@ -33,7 +33,7 @@ const brands = [
   },
   {
     name: 'LeetCode',
-    className: 'text-slate-900 font-semibold',
+    className: 'text-slate-900 dark:text-white font-semibold',
   },
   {
     name: 'VAIO',
@@ -47,7 +47,7 @@ const brands = [
 
 export default function CompaniesHiringOnPlatform() {
   return (
-    <section className="bg-white px-5 py-12 md:px-10 md:py-16 lg:px-16">
+    <section className="bg-white dark:bg-[#1a1a1a] px-5 py-12 md:px-10 md:py-16 lg:px-16">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}

@@ -99,14 +99,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white text-[#101828]">
+    <main className="min-h-screen bg-white dark:bg-[#1a1a1a] text-[#101828] dark:text-white">
       <AuthHeader />
       {step === 0 ? (
         <GetStarted onRegister={next} />
       ) : (
-        <section className="relative min-h-[calc(100vh-70px)] overflow-hidden bg-[#fbfbfc] px-5 py-16">
+        <section className="relative min-h-[calc(100vh-70px)] overflow-hidden bg-[#fbfbfc] dark:bg-[#0a0a0a] px-5 py-16">
           <RegisterBackground />
-          <div className="relative mx-auto w-full max-w-[930px] rounded-lg bg-[#f7f7f8]/95 px-10 py-11 shadow-sm md:px-16">
+          <div className="relative mx-auto w-full max-w-[930px] rounded-lg bg-[#f7f7f8]/95 dark:bg-[#1a1a1a]/95 px-10 py-11 shadow-sm md:px-16">
             {step === 1 && <EmploymentPreference selected={employment} onToggle={toggleEmployment} onBack={back} onNext={next} />}
             {step === 2 && (
               <SkillsStep
@@ -147,11 +147,11 @@ export default function RegisterPage() {
 
 function AuthHeader() {
   return (
-    <header className="flex h-[70px] items-center justify-between border-b border-[#eef0f4] bg-white px-8 shadow-[0_2px_10px_rgba(16,24,40,0.08)] sm:px-14">
+    <header className="flex h-[70px] items-center justify-between border-b border-[#eef0f4] bg-white dark:bg-[#1a1a1a] px-8 shadow-[0_2px_10px_rgba(16,24,40,0.08)] sm:px-14">
       <Link href="/" aria-label="Voctrum home" className="flex items-center">
         <Image src="/common/logo.png" alt="Voctrum" width={118} height={38} className="h-auto w-[118px] object-contain" priority />
       </Link>
-      <div className="flex items-center gap-3 text-sm text-[#667085] sm:text-base">
+      <div className="flex items-center gap-3 text-sm text-[#667085] dark:text-slate-400 sm:text-base">
         <span className="hidden sm:inline">Already have an&nbsp; account ?</span>
         <Link href="/login" className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#2f54eb] px-5 text-xs font-semibold !text-white shadow-sm transition hover:bg-[#2447d8] hover:!text-white">
           <LogIn className="h-4 w-4 text-white" />
@@ -169,14 +169,14 @@ function RegisterBackground() {
 function GetStarted({ onRegister }: { onRegister: () => void }) {
   return (
     <section className="grid min-h-[calc(100vh-70px)] grid-cols-1 lg:grid-cols-2">
-      <aside className="flex items-center justify-center bg-[#f8f8f9] px-8 py-12 lg:px-14">
+      <aside className="flex items-center justify-center bg-[#f8f8f9] dark:bg-slate-900 px-8 py-12 lg:px-14">
         <div className="w-full max-w-[520px]">
-          <h1 className="text-center text-3xl font-extrabold text-[#101828]">
+          <h1 className="text-center text-3xl font-extrabold text-[#101828] dark:text-white">
             V<span className="text-[#2f54eb]">octrum</span>
           </h1>
           <p className="mt-4 text-center text-sm text-[#98a2b3]">Create your account to explore opportunities that match your ambitions</p>
           <div className="mx-auto mt-12 max-w-[420px]">
-            <h2 className="text-lg font-extrabold uppercase text-[#101828]">How It Works</h2>
+            <h2 className="text-lg font-extrabold uppercase text-[#101828] dark:text-white">How It Works</h2>
             <div className="mt-8 space-y-10">
               <HowItWorksItem number="1" title="Create your profile" copy="Add your skills and experience to get matched opportunities" />
               <HowItWorksItem number="2" title="Discover matching roles" copy="Browse curated jobs and find roles that match your experience" />
@@ -190,7 +190,7 @@ function GetStarted({ onRegister }: { onRegister: () => void }) {
       <section className="flex items-center justify-center px-8 py-12 lg:px-14">
         <form className="w-full max-w-[520px]" onSubmit={(event) => event.preventDefault()}>
           <div className="mb-9 text-center">
-            <h2 className="text-4xl font-extrabold text-[#101828]">Get Started</h2>
+            <h2 className="text-4xl font-extrabold text-[#101828] dark:text-white">Get Started</h2>
             <p className="mt-4 text-sm text-[#98a2b3]">Register to start exploring jobs and build your future</p>
           </div>
           <LineInput icon={<User className="h-5 w-5" />} placeholder="Name" />
@@ -203,7 +203,7 @@ function GetStarted({ onRegister }: { onRegister: () => void }) {
           <button type="button" onClick={onRegister} className="mt-7 h-14 w-full rounded-lg bg-[#2f54eb] text-lg font-bold text-white transition hover:bg-[#2447d8]">
             Register
           </button>
-          <div className="my-8 flex items-center gap-3 text-sm text-[#667085]">
+          <div className="my-8 flex items-center gap-3 text-sm text-[#667085] dark:text-slate-400">
             <span className="h-px flex-1 bg-[#e4e7ec]" />
             Or create with
             <span className="h-px flex-1 bg-[#e4e7ec]" />
@@ -223,7 +223,7 @@ function HowItWorksItem({ number, title, copy }: { number: string; title: string
     <div className="relative flex gap-6">
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#2f54eb] text-sm font-bold text-white">{number}</span>
       <span>
-        <span className="block text-base font-bold text-[#667085]">{title}</span>
+        <span className="block text-base font-bold text-[#667085] dark:text-slate-400">{title}</span>
         <span className="mt-2 block max-w-[360px] text-sm leading-6 text-[#98a2b3]">{copy}</span>
       </span>
     </div>
@@ -241,13 +241,13 @@ function EmploymentPreference({ selected, onToggle, onBack, onNext }: StepProps 
           const Icon = option.icon;
           const checked = selected.includes(option.title);
           return (
-            <label key={option.title} className="flex h-[78px] cursor-pointer items-center justify-between rounded-lg border border-[#dfe3ea] bg-white px-5 text-left shadow-sm transition hover:border-[#2f54eb]">
+            <label key={option.title} className="flex h-[78px] cursor-pointer items-center justify-between rounded-lg border border-[#dfe3ea] dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-5 text-left shadow-sm transition hover:border-[#2f54eb]">
               <span className="flex items-center gap-4">
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#e9edff] text-[#2f54eb]">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#e9edff] dark:bg-slate-800 text-[#2f54eb]">
                   <Icon className="h-5 w-5" />
                 </span>
                 <span>
-                  <span className="block text-base font-semibold text-[#101828]">{option.title}</span>
+                  <span className="block text-base font-semibold text-[#101828] dark:text-white">{option.title}</span>
                   <span className="mt-1 block text-sm text-[#98a2b3]">{option.copy}</span>
                 </span>
               </span>
@@ -312,7 +312,7 @@ function SkillsStep({
       </div>
       {showCustomSkill ? (
         <div className="mt-6 flex max-w-[560px] gap-3">
-          <input value={customSkill} onChange={(event) => onCustomSkill(event.target.value)} onKeyDown={(event) => event.key === "Enter" && onAddCustomSkill()} placeholder="Enter custom skill" className="h-11 min-w-0 flex-1 rounded-lg border border-[#d0d5dd] bg-white px-4 text-sm outline-none placeholder:text-[#98a2b3]" />
+          <input value={customSkill} onChange={(event) => onCustomSkill(event.target.value)} onKeyDown={(event) => event.key === "Enter" && onAddCustomSkill()} placeholder="Enter custom skill" className="h-11 min-w-0 flex-1 rounded-lg border border-[#d0d5dd] bg-white dark:bg-[#1a1a1a] px-4 text-sm outline-none placeholder:text-[#98a2b3]" />
           <button type="button" onClick={onAddCustomSkill} className="h-11 rounded-lg bg-[#2f54eb] px-5 text-sm font-bold text-white transition hover:bg-[#2447d8]">Add</button>
         </div>
       ) : (
@@ -348,7 +348,7 @@ function EducationStep({ selectedDegree, search, onSearch, onSelectDegree, onBac
           <Field label="End Year *" placeholder="Enter Year" type="date" icon={<CalendarDays className="h-5 w-5 text-[#2f54eb]" />} />
         </div>
       </div>
-      <label className="mt-6 flex items-center gap-3 text-base text-[#667085]">
+      <label className="mt-6 flex items-center gap-3 text-base text-[#667085] dark:text-slate-400">
         <input type="checkbox" className="h-4 w-4 rounded border-[#d0d5dd] accent-[#2f54eb]" />
         Currently Pursuing
       </label>
@@ -361,11 +361,11 @@ function WorkHistoryStep({ files, onAddFiles, onRemoveFile, onBack, onNext }: St
   return (
     <>
       <StepHeading title="Work History" copy="Add your experience" step={4} percent={60} filled={3} />
-      <div className="mx-auto mt-8 max-w-[430px] rounded-lg bg-white px-5 py-7 text-center">
-        <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[#e9edff] text-[#2f54eb]">
+      <div className="mx-auto mt-8 max-w-[430px] rounded-lg bg-white dark:bg-[#1a1a1a] px-5 py-7 text-center">
+        <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[#e9edff] dark:bg-slate-800 text-[#2f54eb]">
           <FileText className="h-5 w-5" />
         </span>
-        <h3 className="mt-4 text-base font-bold text-[#101828]">{files.length ? "Experience files added" : "No experience added yet"}</h3>
+        <h3 className="mt-4 text-base font-bold text-[#101828] dark:text-white">{files.length ? "Experience files added" : "No experience added yet"}</h3>
         <p className="mx-auto mt-2 max-w-[270px] text-sm leading-5 text-[#98a2b3]">Add your work roles to help us match you with the right jobs</p>
         <FilePicker id="work-history-file" label="Upload Experience" icon={<Plus className="h-4 w-4" />} onChange={onAddFiles} />
         <FileList files={files} onRemove={onRemoveFile} />
@@ -383,11 +383,11 @@ function ResumeStep({ files, portfolioLink, onPortfolioLink, onAddFiles, onRemov
   return (
     <>
       <StepHeading title="Resume & Portfolio" copy="Lets recruiters discover your work" step={5} percent={80} filled={4} />
-      <div className="mx-auto mt-8 w-full max-w-[470px] rounded-xl bg-white px-5 py-8 text-center shadow-[0_6px_18px_rgba(16,24,40,0.16)]">
-        <span className="mx-auto grid h-9 w-9 place-items-center rounded-full bg-[#e9edff] text-[#2f54eb]">
+      <div className="mx-auto mt-8 w-full max-w-[470px] rounded-xl bg-white dark:bg-[#1a1a1a] px-5 py-8 text-center shadow-[0_6px_18px_rgba(16,24,40,0.16)]">
+        <span className="mx-auto grid h-9 w-9 place-items-center rounded-full bg-[#e9edff] dark:bg-slate-800 text-[#2f54eb]">
           <Upload className="h-5 w-5" />
         </span>
-        <h3 className="mt-5 text-base font-bold text-[#101828]">Click to Upload or drag and drop</h3>
+        <h3 className="mt-5 text-base font-bold text-[#101828] dark:text-white">Click to Upload or drag and drop</h3>
         <p className="mt-2 text-sm leading-5 text-[#98a2b3]">Images (PDF, DOC, DOCX) only,<br />Maximum file size 10 MB</p>
         <FilePicker id="resume-file" label="Browse Files" onChange={onAddFiles} />
         <FileList files={files} onRemove={onRemoveFile} />
@@ -405,23 +405,23 @@ function DoneStep({ selectedSkills, employment, resumeAdded, onBack }: { selecte
     <>
       <StepHeading title="All Done" copy="Lets recruiters discover your work" percent={100} filled={5} completeOnly />
       <div className="mt-10 grid gap-8 md:grid-cols-2">
-        <div className="rounded-xl bg-white px-8 py-9 text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-dashed border-[#101828] bg-white">
+        <div className="rounded-xl bg-white dark:bg-[#1a1a1a] px-8 py-9 text-center">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-dashed border-[#101828] bg-white dark:bg-[#1a1a1a]">
             <span className="grid h-10 w-10 place-items-center rounded-full bg-[#16a34a] text-white">
               <Check className="h-7 w-7 stroke-[3]" />
             </span>
           </span>
           <h3 className="mt-5 text-lg font-medium text-[#2f54eb]">Profile Status</h3>
-          <p className="mt-2 text-lg font-extrabold text-[#101828]">Fully Completed</p>
+          <p className="mt-2 text-lg font-extrabold text-[#101828] dark:text-white">Fully Completed</p>
           <p className="mx-auto mt-3 max-w-[300px] text-sm leading-5 text-[#98a2b3]">Your profile is complete--you&apos;re ready to discover the right opportunities</p>
         </div>
-        <div className="flex items-center gap-7 rounded-xl bg-white px-8 py-9">
+        <div className="flex items-center gap-7 rounded-xl bg-white dark:bg-[#1a1a1a] px-8 py-9">
           <div className="grid h-28 w-28 shrink-0 place-items-center rounded-full border-[16px] border-[#16a34a] text-center">
-            <span className="text-xs text-[#667085]"><strong className="block text-[#101828]">100%</strong>Profile Score</span>
+            <span className="text-xs text-[#667085] dark:text-slate-400"><strong className="block text-[#101828] dark:text-white">100%</strong>Profile Score</span>
           </div>
           <span>
-            <h3 className="text-lg font-extrabold text-[#101828]">Profile Strength</h3>
-            <p className="mt-2 max-w-[250px] text-sm leading-5 text-[#667085]">A complete profile increases your chances of getting noticed by recruiters</p>
+            <h3 className="text-lg font-extrabold text-[#101828] dark:text-white">Profile Strength</h3>
+            <p className="mt-2 max-w-[250px] text-sm leading-5 text-[#667085] dark:text-slate-400">A complete profile increases your chances of getting noticed by recruiters</p>
           </span>
         </div>
       </div>
@@ -432,7 +432,7 @@ function DoneStep({ selectedSkills, employment, resumeAdded, onBack }: { selecte
         <SummaryCard value={employment} label="Preferred Job Type" />
       </div>
       <div className="mt-12 flex justify-end gap-5">
-        <button type="button" onClick={onBack} className="h-11 w-32 rounded-lg border border-[#2f54eb] bg-white text-sm font-bold text-[#2f54eb] transition hover:bg-[#eef3ff]">Back</button>
+        <button type="button" onClick={onBack} className="h-11 w-32 rounded-lg border border-[#2f54eb] bg-white dark:bg-[#1a1a1a] text-sm font-bold text-[#2f54eb] transition hover:bg-[#eef3ff]">Back</button>
         <Link href="/dashboard" className="inline-flex h-11 w-36 items-center justify-center rounded-lg bg-[#2f54eb] text-sm font-bold !text-white transition hover:bg-[#2447d8] hover:!text-white">Explore Jobs</Link>
       </div>
     </>
@@ -442,7 +442,7 @@ function DoneStep({ selectedSkills, employment, resumeAdded, onBack }: { selecte
 function StepHeading({ title, copy, step, percent, filled, completeOnly }: { title: string; copy: string; step?: number; percent: number; filled: number; completeOnly?: boolean }) {
   return (
     <div>
-      <h1 className="text-2xl font-extrabold text-[#101828]">{title}</h1>
+      <h1 className="text-2xl font-extrabold text-[#101828] dark:text-white">{title}</h1>
       <p className="mt-3 text-sm text-[#98a2b3]">{copy}</p>
       <div className="mt-8 flex items-center justify-between gap-8">
         <div className="flex flex-1 gap-4">
@@ -450,7 +450,7 @@ function StepHeading({ title, copy, step, percent, filled, completeOnly }: { tit
             <span key={index} className={`h-2 w-20 rounded-full ${index < filled || completeOnly ? "bg-[#2f54eb]" : "bg-[#d9d9d9]"}`} />
           ))}
         </div>
-        <span className="min-w-[210px] text-right text-sm font-bold text-[#101828]">
+        <span className="min-w-[210px] text-right text-sm font-bold text-[#101828] dark:text-white">
           {step ? <span className="font-medium text-[#2f54eb]">Step {step} of 5</span> : null}
           {step ? " - " : null}
           {percent}% complete
@@ -463,7 +463,7 @@ function StepHeading({ title, copy, step, percent, filled, completeOnly }: { tit
 function StepActions({ onBack, onNext, compact }: StepProps & { compact?: boolean }) {
   return (
     <div className={`flex justify-end gap-5 ${compact ? "mt-7" : "mt-24"}`}>
-      <button type="button" onClick={onBack} className="h-11 w-32 rounded-lg border border-[#2f54eb] bg-white text-sm font-bold text-[#2f54eb] transition hover:bg-[#eef3ff]">Back</button>
+      <button type="button" onClick={onBack} className="h-11 w-32 rounded-lg border border-[#2f54eb] bg-white dark:bg-[#1a1a1a] text-sm font-bold text-[#2f54eb] transition hover:bg-[#eef3ff]">Back</button>
       <button type="button" onClick={onNext} className="h-11 w-36 rounded-lg bg-[#2f54eb] text-sm font-bold text-white transition hover:bg-[#2447d8]">Continue</button>
     </div>
   );
@@ -473,7 +473,7 @@ function LineInput({ icon, placeholder, type = "text", trailing }: { icon: React
   return (
     <label className="mt-8 flex h-11 items-center gap-3 border-b border-[#dfe3ea] text-[#2f54eb]">
       {icon}
-      <input type={type} placeholder={placeholder} className="min-w-0 flex-1 bg-transparent text-sm text-[#101828] outline-none placeholder:text-[#98a2b3]" />
+      <input type={type} placeholder={placeholder} className="min-w-0 flex-1 bg-transparent text-sm text-[#101828] dark:text-white outline-none placeholder:text-[#98a2b3]" />
       {trailing}
     </label>
   );
@@ -481,7 +481,7 @@ function LineInput({ icon, placeholder, type = "text", trailing }: { icon: React
 
 function SocialCreate({ label, icon }: { label: string; icon: ReactNode }) {
   return (
-    <button type="button" className="inline-flex h-14 items-center justify-center gap-3 rounded-lg border border-[#dfe3ea] bg-white px-4 text-sm text-[#667085] transition hover:border-[#cbd5e1]">
+    <button type="button" className="inline-flex h-14 items-center justify-center gap-3 rounded-lg border border-[#dfe3ea] bg-white dark:bg-[#1a1a1a] px-4 text-sm text-[#667085] dark:text-slate-400 transition hover:border-[#cbd5e1]">
       {icon}
       {label}
     </button>
@@ -490,16 +490,16 @@ function SocialCreate({ label, icon }: { label: string; icon: ReactNode }) {
 
 function SearchBox({ placeholder, value, onChange }: { placeholder: string; value: string; onChange: (value: string) => void }) {
   return (
-    <label className="mt-7 flex h-12 max-w-[560px] items-center gap-3 rounded-lg border border-[#d0d5dd] bg-white px-4 text-[#2f54eb]">
+    <label className="mt-7 flex h-12 max-w-[560px] items-center gap-3 rounded-lg border border-[#d0d5dd] bg-white dark:bg-[#1a1a1a] px-4 text-[#2f54eb]">
       <Search className="h-5 w-5" />
-      <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#667085]" />
+      <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#667085] dark:text-slate-400" />
     </label>
   );
 }
 
 function Pill({ label, selected, onClick }: { label: string; selected?: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className={`h-9 rounded-full border px-6 text-sm transition ${selected ? "border-[#2f54eb] bg-[#2f54eb] text-white" : "border-[#2f54eb] bg-white text-[#2f54eb] hover:bg-[#eef3ff]"}`}>
+    <button type="button" onClick={onClick} className={`h-9 rounded-full border px-6 text-sm transition ${selected ? "border-[#2f54eb] bg-[#2f54eb] text-white" : "border-[#2f54eb] bg-white dark:bg-[#1a1a1a] text-[#2f54eb] hover:bg-[#eef3ff]"}`}>
       {label}
     </button>
   );
@@ -509,7 +509,7 @@ function Field({ label, placeholder, icon, type = "text", value, onChange }: { l
   return (
     <label className="block">
       <span className="mb-3 block text-lg font-medium text-[#475467]">{label}</span>
-      <span className="flex h-12 items-center gap-3 rounded-lg border border-[#cfd4dc] bg-white px-4">
+      <span className="flex h-12 items-center gap-3 rounded-lg border border-[#cfd4dc] bg-white dark:bg-[#1a1a1a] px-4">
         {icon}
         <input type={type} value={value} onChange={(event) => onChange?.(event.target.value)} placeholder={placeholder} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#98a2b3]" />
       </span>
@@ -521,7 +521,7 @@ function SelectField({ label, placeholder }: { label: string; placeholder: strin
   return (
     <label className="block">
       <span className="mb-3 block text-lg font-medium text-[#475467]">{label}</span>
-      <span className="flex h-12 items-center rounded-lg border border-[#cfd4dc] bg-white px-4">
+      <span className="flex h-12 items-center rounded-lg border border-[#cfd4dc] bg-white dark:bg-[#1a1a1a] px-4">
         <select className="min-w-0 flex-1 bg-transparent text-sm text-[#98a2b3] outline-none">
           <option>{placeholder}</option>
           <option>Entry Level</option>
@@ -555,12 +555,12 @@ function FileList({ files, onRemove }: { files: UploadFile[]; onRemove: (id: str
 
 function UploadRow({ file, onRemove }: { file: UploadFile; onRemove: () => void }) {
   return (
-    <div className="group relative rounded-lg bg-[#f4f4f5] px-4 py-3 text-left">
+    <div className="group relative rounded-lg bg-[#f4f4f5] dark:bg-slate-800 px-4 py-3 text-left">
       <div className="flex items-center gap-3">
         <FileText className="h-7 w-7 shrink-0 text-[#b38a00]" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
-            <p className="truncate text-sm font-semibold text-[#101828]">{file.name}</p>
+            <p className="truncate text-sm font-semibold text-[#101828] dark:text-white">{file.name}</p>
             <button type="button" onClick={onRemove} aria-label={`Remove ${file.name}`} className="text-red-500 transition hover:text-red-600">
               <Trash2 className="h-4 w-4" />
             </button>
@@ -575,8 +575,8 @@ function UploadRow({ file, onRemove }: { file: UploadFile; onRemove: () => void 
         </div>
         <Eye className="h-4 w-4 text-[#2f54eb]" />
       </div>
-      <div className="pointer-events-none absolute left-4 top-full z-10 mt-2 hidden w-[260px] rounded-lg border border-[#dfe3ea] bg-white p-3 text-xs text-[#667085] shadow-lg group-hover:block">
-        <p className="font-bold text-[#101828]">Preview file</p>
+      <div className="pointer-events-none absolute left-4 top-full z-10 mt-2 hidden w-[260px] rounded-lg border border-[#dfe3ea] bg-white dark:bg-[#1a1a1a] p-3 text-xs text-[#667085] dark:text-slate-400 shadow-lg group-hover:block">
+        <p className="font-bold text-[#101828] dark:text-white">Preview file</p>
         <p className="mt-1 break-all">{file.name}</p>
         <p className="mt-1">{file.type || "Uploaded file"} - {formatFileSize(file.size)}</p>
         {file.url ? <p className="mt-2 text-[#2f54eb]">Hover preview ready. Open from the uploaded file in browser controls if supported.</p> : null}
@@ -587,9 +587,9 @@ function UploadRow({ file, onRemove }: { file: UploadFile; onRemove: () => void 
 
 function SummaryCard({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-lg border-l-4 border-[#2f54eb] bg-[#e9edff] px-4 py-4">
-      <p className="text-sm font-extrabold text-[#101828]">{value}</p>
-      <p className="mt-2 text-sm text-[#667085]">{label}</p>
+    <div className="rounded-lg border-l-4 border-[#2f54eb] bg-[#e9edff] dark:bg-slate-800 px-4 py-4">
+      <p className="text-sm font-extrabold text-[#101828] dark:text-white">{value}</p>
+      <p className="mt-2 text-sm text-[#667085] dark:text-slate-400">{label}</p>
     </div>
   );
 }

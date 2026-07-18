@@ -13,7 +13,7 @@ const categories = [
 
 export default function HighDemandJobCategories() {
   return (
-    <section className="bg-white px-5 py-16 md:px-10 lg:px-16">
+    <section className="bg-white dark:bg-[#1a1a1a] px-5 py-16 md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1220px]">
         <p className="section-kicker">EXPLORE FIELDS</p>
         <h2 className="section-title">High Demand Job Categories</h2>
@@ -34,7 +34,7 @@ export default function HighDemandJobCategories() {
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/70">
                   <Icon className="h-6 w-6 text-blue-700" />
                 </span>
-                <h3 className="mt-8 text-xl font-semibold text-slate-700">
+                <h3 className="mt-8 text-xl font-semibold text-slate-700 dark:text-slate-300">
                   {category.title}
                 </h3>
                 <p className="mt-6 text-sm text-slate-600">{category.roles}</p>

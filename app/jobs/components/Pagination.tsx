@@ -10,7 +10,7 @@ export default function Pagination() {
 
       {/* Pages */}
       <div className="flex items-center gap-2 text-[14px] font-medium text-slate-600">
-        <button className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-slate-900">
+        <button className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-slate-900 dark:text-white">
           1
         </button>
         <button className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-slate-100">

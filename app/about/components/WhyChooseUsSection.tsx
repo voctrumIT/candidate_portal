@@ -37,7 +37,7 @@ export default function WhyChooseUsSection() {
 
         {/* Heading */}
         <div className="max-w-lg">
-          <h2 className="text-4xl font-black text-slate-900 md:text-5xl">
+          <h2 className="text-4xl font-black text-slate-900 dark:text-white md:text-5xl">
             Why <span className="text-blue-700">Choose</span> Us ?
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-400">
@@ -48,7 +48,7 @@ export default function WhyChooseUsSection() {
         </div>
 
         {/* Cards */}
-        <div className="mt-12 grid gap-6 rounded-2xl border border-slate-200 bg-white p-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-6 sm:grid-cols-2 lg:grid-cols-4">
           {reasons.map((item, i) => (
             <motion.div
               key={item.title}
@@ -61,7 +61,7 @@ export default function WhyChooseUsSection() {
               <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-700">
                 <item.icon className="h-7 w-7 text-white" />
               </span>
-              <h3 className="text-base font-bold text-slate-900">{item.title}</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">{item.title}</h3>
               <p className="text-sm leading-6 text-slate-400">{item.description}</p>
             </motion.div>
           ))}

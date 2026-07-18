@@ -4,6 +4,7 @@ import { LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const navLinks: { label: string; href: string }[] = [
   { label: 'Jobs', href: '/jobs' },
@@ -12,12 +13,14 @@ const navLinks: { label: string; href: string }[] = [
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
-      className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur"
+      className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur"
     >
       <nav className="mx-auto flex h-20 max-w-[1360px] items-center justify-between px-5 md:px-10 lg:px-16">
         <Link href="/" aria-label="Voctrum home" className="flex items-center">
@@ -32,19 +35,26 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden items-center gap-16 md:flex">
-          {navLinks.map(({ label, href }) => (
-            <Link
-              key={label}
-              href={href}
-              className="text-[15px] font-semibold !text-black transition hover:!text-blue-700"
-            >
-              {label}
-            </Link>
-          ))}
+          {navLinks.map(({ label, href }) => {
+            const isActive = pathname.startsWith(href);
+            return (
+              <Link
+                key={label}
+                href={href}
+                className={`text-[15px] font-semibold transition ${
+                  isActive
+                    ? '!text-blue-700 dark:!text-blue-500 border-b-2 border-blue-700 dark:border-blue-500 pb-1'
+                    : '!text-black dark:!text-white hover:!text-blue-700 dark:hover:!text-blue-500'
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-3 md:gap-4">
-          <span className="hidden text-[15px] font-medium !text-gray-600 lg:inline">
+          <span className="hidden text-[15px] font-medium !text-gray-600 dark:!text-slate-300 lg:inline">
             Already have an account ?
           </span>
           <Link

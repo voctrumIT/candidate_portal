@@ -1,6 +1,14 @@
 {
   "app": {
-    "[project]/app/jobs/[id]/page": [
+    "[project]/app/about/page": [
+      "static/media/GeistVF-s.p.04dvp7dj03si8.woff",
+      "static/media/GeistMonoVF-s.p.0ifhplp~93ddj.woff"
+    ],
+    "[project]/app/companies/[id]/page": [
+      "static/media/GeistVF-s.p.04dvp7dj03si8.woff",
+      "static/media/GeistMonoVF-s.p.0ifhplp~93ddj.woff"
+    ],
+    "[project]/app/jobs/page": [
       "static/media/GeistVF-s.p.04dvp7dj03si8.woff",
       "static/media/GeistMonoVF-s.p.0ifhplp~93ddj.woff"
     ],

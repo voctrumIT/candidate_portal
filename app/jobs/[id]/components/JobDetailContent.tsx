@@ -3,13 +3,13 @@ import { JobListing } from '../../data';
 export default function JobDetailContent({ job }: { job: JobListing }) {
   return (
     <div className="py-10">
-      <h2 className="text-xl font-bold text-slate-900">About the Job</h2>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white">About the Job</h2>
 
       <div className="mt-6 space-y-8">
         {/* Overview */}
         <div>
           <h3 className="text-[15px] font-bold text-slate-800">Overview</h3>
-          <p className="mt-3 text-[14px] leading-relaxed text-slate-500">
+          <p className="mt-3 text-[14px] leading-relaxed text-slate-500 dark:text-slate-400">
             {job.overview}
           </p>
         </div>
@@ -17,7 +17,7 @@ export default function JobDetailContent({ job }: { job: JobListing }) {
         {/* Responsibilities */}
         <div>
           <h3 className="text-[15px] font-bold text-slate-800">Responsibilities</h3>
-          <ul className="mt-3 list-inside list-disc space-y-2 text-[14px] text-slate-500">
+          <ul className="mt-3 list-inside list-disc space-y-2 text-[14px] text-slate-500 dark:text-slate-400">
             {job.responsibilities.map((res, index) => (
               <li key={index}>{res}</li>
             ))}
@@ -27,7 +27,7 @@ export default function JobDetailContent({ job }: { job: JobListing }) {
         {/* Qualifications */}
         <div>
           <h3 className="text-[15px] font-bold text-slate-800">Qualifications</h3>
-          <ul className="mt-3 list-inside list-disc space-y-2 text-[14px] text-slate-500">
+          <ul className="mt-3 list-inside list-disc space-y-2 text-[14px] text-slate-500 dark:text-slate-400">
             {job.qualifications.map((qual, index) => (
               <li key={index}>{qual}</li>
             ))}
@@ -37,12 +37,12 @@ export default function JobDetailContent({ job }: { job: JobListing }) {
 
       {/* Key Skills */}
       <div className="mt-10">
-        <h2 className="text-[15px] font-bold text-slate-900">Key Skills</h2>
+        <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Key Skills</h2>
         <div className="mt-4 flex flex-wrap gap-3">
           {job.keySkills.map((skill) => (
             <span
               key={skill}
-              className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-[13px] font-medium text-slate-600"
+              className="rounded-full border border-slate-300 bg-white dark:bg-[#1a1a1a] px-4 py-1.5 text-[13px] font-medium text-slate-600"
             >
               {skill}
             </span>
@@ -52,8 +52,8 @@ export default function JobDetailContent({ job }: { job: JobListing }) {
 
       {/* About Company */}
       <div className="mt-10">
-        <h2 className="text-[15px] font-bold text-slate-900">About the Company</h2>
-        <p className="mt-4 whitespace-pre-line text-[14px] leading-relaxed text-slate-500">
+        <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">About the Company</h2>
+        <p className="mt-4 whitespace-pre-line text-[14px] leading-relaxed text-slate-500 dark:text-slate-400">
           {job.aboutCompany}
         </p>
       </div>

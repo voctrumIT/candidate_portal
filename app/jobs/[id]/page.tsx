@@ -23,7 +23,7 @@ export default async function JobDetailPage({
   const similarJobs = dummyJobs.filter((j) => j.id !== id).slice(0, 3);
 
   return (
-    <main className="pt-20 bg-white">
+    <main className="pt-20 bg-white dark:bg-[#1a1a1a]">
       <Navbar />
 
       <div className="mx-auto max-w-[960px] px-5 pt-12 md:px-10 lg:px-16">
@@ -35,14 +35,14 @@ export default async function JobDetailPage({
       <div className="mx-auto max-w-[1360px] px-5 py-16 md:px-10 lg:px-16 border-t border-slate-100">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Similar Jobs</h2>
-            <p className="mt-1 text-[14px] text-slate-500">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Similar Jobs</h2>
+            <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
               Explore more opportunities that match your profile and interests.
             </p>
           </div>
           <Link
             href="/jobs"
-            className="text-[14px] font-semibold text-slate-900 underline transition hover:text-blue-700"
+            className="text-[14px] font-semibold text-slate-900 dark:text-white underline transition hover:text-blue-700"
           >
             View all
           </Link>

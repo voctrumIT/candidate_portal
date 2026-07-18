@@ -47,7 +47,7 @@ export default function AboutHeroSection() {
               <span className="text-[#2453ff]">Better</span> Opportunities
             </h1>
 
-            <p className="mt-8 max-w-[540px] text-[17px] leading-[2] text-slate-500">
+            <p className="mt-8 max-w-[540px] text-[17px] leading-[2] text-slate-500 dark:text-slate-400">
               We help job seekers discover meaningful career opportunities
               while enabling employers to connect with qualified professionals
               across various industries.
@@ -145,7 +145,7 @@ export default function AboutHeroSection() {
 
             <Link
               href="/jobs"
-              className="mt-8 inline-flex rounded-lg border border-white px-6 py-3 text-[14px] font-semibold text-white transition hover:bg-white hover:text-[#1f2b85]"
+              className="mt-8 inline-flex rounded-lg border border-white px-6 py-3 text-[14px] font-semibold text-white transition hover:bg-white dark:bg-[#1a1a1a] hover:text-[#1f2b85]"
             >
               Browse Opportunities
             </Link>
@@ -157,9 +157,9 @@ export default function AboutHeroSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="w-[470px] rounded-[26px] bg-white px-8 py-8 shadow-[0_8px_40px_rgba(0,0,0,0.08)]"
+            className="w-[470px] rounded-[26px] bg-white dark:bg-[#1a1a1a] px-8 py-8 shadow-[0_8px_40px_rgba(0,0,0,0.08)]"
           >
-            <h2 className="text-[22px] font-bold text-slate-900">
+            <h2 className="text-[22px] font-bold text-slate-900 dark:text-white">
               Our Mission
             </h2>
 

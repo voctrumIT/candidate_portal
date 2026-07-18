@@ -98,14 +98,14 @@ export default function FeaturedJobListings() {
   const [activeFilter, setActiveFilter] = useState('All');
 
   return (
-    <section className="bg-white px-5 pb-16 md:px-10 lg:px-16">
+    <section className="bg-white dark:bg-[#1a1a1a] px-5 pb-16 md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1220px] overflow-hidden">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="section-kicker">OPPORTUNITIES</p>
             <h2 className="section-title">Featured Job Listings</h2>
           </div>
-          <a href="#" className="mb-2 text-sm font-semibold text-slate-700 underline">
+          <a href="#" className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300 underline">
             View all
           </a>
         </div>
@@ -118,7 +118,7 @@ export default function FeaturedJobListings() {
               className={`h-9 rounded-full border px-7 text-sm font-medium transition ${
                 activeFilter === filter
                   ? 'border-blue-700 bg-blue-700 text-white'
-                  : 'border-blue-700 bg-white text-blue-700 hover:bg-blue-50'
+                  : 'border-blue-700 bg-white dark:bg-[#1a1a1a] text-blue-700 hover:bg-blue-50'
               }`}
             >
               {filter}
@@ -158,7 +158,7 @@ export default function FeaturedJobListings() {
                 whileHover={{
                   y: -5,
                 }}
-                className="h-full rounded-xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300"
+                className="h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-7 shadow-sm transition-all duration-300"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -176,14 +176,14 @@ export default function FeaturedJobListings() {
                   {job.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-[#edf1ff] px-7 py-2 text-xs font-medium text-slate-700"
+                      className="rounded-full bg-[#edf1ff] px-7 py-2 text-xs font-medium text-slate-700 dark:text-slate-300"
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
 
-                <div className="mt-6 flex flex-wrap gap-5 border-b border-slate-200 pb-6 text-sm text-slate-600">
+                <div className="mt-6 flex flex-wrap gap-5 border-b border-slate-200 dark:border-slate-700 pb-6 text-sm text-slate-600">
                   <span className="inline-flex items-center gap-1">
                     <Clock3 className="h-4 w-4 text-blue-700" />
                     Posted {job.posted}
