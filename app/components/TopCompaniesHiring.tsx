@@ -119,7 +119,7 @@ export default function TopCompaniesHiring() {
               FINDINGS
             </p>
 
-            <h2 className="mt-2 text-5xl font-black text-slate-950">
+            <h2 className="mt-2 text-5xl font-black text-slate-950 dark:text-white">
               Top Companies Hiring
             </h2>
           </div>
@@ -171,7 +171,7 @@ export default function TopCompaniesHiring() {
                     <BrandMark name={company.logo} />
 
                     <div>
-                      <h3 className="text-xl font-black text-slate-950">
+                      <h3 className="text-xl font-black text-slate-950 dark:text-white">
                         {company.name}
                       </h3>
 
@@ -187,9 +187,9 @@ export default function TopCompaniesHiring() {
                   </span>
                 </div>
 
-                <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 text-sm font-medium text-slate-600">
+                <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 text-sm font-medium text-slate-600 dark:text-slate-300">
                   <span className="inline-flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-blue-700" />
+                    <MapPin className="h-5 w-5 text-blue-700 dark:text-blue-400" />
                     {company.location}
                   </span>
 

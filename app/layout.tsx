@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "./components/ThemeProvider";
+import { AuthProvider } from "../context/AuthContext";
 
 export default function RootLayout({
   children,
@@ -27,7 +28,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} bg-white dark:bg-[#0a0a0a] text-slate-900 dark:text-slate-100 transition-colors`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

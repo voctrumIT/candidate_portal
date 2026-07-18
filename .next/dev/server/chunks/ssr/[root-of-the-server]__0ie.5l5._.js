@@ -511,11 +511,11 @@ function Footer() {
                     className: "mt-20 flex flex-col items-center justify-between gap-6 rounded-full bg-white dark:bg-[#1a1a1a] px-8 py-4 text-[14px] md:flex-row",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "flex items-center font-medium text-[#71717a]",
+                            className: "flex items-center font-medium text-[#71717a] dark:text-slate-400",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
                                     href: "#",
-                                    className: "transition hover:text-slate-900 dark:text-white",
+                                    className: "transition hover:text-slate-900 dark:hover:text-white",
                                     children: "Terms of Service"
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/Footer.tsx",
@@ -523,7 +523,7 @@ function Footer() {
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: "mx-3 text-[#d4d4d8]",
+                                    className: "mx-3 text-[#d4d4d8] dark:text-slate-700",
                                     children: "|"
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/Footer.tsx",
@@ -532,7 +532,7 @@ function Footer() {
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
                                     href: "#",
-                                    className: "transition hover:text-slate-900 dark:text-white",
+                                    className: "transition hover:text-slate-900 dark:hover:text-white",
                                     children: "Privacy Policy"
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/Footer.tsx",
@@ -546,11 +546,11 @@ function Footer() {
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "text-[#a1a1aa]",
+                            className: "text-[#a1a1aa] dark:text-slate-400",
                             children: [
                                 "© 2026 ",
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: "font-bold text-[#71717a]",
+                                    className: "font-bold text-[#71717a] dark:text-slate-300",
                                     children: "Voctrum."
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/Footer.tsx",

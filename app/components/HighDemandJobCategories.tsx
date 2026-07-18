@@ -29,15 +29,15 @@ export default function HighDemandJobCategories() {
                 viewport={{ once: true, amount: 0.4 }}
                 transition={{ duration: 0.45, delay: index * 0.05 }}
                 whileHover={{ y: -6 }}
-                className="rounded-lg bg-[#dfe6ff] p-7 shadow-[0_4px_14px_rgba(37,99,235,0.18)]"
+                className="rounded-lg bg-[#dfe6ff] dark:bg-slate-900 p-7 shadow-[0_4px_14px_rgba(37,99,235,0.18)]"
               >
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/70">
-                  <Icon className="h-6 w-6 text-blue-700" />
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/70 dark:bg-slate-800">
+                  <Icon className="h-6 w-6 text-blue-700 dark:text-blue-400" />
                 </span>
                 <h3 className="mt-8 text-xl font-semibold text-slate-700 dark:text-slate-300">
                   {category.title}
                 </h3>
-                <p className="mt-6 text-sm text-slate-600">{category.roles}</p>
+                <p className="mt-6 text-sm text-slate-600 dark:text-slate-400">{category.roles}</p>
               </motion.article>
             );
           })}

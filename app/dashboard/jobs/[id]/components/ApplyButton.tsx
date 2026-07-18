@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { ExternalLink, X, Mail, Phone, ChevronDown, Trash2, Plus, GraduationCap, MapPin, Banknote, Clock, Pencil, BadgeCheck } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ExternalLink, X, Mail, Phone, ChevronDown, Trash2, Plus, GraduationCap, MapPin, Banknote, Clock, Pencil, BadgeCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../../../../../context/AuthContext";
+import { jobsService } from "../../../../../services/jobs";
+import { documentsService } from "../../../../../services/documents";
 
 interface ApplyButtonProps {
+  jobId: string;
   jobCompany: string;
   jobTitle: string;
 }
@@ -17,18 +21,57 @@ const countries = [
   { code: "+1", flag: "🇨🇦", name: "Canada" },
 ];
 
-export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) {
+export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButtonProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
 
   // Form states
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [education, setEducation] = useState("");
+  const [location, setLocation] = useState("");
+  const [ctc, setCtc] = useState("");
+  const [noticePeriod, setNoticePeriod] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   
   // Resumes state (initially empty as requested)
-  const [resumes, setResumes] = useState<{ id: number; name: string; size: string }[]>([]);
-  const [selectedResumeId, setSelectedResumeId] = useState<number | null>(null);
+  const [resumes, setResumes] = useState<any[]>([]);
+  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setEmail(user.email || "");
+      setPhone(user.mobile || "");
+      setLocation(user.currentLocation || "");
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Load resumes from database
+      const loadResumes = async () => {
+        try {
+          const docs = await documentsService.getDocuments();
+          if (docs && Array.isArray(docs)) {
+            setResumes(docs);
+            if (docs.length > 0) {
+              setSelectedResumeId(docs[0].id);
+            }
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      };
+      loadResumes();
+    }
+  }, [isOpen]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -36,34 +79,53 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
       setStep(1);
       setResumes([]); // Reset resumes on close
       setSelectedResumeId(null);
+      setSubmitError("");
     }, 300);
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const sizeInKb = Math.round(file.size / 1024);
-      const newResume = {
-        id: Date.now(),
-        name: file.name,
-        size: `${sizeInKb}kb of ${sizeInKb}kb`,
-      };
-      setResumes([...resumes, newResume]);
-      setSelectedResumeId(newResume.id);
-      
-      // Reset input value to allow uploading the same file again if deleted
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      try {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await documentsService.uploadDocument(formData);
+        
+        // Reload resumes from database
+        const docs = await documentsService.getDocuments();
+        if (docs && Array.isArray(docs)) {
+          setResumes(docs);
+          // Try to select the uploaded one
+          const uploadedDoc = docs.find((d: any) => d.name === file.name);
+          if (uploadedDoc) {
+            setSelectedResumeId(uploadedDoc.id);
+          } else if (docs.length > 0) {
+            setSelectedResumeId(docs[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Upload failed", err);
+      } finally {
+        setUploading(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
     }
   };
 
-  const removeResume = (e: React.MouseEvent, id: number) => {
+  const removeResume = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setResumes(resumes.filter((r) => r.id !== id));
-    if (selectedResumeId === id) setSelectedResumeId(null);
+    try {
+      await documentsService.deleteDocument(id);
+      setResumes(resumes.filter((r) => r.id !== id));
+      if (selectedResumeId === id) setSelectedResumeId(null);
+    } catch(err) {
+      console.error("Delete failed", err);
+    }
   };
 
   return (
@@ -141,6 +203,8 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                     <input
                       type="email"
                       placeholder="Email *"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="h-12 w-full rounded-lg border border-slate-300 pl-12 pr-4 text-[15px] outline-none transition focus:border-[#2f54eb] focus:ring-1 focus:ring-[#2f54eb]"
                     />
                   </div>
@@ -186,6 +250,8 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                       <input
                         type="tel"
                         placeholder="Enter Mobile Number *"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
                         className="h-12 w-full rounded-r-lg border border-slate-300 pl-12 pr-4 text-[15px] outline-none transition focus:border-[#2f54eb] focus:ring-1 focus:ring-[#2f54eb]"
                       />
                     </div>
@@ -216,11 +282,11 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
 
                   <div className="mt-4 space-y-4">
                     {resumes.map((resume) => {
-                      const isSelected = selectedResumeId === resume.id;
+                      const isSelected = selectedResumeId === resume.fileUrl;
                       return (
                         <div
-                          key={resume.id}
-                          onClick={() => setSelectedResumeId(resume.id)}
+                          key={resume.fileUrl}
+                          onClick={() => setSelectedResumeId(resume.fileUrl)}
                           className={`group relative flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
                             isSelected ? "border-[#2f54eb] bg-white dark:bg-[#1a1a1a] shadow-sm" : "border-transparent bg-slate-50 dark:bg-slate-900 hover:bg-slate-100"
                           }`}
@@ -230,8 +296,8 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                               <span className="mt-2 text-[10px] font-bold tracking-wider">PDF</span>
                             </div>
                             <div>
-                              <p className="text-[15px] font-semibold text-slate-900 dark:text-white">{resume.name}</p>
-                              <p className="text-[13px] text-slate-400">{resume.size}</p>
+                              <p className="text-[15px] font-semibold text-slate-900 dark:text-white">{resume.fileName || "Resume"}</p>
+                              <p className="text-[13px] text-slate-400">{resume.fileSize ? `${Math.round(resume.fileSize / 1024)} KB` : "Unknown size"}</p>
                             </div>
                           </div>
 
@@ -240,7 +306,7 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                               {isSelected && <div className="h-2 w-2 rounded-full bg-[#2f54eb]"></div>}
                             </div>
                             <button 
-                              onClick={(e) => removeResume(e, resume.id)}
+                              onClick={(e) => removeResume(e, resume.fileUrl)}
                               className="flex h-6 w-6 items-center justify-center rounded bg-red-50 text-red-500 opacity-0 transition hover:bg-red-100 group-hover:opacity-100"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -288,8 +354,7 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                 </div>
               </div>
             )}
-
-            {/* Step 3: Additional Questions */}
+             {/* Step 3: Additional Questions */}
             {step === 3 && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="mt-6 space-y-8">
@@ -301,6 +366,8 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                     <input
                       type="text"
                       placeholder="Education *"
+                      value={education}
+                      onChange={(e) => setEducation(e.target.value)}
                       className="w-full border-b border-slate-300 bg-transparent pb-3 pl-9 text-[15px] outline-none transition focus:border-[#2f54eb] placeholder:text-slate-400"
                     />
                   </div>
@@ -313,6 +380,8 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                     <input
                       type="text"
                       placeholder="Location *"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
                       className="w-full border-b border-slate-300 bg-transparent pb-3 pl-9 text-[15px] outline-none transition focus:border-[#2f54eb] placeholder:text-slate-400"
                     />
                   </div>
@@ -325,6 +394,8 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                     <input
                       type="text"
                       placeholder="Expected CTC Per Annum(Lakhs) *"
+                      value={ctc}
+                      onChange={(e) => setCtc(e.target.value)}
                       className="w-full border-b border-slate-300 bg-transparent pb-3 pl-9 text-[15px] outline-none transition focus:border-[#2f54eb] placeholder:text-slate-400"
                     />
                   </div>
@@ -337,6 +408,8 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                     <input
                       type="text"
                       placeholder="Notice Period *"
+                      value={noticePeriod}
+                      onChange={(e) => setNoticePeriod(e.target.value)}
                       className="w-full border-b border-slate-300 bg-transparent pb-3 pl-9 text-[15px] outline-none transition focus:border-[#2f54eb] placeholder:text-slate-400"
                     />
                   </div>
@@ -363,6 +436,12 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
             {step === 4 && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="mt-6 space-y-4">
+                  {submitError && (
+                    <div className="rounded-md bg-red-50 p-3 text-xs text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                      {submitError}
+                    </div>
+                  )}
+
                   {/* Contact Information Review */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-5">
                     <div className="flex items-center justify-between">
@@ -377,11 +456,11 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                     <div className="mt-4 space-y-3">
                       <div className="flex items-center justify-between text-[14px]">
                         <span className="text-slate-500 dark:text-slate-400">Email</span>
-                        <span className="font-medium text-slate-400">hidayatam041@gmail.com</span>
+                        <span className="font-medium text-slate-400">{email || "N/A"}</span>
                       </div>
                       <div className="flex items-center justify-between text-[14px]">
                         <span className="text-slate-500 dark:text-slate-400">Phone</span>
-                        <span className="font-medium text-slate-400">8899451482</span>
+                        <span className="font-medium text-slate-400">{phone || "N/A"}</span>
                       </div>
                     </div>
                   </div>
@@ -404,7 +483,7 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                           <div className="flex h-4 w-3.5 items-center justify-center rounded-[2px] bg-red-500 text-white">
                             <span className="text-[5px] font-bold leading-none tracking-tighter">PDF</span>
                           </div>
-                          hidayat.PDF
+                          {resumes.find(r => r.fileUrl === selectedResumeId)?.fileName || "No resume selected"}
                         </div>
                       </div>
                     </div>
@@ -424,19 +503,19 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                     <div className="mt-4 space-y-3">
                       <div className="flex items-center justify-between text-[14px]">
                         <span className="text-slate-500 dark:text-slate-400">Education</span>
-                        <span className="font-medium text-slate-400">Btech computer science</span>
+                        <span className="font-medium text-slate-400">{education || "N/A"}</span>
                       </div>
                       <div className="flex items-center justify-between text-[14px]">
                         <span className="text-slate-500 dark:text-slate-400">Location</span>
-                        <span className="font-medium text-slate-400">Srinagar, Jammu & Kashmir</span>
+                        <span className="font-medium text-slate-400">{location || "N/A"}</span>
                       </div>
                       <div className="flex items-center justify-between text-[14px]">
                         <span className="text-slate-500 dark:text-slate-400">Expected CTC Per Annum(Lakhs)</span>
-                        <span className="font-medium text-slate-400">₹ 7.5</span>
+                        <span className="font-medium text-slate-400">{ctc || "N/A"}</span>
                       </div>
                       <div className="flex items-center justify-between text-[14px]">
                         <span className="text-slate-500 dark:text-slate-400">Notice Period</span>
-                        <span className="font-medium text-slate-400">1 month</span>
+                        <span className="font-medium text-slate-400">{noticePeriod || "N/A"}</span>
                       </div>
                     </div>
                   </div>
@@ -445,15 +524,43 @@ export default function ApplyButton({ jobCompany, jobTitle }: ApplyButtonProps) 
                 <div className="mt-8 flex justify-end gap-4">
                   <button
                     onClick={() => setStep(3)}
-                    className="h-11 rounded-lg border border-[#2f54eb] bg-white dark:bg-[#1a1a1a] px-8 text-[15px] font-semibold text-[#2f54eb] transition hover:bg-[#f4f7ff]"
+                    disabled={submitting}
+                    className="h-11 rounded-lg border border-[#2f54eb] bg-white dark:bg-[#1a1a1a] px-8 text-[15px] font-semibold text-[#2f54eb] transition hover:bg-[#f4f7ff] disabled:opacity-70"
                   >
                     Back
                   </button>
                   <button
-                    onClick={() => setStep(5)}
-                    className="h-11 rounded-lg bg-[#2f54eb] px-8 text-[15px] font-semibold text-white transition hover:bg-[#2447d8]"
+                    onClick={async () => {
+                      setSubmitting(true);
+                      setSubmitError("");
+                      try {
+                        const selectedResume = resumes.find(r => r.fileUrl === selectedResumeId);
+                        const resumeLink = selectedResume?.fileUrl || "https://erp-api.voctrum.com/placeholder-resume.pdf";
+                        
+                        await jobsService.applyForJob({
+                          jobId,
+                          tenantId: "production_test",
+                          resumeLink,
+                          note: `Education: ${education}. Location: ${location}. CTC: ${ctc}. Notice: ${noticePeriod}`
+                        });
+                        setStep(5);
+                      } catch(err: any) {
+                        setSubmitError(err.message || "Failed to submit application. Please try again.");
+                      } finally {
+                        setSubmitting(false);
+                      }
+                    }}
+                    disabled={submitting}
+                    className="flex h-11 items-center gap-2 rounded-lg bg-[#2f54eb] px-8 text-[15px] font-semibold text-white transition hover:bg-[#2447d8] disabled:opacity-70"
                   >
-                    Submit Application
+                    {submitting ? (
+                      <>
+                        Submitting...
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      </>
+                    ) : (
+                      "Submit Application"
+                    )}
                   </button>
                 </div>
               </div>

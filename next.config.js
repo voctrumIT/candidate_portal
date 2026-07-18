@@ -17,6 +17,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/Candidate/:path*',
+        destination: 'https://erp-api.voctrum.com/api/Candidate/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

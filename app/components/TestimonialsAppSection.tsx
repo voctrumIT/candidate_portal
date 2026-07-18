@@ -89,7 +89,7 @@ export default function TestimonialsAppSection() {
       <div className="mx-auto max-w-[1220px] overflow-hidden">
         <div className="text-center">
           <p className="section-kicker justify-center">Success Stories</p>
-          <h2 className="mt-4 text-3xl font-black text-slate-800 md:text-4xl">
+          <h2 className="mt-4 text-3xl font-black text-slate-800 dark:text-white md:text-4xl">
             Trusted By Job Seekers Like You
           </h2>
         </div>
@@ -138,7 +138,7 @@ export default function TestimonialsAppSection() {
                   <div className="flex items-center gap-3">
                     <span className={`h-9 w-9 rounded-full ${item.avatar}`} />
                     <div>
-                      <p className="text-xs font-black text-blue-700">{item.name}</p>
+                      <p className="text-xs font-black text-blue-700 dark:text-blue-400">{item.name}</p>
                       <p className="text-xs text-slate-400">{item.role}</p>
                     </div>
                   </div>
@@ -152,20 +152,20 @@ export default function TestimonialsAppSection() {
 
         <div className="mt-20 grid items-center gap-10 rounded-lg bg-slate-50 dark:bg-slate-900 px-7 py-10 md:grid-cols-[1.1fr_0.9fr] md:px-16">
           <div>
-            <h2 className="max-w-xl text-3xl font-black leading-tight text-slate-950 md:text-4xl">
+            <h2 className="max-w-xl text-3xl font-black leading-tight text-slate-955 dark:text-white md:text-4xl">
               Join thousands of users already using our{' '}
-              <span className="text-blue-700">Voctrum app</span>
+              <span className="text-blue-700 dark:text-blue-500">Voctrum app</span>
             </h2>
             <p className="mt-7 text-base text-slate-400">
               Access real-time job updates and apply seamlessly from your mobile device
             </p>
 
-            <div className="mt-8 flex max-w-[520px] items-center rounded-full bg-[#eaf0ff] p-2 shadow-inner">
-              <Phone className="ml-4 h-5 w-5 shrink-0 text-blue-700" />
+            <div className="mt-8 flex max-w-[520px] items-center rounded-full bg-[#eaf0ff] dark:bg-slate-800 p-2 shadow-inner">
+              <Phone className="ml-4 h-5 w-5 shrink-0 text-blue-700 dark:text-blue-400" />
               <input
                 aria-label="Mobile number"
                 placeholder="Enter your mobile number"
-                className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-500 dark:text-slate-400"
+                className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400 !text-black dark:!text-white"
               />
               <button className="h-9 shrink-0 rounded-full bg-blue-700 px-5 text-xs font-bold text-white">
                 Get App Link

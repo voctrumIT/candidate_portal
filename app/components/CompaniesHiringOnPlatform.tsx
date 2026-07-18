@@ -13,7 +13,7 @@ const brands = [
   },
   {
     name: 'calvin klein',
-    className: 'font-serif italic text-slate-950',
+    className: 'font-serif italic text-slate-950 dark:text-white',
   },
   {
     name: 'SPARTAN',
@@ -25,7 +25,7 @@ const brands = [
   },
   {
     name: 'amazon',
-    className: 'text-slate-950 font-black lowercase',
+    className: 'text-slate-950 dark:text-white font-black lowercase',
   },
   {
     name: 'Baskin Robbins',
@@ -57,13 +57,13 @@ export default function CompaniesHiringOnPlatform() {
       >
         {/* Heading */}
         <div className="flex items-center justify-center gap-6 md:gap-10">
-          <div className="h-px flex-1 bg-slate-200" />
+          <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
 
-          <h2 className="text-center text-[20px] font-black text-slate-950 md:text-[28px] lg:text-[32px]">
+          <h2 className="text-center text-[20px] font-black text-slate-950 dark:text-white md:text-[28px] lg:text-[32px]">
             Companies hiring on our platform
           </h2>
 
-          <div className="h-px flex-1 bg-slate-200" />
+          <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
         </div>
 
         {/* Moving Logos */}

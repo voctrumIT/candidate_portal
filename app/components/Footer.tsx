@@ -71,14 +71,14 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-20 flex flex-col items-center justify-between gap-6 rounded-full bg-white dark:bg-[#1a1a1a] px-8 py-4 text-[14px] md:flex-row">
           
-          <div className="flex items-center font-medium text-[#71717a]">
-            <a href="#" className="transition hover:text-slate-900 dark:text-white">Terms of Service</a>
-            <span className="mx-3 text-[#d4d4d8]">|</span>
-            <a href="#" className="transition hover:text-slate-900 dark:text-white">Privacy Policy</a>
+          <div className="flex items-center font-medium text-[#71717a] dark:text-slate-400">
+            <a href="#" className="transition hover:text-slate-900 dark:hover:text-white">Terms of Service</a>
+            <span className="mx-3 text-[#d4d4d8] dark:text-slate-700">|</span>
+            <a href="#" className="transition hover:text-slate-900 dark:hover:text-white">Privacy Policy</a>
           </div>
           
-          <div className="text-[#a1a1aa]">
-            © 2026 <span className="font-bold text-[#71717a]">Voctrum.</span> All rights reserved
+          <div className="text-[#a1a1aa] dark:text-slate-400">
+            © 2026 <span className="font-bold text-[#71717a] dark:text-slate-300">Voctrum.</span> All rights reserved
           </div>
           
           <div className="flex items-center gap-3">

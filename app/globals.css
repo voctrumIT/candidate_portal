@@ -52,6 +52,10 @@ a {
   line-height: 1.05;
 }
 
+.dark .section-title {
+  color: #ffffff;
+}
+
 .imgDark {
   display: none;
 }

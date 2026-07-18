@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
+import { jobsService } from "../../../services/jobs";
 import { dummyJobs } from "../../jobs/data";
 import JobCard from "../../jobs/components/JobCard";
 import AppliedJobCard from "./components/AppliedJobCard";
@@ -18,11 +19,26 @@ type TabType = "saved" | "applied" | "interviews";
 export default function MyJobsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("saved");
 
-  // We set these to empty arrays to demonstrate the empty states as requested.
-  // In a real app, these would come from an API or database.
-  const savedJobs: any[] = []; 
-  const appliedJobs: any[] = [];
-  const interviewJobs: any[] = [];
+  const [savedJobs, setSavedJobs] = useState<any[]>([]);
+  const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
+  const [interviewJobs, setInterviewJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const apps = await jobsService.getApplications();
+        if (apps && Array.isArray(apps)) {
+          setAppliedJobs(apps);
+        }
+      } catch (err) {
+        console.error("Failed to fetch applications", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, []);
 
   const getTabClass = (tab: TabType) => {
     const isActive = activeTab === tab;

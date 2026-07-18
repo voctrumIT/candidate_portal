@@ -14,11 +14,13 @@ import {
   TrendingUp,
   UsersRound,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import VoctrumAIChat from "./components/VoctrumAIChat";
 import { Autoplay, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FaApple, FaGooglePlay } from "react-icons/fa6";
+import Link from "next/link";
+import { jobsService } from "../../services/jobs";
 
 import "swiper/css";
 import "swiper/css/pagination";

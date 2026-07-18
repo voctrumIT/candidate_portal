@@ -58,6 +58,7 @@ const stepContent = {
 
 export default function LoginPage() {
   const [step, setStep] = useState<AuthStep>("login");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -124,9 +125,13 @@ export default function LoginPage() {
 
           <section className="flex items-center justify-center px-8 py-12 lg:px-12">
             {step === "login" && <LoginForm onForgot={() => setStep("forgot")} />}
-            {step === "forgot" && <ForgotForm onSendOtp={() => setStep("otp")} />}
+            {step === "forgot" && <ForgotForm onSendOtp={(enteredEmail) => {
+              setEmail(enteredEmail);
+              setStep("otp");
+            }} />}
             {step === "otp" && (
               <OtpForm
+                email={email}
                 otp={otp}
                 refs={otpRefs}
                 onChange={setOtpDigit}
@@ -196,12 +201,60 @@ function IllustrationPanel({ title, copy, image, alt }: { title: string; copy: s
   );
 }
 
+import { useRouter } from "next/navigation";
+import { authService } from "../../services/auth";
+
 function LoginForm({ onForgot }: { onForgot: () => void }) {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await authService.login({ email, password });
+      if (res && res.payload && res.payload.token) {
+        localStorage.setItem("candidate_token", res.payload.token);
+        if (res.payload.candidateId) {
+          localStorage.setItem("candidate_id", res.payload.candidateId);
+        }
+        router.push("/dashboard");
+      } else {
+        throw new Error("Invalid response from server");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to log in");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <form className="w-full max-w-[430px]" onSubmit={(event) => event.preventDefault()}>
+    <form className="w-full max-w-[430px]" onSubmit={handleSubmit}>
       <FormHeading title="Welcome back!" copy="Log in to continue your journey with Voctrum" />
-      <IconInput icon={<Mail className="h-5 w-5" />} placeholder="Email" type="email" />
-      <IconInput icon={<Lock className="h-5 w-5" />} placeholder="Password" type="password" trailing={<EyeOff className="h-5 w-5" />} />
+      
+      {error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{error}</div>}
+
+      <IconInput 
+        icon={<Mail className="h-5 w-5" />} 
+        placeholder="Email" 
+        type="email" 
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <IconInput 
+        icon={<Lock className="h-5 w-5" />} 
+        placeholder="Password" 
+        type="password" 
+        trailing={<EyeOff className="h-5 w-5" />} 
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
 
       <div className="mt-5 flex items-center justify-between text-xs text-[#667085] dark:text-slate-400">
         <label className="flex items-center gap-2">
@@ -213,7 +266,7 @@ function LoginForm({ onForgot }: { onForgot: () => void }) {
         </button>
       </div>
 
-      <PrimaryButton label="Log In" />
+      <PrimaryButton type="submit" label={loading ? "Logging in..." : "Log In"} disabled={loading || !email || !password} />
 
       <div className="my-8 flex items-center gap-4 text-xs text-[#98a2b3]">
         <span className="h-px flex-1 bg-[#e4e7ec]" />
@@ -229,23 +282,59 @@ function LoginForm({ onForgot }: { onForgot: () => void }) {
   );
 }
 
-function ForgotForm({ onSendOtp }: { onSendOtp: () => void }) {
+function ForgotForm({ onSendOtp }: { onSendOtp: (email: string) => void }) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setError("");
+    setMessage("");
+    setLoading(true);
+    try {
+      await authService.forgotPassword({ email });
+      setMessage("Verification code sent to your email!");
+      setTimeout(() => {
+        onSendOtp(email);
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset code.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <form className="w-full max-w-[430px]" onSubmit={(event) => event.preventDefault()}>
-      <FormHeading title="Forgot Password" copy="Enter your email and we'll send you an otp to reset your password" />
-      <IconInput icon={<Mail className="h-5 w-5" />} placeholder="Email" type="email" />
-      <PrimaryButton label="Send OTP" onClick={onSendOtp} />
+    <form className="w-full max-w-[430px]" onSubmit={handleSubmit}>
+      <FormHeading title="Forgot Password" copy="Enter your email and we'll send you an OTP to reset your password" />
+      
+      {error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{error}</div>}
+      {message && <div className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-600 dark:bg-green-900/20 dark:text-green-400">{message}</div>}
+
+      <IconInput 
+        icon={<Mail className="h-5 w-5" />} 
+        placeholder="Email" 
+        type="email" 
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <PrimaryButton type="submit" label={loading ? "Sending..." : "Send OTP"} disabled={loading || !email} />
     </form>
   );
 }
 
 function OtpForm({
+  email,
   otp,
   refs,
   onChange,
   onKeyDown,
   onSubmit,
 }: {
+  email: string;
   otp: string[];
   refs: React.MutableRefObject<Array<HTMLInputElement | null>>;
   onChange: (index: number, value: string) => void;
@@ -254,7 +343,7 @@ function OtpForm({
 }) {
   return (
     <form className="w-full max-w-[430px]" onSubmit={(event) => event.preventDefault()}>
-      <FormHeading title="Enter OTP" copy="One step away, enter the 4-digit code sent to h******@gmail.com" />
+      <FormHeading title="Enter OTP" copy={`One step away, enter the 4-digit code sent to ${email}`} />
       <div className="mt-8 flex justify-center gap-6">
         {otp.map((digit, index) => (
           <input
@@ -334,24 +423,39 @@ function IconInput({
   placeholder,
   type,
   trailing,
+  value,
+  onChange,
 }: {
   icon: React.ReactNode;
   placeholder: string;
   type: string;
   trailing?: React.ReactNode;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <label className="mt-7 flex h-11 items-center gap-3 border-b border-[#dfe3ea] text-[#2f54eb]">
       {icon}
-      <input className="min-w-0 flex-1 bg-transparent text-sm text-[#101828] dark:text-white outline-none placeholder:text-[#98a2b3]" placeholder={placeholder} type={type} />
+      <input 
+        className="min-w-0 flex-1 bg-transparent text-sm text-[#101828] dark:text-white outline-none placeholder:text-[#98a2b3]" 
+        placeholder={placeholder} 
+        type={type} 
+        value={value}
+        onChange={onChange}
+      />
       {trailing ? <span className="text-[#2f54eb]">{trailing}</span> : null}
     </label>
   );
 }
 
-function PrimaryButton({ label, onClick }: { label: string; onClick?: () => void }) {
+function PrimaryButton({ label, onClick, disabled, type = "button" }: { label: string; onClick?: () => void; disabled?: boolean; type?: "button" | "submit" }) {
   return (
-    <button type="button" onClick={onClick} className="mt-8 h-12 w-full rounded-lg bg-[#2f54eb] text-sm font-bold text-white shadow-sm transition hover:bg-[#2447d8]">
+    <button 
+      type={type} 
+      onClick={onClick} 
+      disabled={disabled}
+      className="mt-8 h-12 w-full rounded-lg bg-[#2f54eb] text-sm font-bold text-white shadow-sm transition hover:bg-[#2447d8] disabled:opacity-70 disabled:cursor-not-allowed"
+    >
       {label}
     </button>
   );

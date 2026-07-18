@@ -29,7 +29,7 @@ export default function EasyStepsSection() {
       <div className="mx-auto max-w-[1220px]">
         <div className="text-center">
           <p className="section-kicker justify-center">Easy Onboarding</p>
-          <h2 className="mt-4 text-4xl font-black text-slate-950 md:text-5xl">
+          <h2 className="mt-4 text-4xl font-black text-slate-950 dark:text-white md:text-5xl">
             Get Started In 3 Easy Steps
           </h2>
         </div>
@@ -49,7 +49,7 @@ export default function EasyStepsSection() {
                 <span className="flex h-15 w-15 items-center justify-center rounded-full bg-blue-700 text-4xl font-black text-white">
                   {step.number}
                 </span>
-                <h3 className="mt-7 text-3xl font-semibold text-slate-600">{step.title}</h3>
+                <h3 className="mt-7 text-3xl font-semibold text-slate-600 dark:text-slate-300">{step.title}</h3>
                 <p className="mt-4 max-w-xs text-base leading-5 text-slate-400">{step.text}</p>
               </motion.div>
             ))}

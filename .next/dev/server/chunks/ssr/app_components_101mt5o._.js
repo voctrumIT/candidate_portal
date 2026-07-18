@@ -171,7 +171,7 @@ function HeroSection() {
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(120%_110%_at_85%_0%,transparent_0%,transparent_42%,#e1e1e1_43%,#f3f3f3_76%,transparent_77%)]"
+                className: "absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(120%_110%_at_85%_0%,transparent_0%,transparent_42%,#e1e1e1_43%,#f3f3f3_76%,transparent_77%)] dark:opacity-10"
             }, void 0, false, {
                 fileName: "[project]/app/components/HeroSection.tsx",
                 lineNumber: 16,
@@ -196,7 +196,7 @@ function HeroSection() {
                             },
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "mb-8 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white dark:bg-[#1a1a1a] px-4 py-1.5 text-sm font-semibold italic text-slate-600",
+                                    className: "mb-8 inline-flex items-center gap-2 rounded-full border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#1a1a1a] px-4 py-1.5 text-sm font-semibold italic text-slate-600 dark:text-slate-300",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             className: "h-3 w-3 rounded-full bg-blue-800 ring-2 ring-blue-100"
@@ -566,12 +566,12 @@ function HighDemandJobCategories() {
                             whileHover: {
                                 y: -6
                             },
-                            className: "rounded-lg bg-[#dfe6ff] p-7 shadow-[0_4px_14px_rgba(37,99,235,0.18)]",
+                            className: "rounded-lg bg-[#dfe6ff] dark:bg-slate-900 p-7 shadow-[0_4px_14px_rgba(37,99,235,0.18)]",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: "flex h-12 w-12 items-center justify-center rounded-full bg-white/70",
+                                    className: "flex h-12 w-12 items-center justify-center rounded-full bg-white/70 dark:bg-slate-800",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
-                                        className: "h-6 w-6 text-blue-700"
+                                        className: "h-6 w-6 text-blue-700 dark:text-blue-400"
                                     }, void 0, false, {
                                         fileName: "[project]/app/components/HighDemandJobCategories.tsx",
                                         lineNumber: 35,
@@ -591,7 +591,7 @@ function HighDemandJobCategories() {
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "mt-6 text-sm text-slate-600",
+                                    className: "mt-6 text-sm text-slate-600 dark:text-slate-400",
                                     children: category.roles
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/HighDemandJobCategories.tsx",
@@ -884,7 +884,7 @@ function FeaturedJobListings() {
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                                        className: "text-2xl font-black text-slate-950",
+                                                        className: "text-2xl font-black text-slate-950 dark:text-white",
                                                         children: job.title
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/components/FeaturedJobListings.tsx",
@@ -932,7 +932,7 @@ function FeaturedJobListings() {
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "mt-6 flex flex-wrap gap-4",
                                         children: job.tags.map((tag)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "rounded-full bg-[#edf1ff] px-7 py-2 text-xs font-medium text-slate-700 dark:text-slate-300",
+                                                className: "rounded-full bg-[#edf1ff] dark:bg-slate-800 px-7 py-2 text-xs font-medium text-slate-700 dark:text-slate-300",
                                                 children: tag
                                             }, tag, false, {
                                                 fileName: "[project]/app/components/FeaturedJobListings.tsx",
@@ -945,13 +945,13 @@ function FeaturedJobListings() {
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "mt-6 flex flex-wrap gap-5 border-b border-slate-200 dark:border-slate-700 pb-6 text-sm text-slate-600",
+                                        className: "mt-6 flex flex-wrap gap-5 border-b border-slate-200 dark:border-slate-700 pb-6 text-sm text-slate-600 dark:text-slate-400",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "inline-flex items-center gap-1",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2d$3$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock3$3e$__["Clock3"], {
-                                                        className: "h-4 w-4 text-blue-700"
+                                                        className: "h-4 w-4 text-blue-700 dark:text-blue-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/components/FeaturedJobListings.tsx",
                                                         lineNumber: 188,
@@ -969,7 +969,7 @@ function FeaturedJobListings() {
                                                 className: "inline-flex items-center gap-1",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2d$days$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CalendarDays$3e$__["CalendarDays"], {
-                                                        className: "h-4 w-4 text-blue-700"
+                                                        className: "h-4 w-4 text-blue-700 dark:text-blue-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/components/FeaturedJobListings.tsx",
                                                         lineNumber: 192,
@@ -1227,7 +1227,7 @@ function TopCompaniesHiring() {
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                                    className: "mt-2 text-5xl font-black text-slate-950",
+                                    className: "mt-2 text-5xl font-black text-slate-950 dark:text-white",
                                     children: "Top Companies Hiring"
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/TopCompaniesHiring.tsx",
@@ -1316,7 +1316,7 @@ function TopCompaniesHiring() {
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                                                className: "text-xl font-black text-slate-950",
+                                                                className: "text-xl font-black text-slate-950 dark:text-white",
                                                                 children: company.name
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/components/TopCompaniesHiring.tsx",
@@ -1367,13 +1367,13 @@ function TopCompaniesHiring() {
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "mt-8 grid grid-cols-2 gap-x-6 gap-y-5 text-sm font-medium text-slate-600",
+                                        className: "mt-8 grid grid-cols-2 gap-x-6 gap-y-5 text-sm font-medium text-slate-600 dark:text-slate-300",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "inline-flex items-center gap-2",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$map$2d$pin$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__MapPin$3e$__["MapPin"], {
-                                                        className: "h-5 w-5 text-blue-700"
+                                                        className: "h-5 w-5 text-blue-700 dark:text-blue-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/components/TopCompaniesHiring.tsx",
                                                         lineNumber: 192,
@@ -1512,7 +1512,7 @@ const brands = [
     },
     {
         name: 'calvin klein',
-        className: 'font-serif italic text-slate-950'
+        className: 'font-serif italic text-slate-950 dark:text-white'
     },
     {
         name: 'SPARTAN',
@@ -1524,7 +1524,7 @@ const brands = [
     },
     {
         name: 'amazon',
-        className: 'text-slate-950 font-black lowercase'
+        className: 'text-slate-950 dark:text-white font-black lowercase'
     },
     {
         name: 'Baskin Robbins',
@@ -1567,14 +1567,14 @@ function CompaniesHiringOnPlatform() {
                     className: "flex items-center justify-center gap-6 md:gap-10",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "h-px flex-1 bg-slate-200"
+                            className: "h-px flex-1 bg-slate-200 dark:bg-slate-800"
                         }, void 0, false, {
                             fileName: "[project]/app/components/CompaniesHiringOnPlatform.tsx",
                             lineNumber: 60,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                            className: "text-center text-[20px] font-black text-slate-950 md:text-[28px] lg:text-[32px]",
+                            className: "text-center text-[20px] font-black text-slate-950 dark:text-white md:text-[28px] lg:text-[32px]",
                             children: "Companies hiring on our platform"
                         }, void 0, false, {
                             fileName: "[project]/app/components/CompaniesHiringOnPlatform.tsx",
@@ -1582,7 +1582,7 @@ function CompaniesHiringOnPlatform() {
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "h-px flex-1 bg-slate-200"
+                            className: "h-px flex-1 bg-slate-200 dark:bg-slate-800"
                         }, void 0, false, {
                             fileName: "[project]/app/components/CompaniesHiringOnPlatform.tsx",
                             lineNumber: 66,
@@ -1707,7 +1707,7 @@ function ResumeBuilderSection() {
                     alt: "Professional building a resume on a laptop",
                     fill: true,
                     sizes: "(max-width: 1220px) 100vw, 1220px",
-                    className: "object-cover"
+                    className: "object-cover opacity-100 dark:opacity-20 mix-blend-multiply dark:mix-blend-screen"
                 }, void 0, false, {
                     fileName: "[project]/app/components/ResumeBuilderSection.tsx",
                     lineNumber: 23,
@@ -1717,7 +1717,7 @@ function ResumeBuilderSection() {
                     className: "relative z-10 max-w-2xl px-7 py-16 md:px-28 md:py-20",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                            className: "inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white/80 px-4 py-1.5 text-sm font-semibold italic text-slate-600",
+                            className: "inline-flex items-center gap-2 rounded-full border border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-800/80 px-4 py-1.5 text-sm font-semibold italic text-slate-600 dark:text-slate-300",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     className: "h-3 w-3 rounded-full bg-blue-800 ring-2 ring-blue-100"
@@ -1734,11 +1734,11 @@ function ResumeBuilderSection() {
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                            className: "mt-8 text-3xl font-black text-slate-950 md:text-4xl",
+                            className: "mt-8 text-3xl font-black text-slate-950 dark:text-white md:text-4xl",
                             children: [
                                 "No resume? ",
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: "text-blue-700",
+                                    className: "text-blue-700 dark:text-blue-500",
                                     children: "No problem"
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/ResumeBuilderSection.tsx",
@@ -1754,7 +1754,7 @@ function ResumeBuilderSection() {
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
                             className: "mt-8 space-y-7",
                             children: benefits.map((benefit)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
-                                    className: "flex items-center gap-3 text-slate-600",
+                                    className: "flex items-center gap-3 text-slate-600 dark:text-slate-300",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$hexagon$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Hexagon$3e$__["Hexagon"], {
                                             className: "h-5 w-5 fill-blue-50 text-blue-700"
@@ -1859,7 +1859,7 @@ function EasyStepsSection() {
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                            className: "mt-4 text-4xl font-black text-slate-950 md:text-5xl",
+                            className: "mt-4 text-4xl font-black text-slate-950 dark:text-white md:text-5xl",
                             children: "Get Started In 3 Easy Steps"
                         }, void 0, false, {
                             fileName: "[project]/app/components/EasyStepsSection.tsx",
@@ -1912,7 +1912,7 @@ function EasyStepsSection() {
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                            className: "mt-7 text-3xl font-semibold text-slate-600",
+                                            className: "mt-7 text-3xl font-semibold text-slate-600 dark:text-slate-300",
                                             children: step.title
                                         }, void 0, false, {
                                             fileName: "[project]/app/components/EasyStepsSection.tsx",
@@ -2064,7 +2064,7 @@ function TestimonialsAppSection() {
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                            className: "mt-4 text-3xl font-black text-slate-800 md:text-4xl",
+                            className: "mt-4 text-3xl font-black text-slate-800 dark:text-white md:text-4xl",
                             children: "Trusted By Job Seekers Like You"
                         }, void 0, false, {
                             fileName: "[project]/app/components/TestimonialsAppSection.tsx",
@@ -2158,7 +2158,7 @@ function TestimonialsAppSection() {
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                className: "text-xs font-black text-blue-700",
+                                                                className: "text-xs font-black text-blue-700 dark:text-blue-400",
                                                                 children: item.name
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/components/TestimonialsAppSection.tsx",
@@ -2221,12 +2221,12 @@ function TestimonialsAppSection() {
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                                    className: "max-w-xl text-3xl font-black leading-tight text-slate-950 md:text-4xl",
+                                    className: "max-w-xl text-3xl font-black leading-tight text-slate-955 dark:text-white md:text-4xl",
                                     children: [
                                         "Join thousands of users already using our",
                                         ' ',
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            className: "text-blue-700",
+                                            className: "text-blue-700 dark:text-blue-500",
                                             children: "Voctrum app"
                                         }, void 0, false, {
                                             fileName: "[project]/app/components/TestimonialsAppSection.tsx",
@@ -2248,10 +2248,10 @@ function TestimonialsAppSection() {
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "mt-8 flex max-w-[520px] items-center rounded-full bg-[#eaf0ff] p-2 shadow-inner",
+                                    className: "mt-8 flex max-w-[520px] items-center rounded-full bg-[#eaf0ff] dark:bg-slate-800 p-2 shadow-inner",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$phone$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Phone$3e$__["Phone"], {
-                                            className: "ml-4 h-5 w-5 shrink-0 text-blue-700"
+                                            className: "ml-4 h-5 w-5 shrink-0 text-blue-700 dark:text-blue-400"
                                         }, void 0, false, {
                                             fileName: "[project]/app/components/TestimonialsAppSection.tsx",
                                             lineNumber: 164,
@@ -2260,7 +2260,7 @@ function TestimonialsAppSection() {
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                             "aria-label": "Mobile number",
                                             placeholder: "Enter your mobile number",
-                                            className: "min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-500 dark:text-slate-400"
+                                            className: "min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400 !text-black dark:!text-white"
                                         }, void 0, false, {
                                             fileName: "[project]/app/components/TestimonialsAppSection.tsx",
                                             lineNumber: 165,

@@ -25,19 +25,19 @@ export default function ResumeBuilderSection() {
           alt="Professional building a resume on a laptop"
           fill
           sizes="(max-width: 1220px) 100vw, 1220px"
-          className="object-cover"
+          className="object-cover opacity-100 dark:opacity-20 mix-blend-multiply dark:mix-blend-screen"
         />
         <div className="relative z-10 max-w-2xl px-7 py-16 md:px-28 md:py-20">
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white/80 px-4 py-1.5 text-sm font-semibold italic text-slate-600">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-800/80 px-4 py-1.5 text-sm font-semibold italic text-slate-600 dark:text-slate-300">
             <span className="h-3 w-3 rounded-full bg-blue-800 ring-2 ring-blue-100" />
             AI-Powered
           </span>
-          <h2 className="mt-8 text-3xl font-black text-slate-950 md:text-4xl">
-            No resume? <span className="text-blue-700">No problem</span>
+          <h2 className="mt-8 text-3xl font-black text-slate-950 dark:text-white md:text-4xl">
+            No resume? <span className="text-blue-700 dark:text-blue-500">No problem</span>
           </h2>
           <ul className="mt-8 space-y-7">
             {benefits.map((benefit) => (
-              <li key={benefit} className="flex items-center gap-3 text-slate-600">
+              <li key={benefit} className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
                 <Hexagon className="h-5 w-5 fill-blue-50 text-blue-700" />
                 <span className="text-base font-medium">{benefit}</span>
               </li>

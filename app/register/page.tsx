@@ -46,8 +46,42 @@ const employmentOptions = [
   { title: "Internship", copy: "Learning-focused", icon: GraduationCap },
 ];
 
+import { authService } from "../../services/auth";
+import { useRouter } from "next/navigation";
+
 export default function RegisterPage() {
+  const router = useRouter();
   const [step, setStep] = useState<RegisterStep>(0);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleInitialRegister = async () => {
+    if (!name || !email || !password || !contactNumber) {
+      setError("Please fill all fields");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      const res = await authService.register({ name, email, password, contactNumber });
+      if (res && res.payload && res.payload.token) {
+        localStorage.setItem("candidate_token", res.payload.token);
+        if (res.payload.candidateId) {
+          localStorage.setItem("candidate_id", res.payload.candidateId);
+        }
+      }
+      next(); // Move to step 1
+    } catch (err: any) {
+      setError(err.message || "Failed to register");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [employment, setEmployment] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [customSkills, setCustomSkills] = useState<string[]>([]);
@@ -60,8 +94,14 @@ export default function RegisterPage() {
   const [resumeFiles, setResumeFiles] = useState<UploadFile[]>([]);
   const [portfolioLink, setPortfolioLink] = useState("");
 
-  const next = () => setStep((current) => Math.min(current + 1, 6) as RegisterStep);
-  const back = () => setStep((current) => Math.max(current - 1, 0) as RegisterStep);
+  const next = () => {
+    setError("");
+    setStep((current) => Math.min(current + 1, 6) as RegisterStep);
+  };
+  const back = () => {
+    setError("");
+    setStep((current) => Math.max(current - 1, 0) as RegisterStep);
+  };
 
   const toggleEmployment = (title: string) => {
     setEmployment((current) => (current.includes(title) ? current.filter((item) => item !== title) : [...current, title]));
@@ -102,7 +142,14 @@ export default function RegisterPage() {
     <main className="min-h-screen bg-white dark:bg-[#1a1a1a] text-[#101828] dark:text-white">
       <AuthHeader />
       {step === 0 ? (
-        <GetStarted onRegister={next} />
+        <GetStarted 
+          name={name} setName={setName}
+          email={email} setEmail={setEmail}
+          password={password} setPassword={setPassword}
+          contactNumber={contactNumber} setContactNumber={setContactNumber}
+          loading={loading} error={error}
+          onRegister={handleInitialRegister} 
+        />
       ) : (
         <section className="relative min-h-[calc(100vh-70px)] overflow-hidden bg-[#fbfbfc] dark:bg-[#0a0a0a] px-5 py-16">
           <RegisterBackground />
@@ -166,7 +213,21 @@ function RegisterBackground() {
   return <div className="pointer-events-none absolute inset-0 opacity-80 [background-image:linear-gradient(46deg,transparent_0%,transparent_52%,rgba(47,84,235,0.035)_52.4%,transparent_64%),linear-gradient(132deg,transparent_0%,transparent_58%,rgba(47,84,235,0.03)_58.4%,transparent_70%)]" />;
 }
 
-function GetStarted({ onRegister }: { onRegister: () => void }) {
+function GetStarted({ 
+  onRegister, 
+  name, setName, 
+  email, setEmail, 
+  password, setPassword, 
+  contactNumber, setContactNumber,
+  loading, error 
+}: { 
+  onRegister: () => void;
+  name?: string; setName?: (v: string) => void;
+  email?: string; setEmail?: (v: string) => void;
+  password?: string; setPassword?: (v: string) => void;
+  contactNumber?: string; setContactNumber?: (v: string) => void;
+  loading?: boolean; error?: string;
+}) {
   return (
     <section className="grid min-h-[calc(100vh-70px)] grid-cols-1 lg:grid-cols-2">
       <aside className="flex items-center justify-center bg-[#f8f8f9] dark:bg-slate-900 px-8 py-12 lg:px-14">
@@ -193,15 +254,19 @@ function GetStarted({ onRegister }: { onRegister: () => void }) {
             <h2 className="text-4xl font-extrabold text-[#101828] dark:text-white">Get Started</h2>
             <p className="mt-4 text-sm text-[#98a2b3]">Register to start exploring jobs and build your future</p>
           </div>
-          <LineInput icon={<User className="h-5 w-5" />} placeholder="Name" />
-          <LineInput icon={<Mail className="h-5 w-5" />} placeholder="Email" type="email" />
-          <LineInput icon={<Lock className="h-5 w-5" />} placeholder="Password" type="password" trailing={<EyeOff className="h-5 w-5" />} />
+          
+          {error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{error}</div>}
+
+          <LineInput icon={<User className="h-5 w-5" />} placeholder="Name" value={name} onChange={(e) => setName?.(e.target.value)} />
+          <LineInput icon={<Mail className="h-5 w-5" />} placeholder="Email" type="email" value={email} onChange={(e) => setEmail?.(e.target.value)} />
+          <LineInput icon={<Lock className="h-5 w-5" />} placeholder="Password" type="password" trailing={<EyeOff className="h-5 w-5" />} value={password} onChange={(e) => setPassword?.(e.target.value)} />
+          <LineInput icon={<User className="h-5 w-5" />} placeholder="Contact Number" type="tel" value={contactNumber} onChange={(e) => setContactNumber?.(e.target.value)} />
           <label className="mt-6 flex items-center gap-3 text-sm text-[#475467]">
             <input type="checkbox" className="h-4 w-4 rounded border-[#d0d5dd]" />
             I agree to the Terms &amp; Privacy Policy
           </label>
-          <button type="button" onClick={onRegister} className="mt-7 h-14 w-full rounded-lg bg-[#2f54eb] text-lg font-bold text-white transition hover:bg-[#2447d8]">
-            Register
+          <button type="button" onClick={onRegister} disabled={loading} className="mt-7 h-14 w-full rounded-lg bg-[#2f54eb] text-lg font-bold text-white transition hover:bg-[#2447d8] disabled:opacity-70 disabled:cursor-not-allowed">
+            {loading ? "Registering..." : "Register"}
           </button>
           <div className="my-8 flex items-center gap-3 text-sm text-[#667085] dark:text-slate-400">
             <span className="h-px flex-1 bg-[#e4e7ec]" />
@@ -469,11 +534,11 @@ function StepActions({ onBack, onNext, compact }: StepProps & { compact?: boolea
   );
 }
 
-function LineInput({ icon, placeholder, type = "text", trailing }: { icon: ReactNode; placeholder: string; type?: string; trailing?: ReactNode }) {
+function LineInput({ icon, placeholder, type = "text", trailing, value, onChange }: { icon: ReactNode; placeholder: string; type?: string; trailing?: ReactNode; value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
   return (
     <label className="mt-8 flex h-11 items-center gap-3 border-b border-[#dfe3ea] text-[#2f54eb]">
       {icon}
-      <input type={type} placeholder={placeholder} className="min-w-0 flex-1 bg-transparent text-sm text-[#101828] dark:text-white outline-none placeholder:text-[#98a2b3]" />
+      <input type={type} placeholder={placeholder} value={value} onChange={onChange} className="min-w-0 flex-1 bg-transparent text-sm text-[#101828] dark:text-white outline-none placeholder:text-[#98a2b3]" />
       {trailing}
     </label>
   );

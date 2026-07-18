@@ -13,7 +13,7 @@ export default function HeroSection() {
       <div className="absolute left-0 top-0 h-80 w-96 rounded-br-[100%] bg-[repeating-radial-gradient(circle_at_0_0,rgba(15,23,42,0.12)_0,rgba(15,23,42,0.12)_1px,transparent_2px,transparent_8px)] opacity-25" />
 
       {/* Bottom Right Pattern */}
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(120%_110%_at_85%_0%,transparent_0%,transparent_42%,#e1e1e1_43%,#f3f3f3_76%,transparent_77%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(120%_110%_at_85%_0%,transparent_0%,transparent_42%,#e1e1e1_43%,#f3f3f3_76%,transparent_77%)] dark:opacity-10" />
 
       <div className="relative mx-auto max-w-[1380px] px-5 py-14 md:px-10 lg:px-16">
 
@@ -25,7 +25,7 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white dark:bg-[#1a1a1a] px-4 py-1.5 text-sm font-semibold italic text-slate-600">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#1a1a1a] px-4 py-1.5 text-sm font-semibold italic text-slate-600 dark:text-slate-300">
               <span className="h-3 w-3 rounded-full bg-blue-800 ring-2 ring-blue-100" />
               Inclusive workplace for all
             </div>
