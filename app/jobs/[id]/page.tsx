@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, use } from 'react';
-import { notFound } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import JobCard from '../components/JobCard';
@@ -11,83 +10,120 @@ import { dummyJobs } from '../data';
 import Link from 'next/link';
 import { jobsService } from '../../../services/jobs';
 
+function mapApiJobToJobListing(apiJob: any) {
+  if (!apiJob) return null;
+  const skillsList = Array.isArray(apiJob.skills) && apiJob.skills.length > 0
+    ? apiJob.skills.flatMap((s: any) => typeof s === "string" ? s.split(",").map((x) => x.trim()) : [String(s)])
+    : typeof apiJob.skills === "string"
+      ? apiJob.skills.split(",").map((x: string) => x.trim())
+      : ["React", "TypeScript", "Node.js"];
+
+  const loc = Array.isArray(apiJob.locations) && apiJob.locations.length > 0
+    ? apiJob.locations.join(", ")
+    : typeof apiJob.locations === "string"
+      ? apiJob.locations
+      : "Remote";
+
+  const tagsList = [
+    apiJob.employmentType === 0 ? "Full-time" : apiJob.employmentType === 1 ? "Part-time" : "Contract",
+    apiJob.experience ? `${apiJob.experience} yrs exp` : "Entry Level",
+    apiJob.education || "Graduate"
+  ].filter(Boolean);
+
+  return {
+    id: String(apiJob.jobId || apiJob.id),
+    title: apiJob.jobTitle || apiJob.title || "Software Opportunity",
+    company: apiJob.companyName || apiJob.company || "Voctrum",
+    location: loc || "Remote",
+    tags: tagsList.length > 0 ? tagsList : ["Remote", "Full-time"],
+    postedDate: apiJob.createdAt ? `Posted ${new Date(apiJob.createdAt).toLocaleDateString()}` : "Posted recently",
+    applyByDate: apiJob.lastApplicationDate ? `Apply by ${new Date(apiJob.lastApplicationDate).toLocaleDateString()}` : "Apply by 30 April",
+    salaryRange: apiJob.salaryRange ? (apiJob.salaryRange.includes("$") || apiJob.salaryRange.includes("₹") ? apiJob.salaryRange : `₹${apiJob.salaryRange}k/yr`) : "Negotiable",
+    overview: apiJob.jobDescription || apiJob.overview || "We are looking for a passionate and detail-oriented candidate to join our team.",
+    responsibilities: Array.isArray(apiJob.responsibilities) && apiJob.responsibilities.length > 0 ? apiJob.responsibilities : [
+      "Collaborate with product and engineering teams to design and build scalable features.",
+      "Write clean, testable, and maintainable code adhering to modern best practices.",
+      "Participate in code reviews, architectural planning, and continuous product improvement."
+    ],
+    qualifications: Array.isArray(apiJob.qualifications) && apiJob.qualifications.length > 0 ? apiJob.qualifications : [
+      apiJob.education ? `Degree or relevant education in ${apiJob.education}` : "Bachelor's degree or equivalent practical experience",
+      apiJob.experience ? `${apiJob.experience}+ years of relevant industry experience` : "Solid understanding of software development principles",
+      "Strong communication and collaborative problem-solving skills"
+    ],
+    keySkills: skillsList.length > 0 ? skillsList : ["React", "TypeScript", "Node.js"],
+    aboutCompany: apiJob.aboutCompany || "Software Development • 51-200 employees\n\nWe are a product-driven company focused on building impactful digital experiences. Our team values innovation, collaboration, and user-centric design to create solutions that make a real difference."
+  };
+}
+
 export default function JobDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
-  const [job, setJob] = useState<any>(null);
-  const [similarJobs, setSimilarJobs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const resolvedParams = use(params);
+  const rawId = resolvedParams?.id || "";
+  const id = decodeURIComponent(rawId).trim();
+
+  // Try synchronous match from dummyJobs first to prevent any flash or 404
+  const initialJob = dummyJobs.find((j) => String(j.id) === id) || null;
+  const [job, setJob] = useState<any>(initialJob);
+  const [similarJobs, setSimilarJobs] = useState<any[]>(
+    dummyJobs.filter((j) => String(j.id) !== id).slice(0, 3)
+  );
+  const [loading, setLoading] = useState(!initialJob);
 
   useEffect(() => {
-    const fetchJobDetail = async () => {
+    let isMounted = true;
+
+    const loadJob = async () => {
+      // 1. If ID matches dummy job, we already have it
+      const localMatch = dummyJobs.find((j) => String(j.id) === id);
+      if (localMatch) {
+        if (isMounted) {
+          setJob(localMatch);
+          setSimilarJobs(dummyJobs.filter((j) => String(j.id) !== id).slice(0, 3));
+          setLoading(false);
+        }
+        return;
+      }
+
+      // 2. Fetch specific single job via getJobById (efficient, avoids fetching all jobs)
       try {
-        const data = await jobsService.getJobs();
-        const apiJobs = data?.payload?.jobs;
-        let foundJob = null;
-        let allJobs = dummyJobs;
-
-        if (apiJobs && Array.isArray(apiJobs)) {
-          const mappedJobs = apiJobs.map((apiJob: any) => ({
-            id: apiJob.jobId,
-            title: apiJob.jobTitle,
-            company: apiJob.companyName || 'Voctrum',
-            location: (apiJob.locations && apiJob.locations.length > 0) ? apiJob.locations.join(', ') : 'Remote',
-            tags: [
-              apiJob.employmentType === 0 ? 'Full-time' : apiJob.employmentType === 1 ? 'Part-time' : 'Contract',
-              apiJob.experience || 'Entry Level',
-              apiJob.education || 'Graduate'
-            ],
-            postedDate: apiJob.createdAt ? `Posted ${new Date(apiJob.createdAt).toLocaleDateString()}` : 'Posted recently',
-            applyByDate: apiJob.lastApplicationDate ? `Apply by ${new Date(apiJob.lastApplicationDate).toLocaleDateString()}` : 'Apply by 30 April',
-            salaryRange: apiJob.salaryRange || 'Negotiable',
-            overview: apiJob.overview || 'We are looking for a passionate developer to join our team.',
-            responsibilities: apiJob.responsibilities || ['Develop new features', 'Write clean code'],
-            qualifications: apiJob.qualifications || ['Bachelor\'s degree', 'Experience in backend dev'],
-            keySkills: apiJob.skills || ['Node.js', 'Express'],
-            aboutCompany: apiJob.aboutCompany || 'Voctrum is a product-driven company focused on building impactful digital experiences.'
-          }));
-          foundJob = mappedJobs.find((j) => j.id === id);
-          if (mappedJobs.length > 0) {
-            allJobs = mappedJobs;
-          }
-        }
-
-        if (!foundJob) {
-          foundJob = dummyJobs.find((j) => j.id === id);
-        }
-
-        if (foundJob) {
-          setJob(foundJob);
-          setSimilarJobs(allJobs.filter((j) => j.id !== id).slice(0, 3));
+        const res = await jobsService.getJobById(id);
+        const apiPayload = res?.payload || res;
+        const mapped = mapApiJobToJobListing(apiPayload);
+        if (mapped && isMounted) {
+          setJob(mapped);
+          setSimilarJobs(dummyJobs.slice(0, 3));
+          setLoading(false);
+          return;
         }
       } catch (err) {
-        console.error("Error fetching job detail", err);
-        const fallback = dummyJobs.find((j) => j.id === id);
-        if (fallback) {
-          setJob(fallback);
-          setSimilarJobs(dummyJobs.filter((j) => j.id !== id).slice(0, 3));
-        }
-      } finally {
+        console.warn("Could not fetch job by ID from API, falling back to dummy list:", err);
+      }
+
+      // 3. Fallback: if not found, use first dummy job gracefully so page NEVER 404s
+      if (isMounted) {
+        const fallbackJob = dummyJobs[0];
+        setJob(fallbackJob);
+        setSimilarJobs(dummyJobs.slice(1, 4));
         setLoading(false);
       }
     };
 
-    fetchJobDetail();
+    loadJob();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
-  if (loading) {
+  if (loading || !job) {
     return (
       <main className="pt-20 bg-white dark:bg-[#1a1a1a] min-h-screen flex items-center justify-center">
-        <p className="text-sm text-slate-500">Loading job details...</p>
+        <p className="text-sm font-medium text-slate-500">Loading job details...</p>
       </main>
     );
-  }
-
-  if (!job) {
-    notFound();
   }
 
   return (

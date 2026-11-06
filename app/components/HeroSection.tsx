@@ -4,8 +4,26 @@ import { MapPin, Search, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect } from 'react';
 
 export default function HeroSection() {
+  const { user } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkToken = () => {
+      if (typeof window !== 'undefined') {
+        setToken(localStorage.getItem('candidate_token'));
+      }
+    };
+    checkToken();
+    window.addEventListener('storage', checkToken);
+    return () => window.removeEventListener('storage', checkToken);
+  }, []);
+
+  const isLoggedIn = Boolean(token || user);
+
   return (
     <section className="relative overflow-hidden bg-[#f7f8fb] dark:bg-[#0a0a0a]">
 
@@ -30,33 +48,28 @@ export default function HeroSection() {
               Inclusive workplace for all
             </div>
 
-            <h1 className="text-[54px] font-black leading-[1.05] text-slate-950 dark:text-white lg:text-[68px]">
-              Find Jobs where
-              <br />
-              <span className="text-blue-700 dark:text-blue-500">Diversity</span> Thrives
+            <h1 className="text-4xl font-black leading-[1.15] tracking-tight !text-black dark:!text-white sm:text-5xl lg:text-[56px]">
+              Find a workplace where you can truly thrive.
             </h1>
 
-            <p className="mt-7 max-w-[620px] text-lg leading-8 text-slate-600 dark:text-slate-400">
-              Search for roles in organizations where your values,
-              personality, and potential matter — not just your resume.
-              Connect with workplaces that appreciate your individuality
-              and help you grow beyond your limits.
+            <p className="mt-6 max-w-xl text-base text-gray-600 dark:text-slate-300">
+              Explore thousands of job opportunities tailored to your unique skills, experience, and career aspirations.
             </p>
 
-            {/* Search Box */}
-            <div className="mt-10 flex flex-col gap-4 rounded-[28px] bg-[#E9EDFB] dark:bg-slate-800/80 p-3 shadow-[0_8px_20px_rgba(15,23,42,0.14)] items-stretch justify-center md:flex-row relative z-10">
+            {/* SEARCH BAR */}
+            <div className="mt-8 flex flex-col gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-2 shadow-sm sm:flex-row sm:items-center sm:rounded-full">
 
-              <label className="flex min-w-0 flex-1 items-center gap-3 px-3">
-                <Search size={20} className="flex-shrink-0 text-blue-700 dark:text-blue-400" aria-hidden />
+              <label className="flex items-center gap-3 px-4 sm:flex-1">
+                <Search size={18} className="flex-shrink-0 text-blue-700 dark:text-blue-400" aria-hidden />
                 <input
-                  placeholder="Enter skills / designations / companies"
+                  placeholder="Job title, keywords..."
                   className="h-12 min-w-0 w-full bg-transparent text-sm outline-none !text-black dark:!text-white placeholder:text-gray-600 dark:placeholder:text-slate-400"
                 />
               </label>
 
-              <div className="hidden h-10 w-[2px] bg-slate-600 dark:bg-slate-700 md:block"></div>
+              <div className="hidden h-8 w-[1px] bg-slate-200 dark:bg-slate-700 sm:block" />
 
-              <label className="flex min-w-0 flex-1 items-center gap-3 px-3">
+              <label className="flex items-center gap-3 px-4 sm:flex-1">
                 <MapPin size={18} className="flex-shrink-0 text-blue-700 dark:text-blue-400" aria-hidden />
                 <input
                   placeholder="Enter Location"
@@ -69,18 +82,36 @@ export default function HeroSection() {
               </button>
             </div>
 
-            {/* Register + Rating */}
+            {/* Register or Profile CTA + Rating */}
             <div className="mt-10 flex flex-col gap-6 sm:flex-row sm:items-center">
 
-              <div>
-                <Link href="/register" className="inline-flex h-11 w-56 items-center justify-center rounded-md border-2 border-blue-700 bg-white dark:bg-[#1a1a1a] font-bold !text-blue-700 shadow-sm transition hover:bg-blue-700 hover:!text-white hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
-                  Register
-                </Link>
+              {isLoggedIn ? (
+                <div>
+                  <Link
+                    href="/dashboard/profile"
+                    className="inline-flex h-11 w-56 items-center justify-center rounded-md bg-blue-700 font-bold !text-white shadow-sm transition hover:bg-blue-800 hover:shadow-md"
+                  >
+                    View Your Profile
+                  </Link>
+                  <p className="mt-3 text-sm italic text-slate-500 dark:text-slate-400">
+                    Welcome back! Keep your profile updated
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <Link
+                    href="/register"
+                    className="inline-flex h-11 w-56 items-center justify-center rounded-md border-2 border-blue-700 bg-white dark:bg-[#1a1a1a] font-bold !text-blue-700 shadow-sm transition hover:bg-blue-700 hover:!text-white hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                  >
+                    Register
+                  </Link>
 
-                <p className="mt-3 text-sm italic text-slate-500 dark:text-slate-400">
-                  Get started in minutes with simple ease
-                </p>
-              </div>
+                  <p className="mt-3 text-sm italic text-slate-500 dark:text-slate-400">
+                    Get started in minutes with simple ease
+                  </p>
+                </div>
+              )}
+
               <div className="flex items-center gap-4">
                 <div className="flex -space-x-3">
                   {[
@@ -112,31 +143,32 @@ export default function HeroSection() {
               </div>
 
             </div>
+
           </motion.div>
 
-          {/* RIGHT IMAGE */}
+          {/* RIGHT HERO IMAGE */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{
-              duration: 0.7,
-              delay: 0.15,
-            }}
-            className="relative -mr-16 w-[850px] max-w-none"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.15 }}
+            className="relative flex items-center justify-center lg:justify-end w-full mt-10 lg:mt-0"
           >
-                          <Image
+            <div className="relative w-full max-w-[580px] lg:max-w-[660px] aspect-[4/3]">
+              <Image
                 src="/homepage/hero.png"
-                width={1800}
-                height={1400}
+                alt="Find a workplace where you can thrive with Voctrum"
+                fill
                 priority
-                alt="Hero Image"
-                className="w-full h-auto scale-125 object-contain"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 660px"
+                className="object-contain select-none"
               />
+            </div>
           </motion.div>
 
         </div>
+
       </div>
+
     </section>
   );
 }
-

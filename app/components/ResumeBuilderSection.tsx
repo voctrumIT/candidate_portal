@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Hexagon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import ResumeBuilderModal from './ResumeBuilderModal';
 
 const benefits = [
   'Create or improve your resume with AI-powered assistance',
@@ -11,6 +14,18 @@ const benefits = [
 ];
 
 export default function ResumeBuilderSection() {
+  const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCreateResume = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('candidate_token') : null;
+    if (!token) {
+      router.push('/login?redirect=/dashboard/resume-builder');
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
   return (
     <section className="bg-white dark:bg-[#1a1a1a] px-5 py-12 md:px-10 lg:px-16">
       <motion.div
@@ -43,11 +58,19 @@ export default function ResumeBuilderSection() {
               </li>
             ))}
           </ul>
-          <button className="mt-9 h-12 rounded-md bg-blue-700 px-6 text-sm font-bold text-white transition hover:bg-blue-800">
-            Start Building Your Resume
+          <button
+            onClick={handleCreateResume}
+            className="mt-9 h-12 rounded-md bg-blue-700 px-6 text-sm font-bold text-white transition hover:bg-blue-800 shadow-md"
+          >
+            Create Resume
           </button>
         </div>
       </motion.div>
+
+      <ResumeBuilderModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </section>
   );
 }
