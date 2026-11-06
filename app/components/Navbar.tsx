@@ -1,19 +1,35 @@
 'use client';
 
-import { LogIn } from 'lucide-react';
+import { LogIn, LogOut, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect } from 'react';
 
 const navLinks: { label: string; href: string }[] = [
   { label: 'Jobs', href: '/jobs' },
-  { label: 'Companies', href: '/companies' },
   { label: 'About Us', href: '/about' },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkToken = () => {
+      if (typeof window !== 'undefined') {
+        setToken(localStorage.getItem('candidate_token'));
+      }
+    };
+    checkToken();
+    window.addEventListener('storage', checkToken);
+    return () => window.removeEventListener('storage', checkToken);
+  }, []);
+
+  const isLoggedIn = Boolean(token || user);
 
   return (
     <motion.header
@@ -41,11 +57,10 @@ export default function Navbar() {
               <Link
                 key={label}
                 href={href}
-                className={`text-[15px] font-semibold transition ${
-                  isActive
+                className={`text-[15px] font-semibold transition ${isActive
                     ? '!text-blue-700 dark:!text-blue-500 border-b-2 border-blue-700 dark:border-blue-500 pb-1'
                     : '!text-black dark:!text-white hover:!text-blue-700 dark:hover:!text-blue-500'
-                }`}
+                  }`}
               >
                 {label}
               </Link>
@@ -54,16 +69,39 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3 md:gap-4">
-          <span className="hidden text-[15px] font-medium !text-gray-600 dark:!text-slate-300 lg:inline">
-            Already have an account ?
-          </span>
-          <Link
-            href="/login"
-            className="inline-flex h-11 items-center gap-2 rounded-md bg-blue-700 px-4 text-sm font-semibold !text-white shadow-sm transition hover:bg-blue-800 hover:!text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 md:px-6"
-          >
-            <LogIn className="h-4 w-4 text-white" />
-            Login
-          </Link>
+          {isLoggedIn ? (
+            <div className="flex items-center gap-2 md:gap-3">
+              <Link
+                href="/dashboard/profile"
+                className="inline-flex h-11 items-center gap-2 rounded-md bg-blue-700 px-4 text-sm font-semibold !text-white shadow-sm transition hover:bg-blue-800 hover:!text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 md:px-5"
+              >
+                <User className="h-4 w-4 text-white" />
+                <span>{user?.firstName ? `${user.firstName}'s Profile` : 'Profile'}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="inline-flex h-11 items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-3 md:px-4 text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                title="Sign Out"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              <span className="hidden text-[15px] font-medium !text-gray-600 dark:!text-slate-300 lg:inline">
+                Already have an account ?
+              </span>
+              <Link
+                href="/login"
+                className="inline-flex h-11 items-center gap-2 rounded-md bg-blue-700 px-4 text-sm font-semibold !text-white shadow-sm transition hover:bg-blue-800 hover:!text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 md:px-6"
+              >
+                <LogIn className="h-4 w-4 text-white" />
+                Login
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </motion.header>

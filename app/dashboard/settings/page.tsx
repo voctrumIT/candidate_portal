@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../../../context/AuthContext";
 import {
   Briefcase,
   FileText,
@@ -121,8 +122,10 @@ export default function SettingsPage() {
     }
   };
 
+  const { logout } = useAuth();
+
   const handleLogout = () => {
-    router.push("/login");
+    logout();
   };
 
   if (!mounted) return null;

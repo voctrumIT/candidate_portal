@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Eye, Trash2, FileText, Loader2 } from "lucide-react";
+import { Plus, Eye, Trash2, FileText, Loader2, Sparkles } from "lucide-react";
 import { documentsService } from "../../../../services/documents";
+import ResumeBuilderModal from "../../../components/ResumeBuilderModal";
 
 export default function ResumeTab() {
   const [resumes, setResumes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
 
   const fetchDocs = async () => {
     try {
@@ -56,6 +58,14 @@ export default function ResumeTab() {
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 pb-4">
         <h3 className="text-[17px] font-bold text-slate-900 dark:text-white">Resume</h3>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsResumeBuilderOpen(true)}
+            className="flex items-center gap-2 rounded-lg border border-[#2f54eb] text-[#2f54eb] hover:bg-blue-50 dark:hover:bg-slate-800 px-4 py-2 text-[13px] font-semibold transition"
+          >
+            <Sparkles className="h-4 w-4" />
+            Create Resume
+          </button>
           <label
             htmlFor="resume-upload"
             className={`flex cursor-pointer items-center gap-2 rounded-lg bg-[#2f54eb] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#2447d8] ${uploading ? 'opacity-70 pointer-events-none' : ''}`}
@@ -107,6 +117,12 @@ export default function ResumeTab() {
           ))
         )}
       </div>
+
+      <ResumeBuilderModal
+        isOpen={isResumeBuilderOpen}
+        onClose={() => setIsResumeBuilderOpen(false)}
+        onSavedResume={fetchDocs}
+      />
     </div>
   );
 }

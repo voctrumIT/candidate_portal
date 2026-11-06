@@ -11,6 +11,8 @@ interface InterviewJobCardProps {
 }
 
 export default function InterviewJobCard({ job, status, time, date, type }: InterviewJobCardProps) {
+  const targetId = job.id || (job as any).jobId || "1";
+
   return (
     <div className="flex flex-col justify-between rounded-[16px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-6 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-[#1a1a1a]">
       <div>
@@ -34,7 +36,7 @@ export default function InterviewJobCard({ job, status, time, date, type }: Inte
 
         {/* Tags */}
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          {job.tags.map((tag) => (
+          {job.tags && job.tags.map((tag) => (
             <span
               key={tag}
               className="inline-flex h-7 items-center rounded-full bg-[#F3F6FF] px-4 text-[12px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-200"
@@ -62,7 +64,7 @@ export default function InterviewJobCard({ job, status, time, date, type }: Inte
           {type}
         </span>
         <Link
-          href={`/jobs/${job.id}`}
+          href={`/dashboard/jobs/${targetId}`}
           className="rounded-md bg-[#2f54eb] px-6 py-2.5 text-[13px] font-semibold !text-white transition hover:bg-[#2447d8]"
         >
           View Details

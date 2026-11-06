@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { LogOut } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
 import BasicDetailsTab from "./components/BasicDetailsTab";
 import ResumeTab from "./components/ResumeTab";
 import AboutTab from "./components/AboutTab";
@@ -22,13 +24,25 @@ const TABS: TabType[] = [
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>("Basic Details");
+  const { logout } = useAuth();
 
   return (
     <div className="p-10 pb-20">
-      <h1 className="text-[28px] font-bold text-[#101828] dark:text-white">Your Profile</h1>
-      <p className="mt-1 text-[15px] text-[#667085] dark:text-slate-400">
-        Keep your profile up to date to improve visibility and opportunities
-      </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-[28px] font-bold text-[#101828] dark:text-white">Your Profile</h1>
+          <p className="mt-1 text-[15px] text-[#667085] dark:text-slate-400">
+            Keep your profile up to date to improve visibility and opportunities
+          </p>
+        </div>
+        <button
+          onClick={logout}
+          className="inline-flex items-center gap-2 self-start rounded-xl border border-red-200 bg-red-50/80 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-100 hover:border-red-300 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50 shadow-sm"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sign Out</span>
+        </button>
+      </div>
 
       {/* Progress Bar Area */}
       <div className="mt-8">

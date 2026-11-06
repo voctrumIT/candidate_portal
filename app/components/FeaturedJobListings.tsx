@@ -3,6 +3,7 @@
 import { Bookmark, CalendarDays, Clock3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import Link from 'next/link';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -12,6 +13,7 @@ const filters = ['All', 'Remote', 'Full-time', 'Part-time', 'Contract'];
 
 const jobs = [
   {
+    id: '1',
     title: 'Senior Product Designer',
     company: 'Niscala.io',
     city: 'San Francisco',
@@ -21,6 +23,7 @@ const jobs = [
     salary: '₹520k - 660k/yr',
   },
   {
+    id: '2',
     title: 'Full Stack Engineer',
     company: 'SAMTIV',
     city: 'New York',
@@ -30,6 +33,7 @@ const jobs = [
     salary: '₹920k - 960k/yr',
   },
   {
+    id: '3',
     title: 'Data Scientist',
     company: 'UNICA',
     city: 'Berlin',
@@ -39,6 +43,7 @@ const jobs = [
     salary: '₹720k - 960k/yr',
   },
   {
+    id: '4',
     title: 'UX Designer',
     company: 'TechFlow',
     city: 'London',
@@ -48,6 +53,7 @@ const jobs = [
     salary: '₹480k - 620k/yr',
   },
   {
+    id: '5',
     title: 'DevOps Engineer',
     company: 'CloudScale',
     city: 'Toronto',
@@ -57,6 +63,7 @@ const jobs = [
     salary: '₹850k - 1.1M/yr',
   },
   {
+    id: '6',
     title: 'Marketing Manager',
     company: 'BrandBoost',
     city: 'Sydney',
@@ -66,6 +73,7 @@ const jobs = [
     salary: '₹380k - 520k/yr',
   },
   {
+    id: '7',
     title: 'Frontend Developer',
     company: 'WebCraft',
     city: 'Singapore',
@@ -75,6 +83,7 @@ const jobs = [
     salary: '₹550k - 700k/yr',
   },
   {
+    id: '8',
     title: 'Product Manager',
     company: 'InnovateTech',
     city: 'Dubai',
@@ -84,6 +93,7 @@ const jobs = [
     salary: '₹650k - 800k/yr',
   },
   {
+    id: '9',
     title: 'Backend Engineer',
     company: 'DataSystems',
     city: 'Mumbai',
@@ -105,9 +115,9 @@ export default function FeaturedJobListings() {
             <p className="section-kicker">OPPORTUNITIES</p>
             <h2 className="section-title">Featured Job Listings</h2>
           </div>
-          <a href="#" className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300 underline">
+          <Link href="/jobs" className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300 underline">
             View all
-          </a>
+          </Link>
         </div>
 
         <div className="mt-8 flex flex-wrap gap-3">
@@ -146,7 +156,7 @@ export default function FeaturedJobListings() {
           className="mt-9 !pb-16"
         >
           {jobs.map((job, index) => (
-            <SwiperSlide key={job.title}>
+            <SwiperSlide key={job.id || job.title}>
               <motion.article
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -158,47 +168,52 @@ export default function FeaturedJobListings() {
                 whileHover={{
                   y: -5,
                 }}
-                className="h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-7 shadow-sm transition-all duration-300"
+                className="h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-7 shadow-sm transition-all duration-300 flex flex-col justify-between"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-2xl font-black text-slate-950 dark:text-white">{job.title}</h3>
-                    <p className="mt-1 text-sm font-medium text-slate-400">
-                      {job.company} - {job.city}
-                    </p>
+                <div>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-black text-slate-950 dark:text-white">{job.title}</h3>
+                      <p className="mt-1 text-sm font-medium text-slate-400">
+                        {job.company} - {job.city}
+                      </p>
+                    </div>
+                    <button aria-label={`Save ${job.title}`}>
+                      <Bookmark className="h-6 w-6 text-slate-400" />
+                    </button>
                   </div>
-                  <button aria-label={`Save ${job.title}`}>
-                    <Bookmark className="h-6 w-6 text-slate-400" />
-                  </button>
-                </div>
 
-                <div className="mt-6 flex flex-wrap gap-4">
-                  {job.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-[#edf1ff] dark:bg-slate-800 px-7 py-2 text-xs font-medium text-slate-700 dark:text-slate-300"
-                    >
-                      {tag}
+                  <div className="mt-6 flex flex-wrap gap-4">
+                    {job.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-[#edf1ff] dark:bg-slate-800 px-7 py-2 text-xs font-medium text-slate-700 dark:text-slate-300"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap gap-5 border-b border-slate-200 dark:border-slate-700 pb-6 text-sm text-slate-600 dark:text-slate-400">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock3 className="h-4 w-4 text-blue-700 dark:text-blue-400" />
+                      Posted {job.posted}
                     </span>
-                  ))}
+                    <span className="inline-flex items-center gap-1">
+                      <CalendarDays className="h-4 w-4 text-blue-700 dark:text-blue-400" />
+                      Apply by {job.deadline}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="mt-6 flex flex-wrap gap-5 border-b border-slate-200 dark:border-slate-700 pb-6 text-sm text-slate-600 dark:text-slate-400">
-                  <span className="inline-flex items-center gap-1">
-                    <Clock3 className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-                    Posted {job.posted}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <CalendarDays className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-                    Apply by {job.deadline}
-                  </span>
-                </div>
-
-                <div className="mt-auto flex items-center justify-between gap-4">
+                <div className="mt-6 flex items-center justify-between gap-4">
                   <p className="text-lg font-semibold text-slate-400">{job.salary}</p>
-                  <button className="h-10 rounded-md bg-blue-700 px-7 text-sm font-bold text-white transition hover:bg-blue-800">
+                  <Link
+                    href={`/jobs/${job.id}`}
+                    className="inline-flex items-center justify-center h-10 rounded-md bg-blue-700 px-7 text-sm font-bold !text-white transition hover:bg-blue-800"
+                  >
                     View Job
-                  </button>
+                  </Link>
                 </div>
               </motion.article>
             </SwiperSlide>

@@ -6,6 +6,12 @@ export const jobsService = {
       method: 'GET',
     });
   },
+
+  getJobById: async (jobId: string) => {
+    return fetchApi(`/api/Candidate/jobs/${encodeURIComponent(jobId)}`, {
+      method: 'GET',
+    });
+  },
   
   applyForJob: async (data: any) => {
     return fetchApi('/api/Candidate/jobs/apply', {
@@ -15,6 +21,10 @@ export const jobsService = {
   },
 
   getApplications: async () => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('candidate_token');
+      if (!token) return [];
+    }
     let url = '/api/Candidate/applications';
     if (typeof window !== 'undefined') {
       const cid = localStorage.getItem("candidate_id");
@@ -22,9 +32,13 @@ export const jobsService = {
         url += `?candidateId=${cid}`;
       }
     }
-    const res = await fetchApi(url, {
-      method: 'GET',
-    });
-    return res?.payload || [];
+    try {
+      const res = await fetchApi(url, {
+        method: 'GET',
+      });
+      return res?.payload || [];
+    } catch {
+      return [];
+    }
   }
 };
