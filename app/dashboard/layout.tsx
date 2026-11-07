@@ -7,7 +7,6 @@ import { useState } from "react";
 import {
   Bell,
   Bookmark,
-  BriefcaseBusiness,
   Crown,
   Download,
   Home,
@@ -23,7 +22,6 @@ import { useAuth } from "../../context/AuthContext";
 
 const navItems = [
   { label: "Home", href: "/dashboard", icon: Home },
-  { label: "Jobs", href: "/dashboard/jobs", icon: BriefcaseBusiness },
   { label: "My Jobs", href: "/dashboard/my-jobs", icon: Bookmark },
   { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { label: "Profile", href: "/dashboard/profile", icon: User },

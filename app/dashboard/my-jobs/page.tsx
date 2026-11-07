@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { jobsService } from "../../../services/jobs";
-import { dummyJobs } from "../../jobs/data";
 import JobCard from "../../jobs/components/JobCard";
 import AppliedJobCard from "./components/AppliedJobCard";
 import InterviewJobCard from "./components/InterviewJobCard";
@@ -17,6 +17,7 @@ import "swiper/css/pagination";
 type TabType = "saved" | "applied" | "interviews";
 
 export default function MyJobsPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("saved");
 
   const [savedJobs, setSavedJobs] = useState<any[]>([]);
@@ -24,20 +25,49 @@ export default function MyJobsPage() {
   const [interviewJobs, setInterviewJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const loadSavedJobs = async () => {
+    try {
+      const saved = await jobsService.getSavedJobs();
+      setSavedJobs(saved || []);
+    } catch (e) {
+      console.warn("Failed to load saved jobs", e);
+    }
+  };
+
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchAll = async () => {
       try {
-        const apps = await jobsService.getApplications();
+        setLoading(true);
+        const [apps, saved] = await Promise.all([
+          jobsService.getApplications(),
+          jobsService.getSavedJobs(),
+        ]);
         if (apps && Array.isArray(apps)) {
           setAppliedJobs(apps);
         }
+        if (saved && Array.isArray(saved)) {
+          setSavedJobs(saved);
+        }
       } catch (err) {
-        console.error("Failed to fetch applications", err);
+        console.error("Failed to fetch applications or saved jobs", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchJobs();
+
+    fetchAll();
+
+    const handleSavedUpdated = () => {
+      loadSavedJobs();
+    };
+
+    window.addEventListener("saved_jobs_updated", handleSavedUpdated);
+    window.addEventListener("storage", handleSavedUpdated);
+
+    return () => {
+      window.removeEventListener("saved_jobs_updated", handleSavedUpdated);
+      window.removeEventListener("storage", handleSavedUpdated);
+    };
   }, []);
 
   const getTabClass = (tab: TabType) => {
@@ -68,7 +98,10 @@ export default function MyJobsPage() {
             Track your job search in one place
           </p>
         </div>
-        <button className="flex h-11 items-center gap-2 rounded-lg bg-[#2f54eb] px-5 text-sm font-semibold text-white transition hover:bg-[#2447d8]">
+        <button
+          onClick={() => router.push("/dashboard/jobs")}
+          className="flex h-11 items-center gap-2 rounded-lg bg-[#2f54eb] px-5 text-sm font-semibold text-white transition hover:bg-[#2447d8]"
+        >
           Explore more jobs
           <ArrowRight className="h-4 w-4" />
         </button>
@@ -97,7 +130,7 @@ export default function MyJobsPage() {
           <EmptyState 
             imageSrc="/myjobs/1.jpg" 
             title="No jobs saved yet" 
-            subtitle="Jobs you save appear here" 
+            subtitle="Jobs you save will appear here. Find roles and click the bookmark icon to save them." 
           />
         )}
         
@@ -105,7 +138,7 @@ export default function MyJobsPage() {
           <EmptyState 
             imageSrc="/myjobs/3.jpg" 
             title="No application yet" 
-            subtitle="Keep track of job application here" 
+            subtitle="Keep track of job applications here" 
           />
         )}
 
@@ -123,24 +156,23 @@ export default function MyJobsPage() {
           (activeTab === "applied" && appliedJobs.length > 0) ||
           (activeTab === "interviews" && interviewJobs.length > 0)) && (
           <Swiper
-            key={activeTab} // Force re-render of swiper when tab changes so it resets
+            key={`${activeTab}-${savedJobs.length}`} // Force reset when tab or count changes
             modules={[Pagination, Autoplay]}
             slidesPerView={1}
             spaceBetween={24}
             pagination={{ clickable: true }}
-            autoplay={{ delay: 3000, disableOnInteraction: false }}
+            autoplay={{ delay: 3500, disableOnInteraction: false }}
             breakpoints={{
               900: { slidesPerView: 2 },
               1200: { slidesPerView: 3 },
             }}
             className="!pb-16"
           >
-            {/* Using active jobs array depending on tab */}
             {(activeTab === "saved" ? savedJobs : activeTab === "applied" ? appliedJobs : interviewJobs).map((job, index) => {
               return (
-                <SwiperSlide key={job.id} className="h-auto">
+                <SwiperSlide key={job.id || job.jobId || index} className="h-auto">
                   <div className="h-full">
-                    {activeTab === "saved" && <JobCard job={job} />}
+                    {activeTab === "saved" && <JobCard job={job} isDashboard />}
                     {activeTab === "applied" && <AppliedJobCard job={job} />}
                     {activeTab === "interviews" && (
                       <InterviewJobCard
