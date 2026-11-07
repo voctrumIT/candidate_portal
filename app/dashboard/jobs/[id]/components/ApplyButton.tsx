@@ -62,7 +62,12 @@ export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButton
           if (docs && Array.isArray(docs)) {
             setResumes(docs);
             if (docs.length > 0) {
-              setSelectedResumeId(docs[0].id);
+              const activeId = typeof window !== "undefined" ? localStorage.getItem("candidate_active_resume_id") : null;
+              const activeName = typeof window !== "undefined" ? localStorage.getItem("candidate_active_resume_name") : null;
+              const matchingResume = docs.find(
+                (d: any) => d.id === activeId || d.name === activeName || d.fileName === activeName
+              );
+              setSelectedResumeId(matchingResume ? matchingResume.id : docs[0].id);
             }
           }
         } catch(e) {
@@ -128,10 +133,19 @@ export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButton
     }
   };
 
+  const handleOpenModal = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('candidate_token') : null;
+    if (!token && !user) {
+      router.push(`/register?redirect=/dashboard/jobs/${jobId}`);
+      return;
+    }
+    setIsOpen(true);
+  };
+
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpenModal}
         className="flex h-11 items-center gap-2 rounded-lg bg-[#2f54eb] px-8 text-sm font-semibold text-white transition hover:bg-[#2447d8]"
       >
         Apply

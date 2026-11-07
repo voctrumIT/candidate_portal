@@ -2,12 +2,15 @@
 
 import { Bookmark, CalendarDays, Clock3 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { Autoplay, Pagination } from 'swiper/modules';
+import { jobsService } from '../../services/jobs';
+import { useAuth } from '../../context/AuthContext';
 
 const filters = ['All', 'Remote', 'Full-time', 'Part-time', 'Contract'];
 
@@ -105,7 +108,58 @@ const jobs = [
 ];
 
 export default function FeaturedJobListings() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState('All');
+  const [savedMap, setSavedMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const refreshSaved = () => {
+      const map: Record<string, boolean> = {};
+      jobs.forEach((j) => {
+        map[j.id] = jobsService.isJobSaved(j.id);
+      });
+      setSavedMap(map);
+    };
+
+    refreshSaved();
+    window.addEventListener('saved_jobs_updated', refreshSaved);
+    window.addEventListener('storage', refreshSaved);
+
+    return () => {
+      window.removeEventListener('saved_jobs_updated', refreshSaved);
+      window.removeEventListener('storage', refreshSaved);
+    };
+  }, []);
+
+  const handleToggleSave = async (e: React.MouseEvent, job: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('candidate_token') : null;
+    if (!token && !user) {
+      router.push(`/register?redirect=/jobs/${job.id}`);
+      return;
+    }
+
+    const currentlySaved = Boolean(savedMap[job.id]);
+    setSavedMap((prev) => ({ ...prev, [job.id]: !currentlySaved }));
+
+    if (currentlySaved) {
+      await jobsService.unsaveJob(job.id);
+    } else {
+      await jobsService.saveJob(job.id, {
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        location: job.city,
+        tags: job.tags,
+        postedDate: `Posted ${job.posted}`,
+        applyByDate: `Apply by ${job.deadline}`,
+        salaryRange: job.salary,
+      });
+    }
+  };
 
   return (
     <section className="bg-white dark:bg-[#1a1a1a] px-5 pb-16 md:px-10 lg:px-16">
@@ -155,69 +209,84 @@ export default function FeaturedJobListings() {
           }}
           className="mt-9 !pb-16"
         >
-          {jobs.map((job, index) => (
-            <SwiperSlide key={job.id || job.title}>
-              <motion.article
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{
-                  duration: 0.45,
-                  delay: index * 0.05,
-                }}
-                whileHover={{
-                  y: -5,
-                }}
-                className="h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-7 shadow-sm transition-all duration-300 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-2xl font-black text-slate-950 dark:text-white">{job.title}</h3>
-                      <p className="mt-1 text-sm font-medium text-slate-400">
-                        {job.company} - {job.city}
-                      </p>
-                    </div>
-                    <button aria-label={`Save ${job.title}`}>
-                      <Bookmark className="h-6 w-6 text-slate-400" />
-                    </button>
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap gap-4">
-                    {job.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-[#edf1ff] dark:bg-slate-800 px-7 py-2 text-xs font-medium text-slate-700 dark:text-slate-300"
+          {jobs.map((job, index) => {
+            const isSaved = Boolean(savedMap[job.id]);
+            return (
+              <SwiperSlide key={job.id || job.title}>
+                <motion.article
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 0.45,
+                    delay: index * 0.05,
+                  }}
+                  whileHover={{
+                    y: -5,
+                  }}
+                  className="h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-7 shadow-sm transition-all duration-300 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-2xl font-black text-slate-950 dark:text-white">{job.title}</h3>
+                        <p className="mt-1 text-sm font-medium text-slate-400">
+                          {job.company} - {job.city}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleSave(e, job)}
+                        aria-label={isSaved ? `Remove ${job.title} from saved` : `Save ${job.title}`}
+                        title={isSaved ? "Saved" : "Save job"}
+                        className="p-1 rounded-md transition hover:scale-110"
                       >
-                        {tag}
+                        <Bookmark
+                          className={`h-6 w-6 transition ${
+                            isSaved
+                              ? "fill-blue-700 text-blue-700"
+                              : "text-slate-400 hover:text-blue-700"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-4">
+                      {job.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full bg-[#edf1ff] dark:bg-slate-800 px-7 py-2 text-xs font-medium text-slate-700 dark:text-slate-300"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-5 border-b border-slate-200 dark:border-slate-700 pb-6 text-sm text-slate-600 dark:text-slate-400">
+                      <span className="inline-flex items-center gap-1">
+                        <Clock3 className="h-4 w-4 text-blue-700 dark:text-blue-400" />
+                        Posted {job.posted}
                       </span>
-                    ))}
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="h-4 w-4 text-blue-700 dark:text-blue-400" />
+                        Apply by {job.deadline}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="mt-6 flex flex-wrap gap-5 border-b border-slate-200 dark:border-slate-700 pb-6 text-sm text-slate-600 dark:text-slate-400">
-                    <span className="inline-flex items-center gap-1">
-                      <Clock3 className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-                      Posted {job.posted}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarDays className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-                      Apply by {job.deadline}
-                    </span>
+                  <div className="mt-6 flex items-center justify-between gap-4">
+                    <p className="text-lg font-semibold text-slate-400">{job.salary}</p>
+                    <Link
+                      href={`/jobs/${job.id}`}
+                      className="inline-flex items-center justify-center h-10 rounded-md bg-blue-700 px-7 text-sm font-bold !text-white transition hover:bg-blue-800"
+                    >
+                      View Job
+                    </Link>
                   </div>
-                </div>
-
-                <div className="mt-6 flex items-center justify-between gap-4">
-                  <p className="text-lg font-semibold text-slate-400">{job.salary}</p>
-                  <Link
-                    href={`/jobs/${job.id}`}
-                    className="inline-flex items-center justify-center h-10 rounded-md bg-blue-700 px-7 text-sm font-bold !text-white transition hover:bg-blue-800"
-                  >
-                    View Job
-                  </Link>
-                </div>
-              </motion.article>
-            </SwiperSlide>
-          ))}
+                </motion.article>
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
 
       </div>

@@ -20,7 +20,7 @@ export default function ResumeBuilderSection() {
   const handleCreateResume = () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('candidate_token') : null;
     if (!token) {
-      router.push('/login?redirect=/dashboard/resume-builder');
+      router.push('/register?redirect=/dashboard/resume-builder');
       return;
     }
     setIsModalOpen(true);

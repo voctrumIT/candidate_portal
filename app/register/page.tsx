@@ -862,6 +862,9 @@ function DoneStep({
   addressCity: string;
   onBack: () => void;
 }) {
+  const redirectUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('redirect') : null;
+  const targetDestination = redirectUrl || "/dashboard";
+
   return (
     <>
       <StepHeading title="All Done!" copy="Your candidate profile is fully configured and updated" percent={100} filled={5} completeOnly />
@@ -903,8 +906,8 @@ function DoneStep({
         <button type="button" onClick={onBack} className="h-11 w-32 rounded-lg border border-[#2f54eb] bg-white dark:bg-[#1a1a1a] text-sm font-bold text-[#2f54eb] transition hover:bg-[#eef3ff]">
           Back
         </button>
-        <Link href="/dashboard" className="inline-flex h-11 items-center justify-center rounded-lg bg-[#2f54eb] px-8 text-sm font-bold !text-white transition hover:bg-[#2447d8] hover:!text-white shadow-md">
-          Explore Dashboard &amp; Jobs
+        <Link href={targetDestination} className="inline-flex h-11 items-center justify-center rounded-lg bg-[#2f54eb] px-8 text-sm font-bold !text-white transition hover:bg-[#2447d8] hover:!text-white shadow-md">
+          {redirectUrl ? "Continue To Job / Resume" : "Explore Dashboard & Jobs"}
         </Link>
       </div>
     </>
