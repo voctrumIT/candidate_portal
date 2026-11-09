@@ -105,7 +105,7 @@ export default function ResumeTab() {
               </div>
               <div className="flex items-center gap-4">
                 {resume.fileUrl && (
-                  <a href={`https://erp-api.voctrum.com/${resume.fileUrl}`} target="_blank" rel="noreferrer" className="text-[#2f54eb] hover:opacity-80 transition">
+                  <a href={resume.fileUrl} target="_blank" rel="noreferrer" className="text-[#2f54eb] hover:opacity-80 transition">
                     <Eye className="h-4 w-4" />
                   </a>
                 )}

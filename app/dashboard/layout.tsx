@@ -25,10 +25,10 @@ const navItems = [
   { label: "Home", href: "/dashboard", icon: Home },
   { label: "Jobs", href: "/dashboard/jobs", icon: BriefcaseBusiness },
   { label: "My Jobs", href: "/dashboard/my-jobs", icon: Bookmark },
-  { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
-  { label: "Profile", href: "/dashboard/profile", icon: User },
-  { label: "Settings", href: "/dashboard/settings", icon: Settings },
-  { label: "Download the app", href: "/dashboard/download", icon: Download },
+  // { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
+  { label: "Profile Settings", href: "/dashboard/profile", icon: User },
+  // { label: "Settings", href: "/dashboard/settings", icon: Settings },s
+  // { label: "Download the app", href: "/dashboard/download", icon: Download },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -9,8 +9,9 @@ import AboutTab from "./components/AboutTab";
 import SkillsTab from "./components/SkillsTab";
 import EducationTab from "./components/EducationTab";
 import WorkExperienceTab from "./components/WorkExperienceTab";
+import SettingsTab from "./components/SettingsTab";
 
-type TabType = "Basic Details" | "Resume" | "About" | "Skill" | "Education" | "Work Experience" | "Social Links";
+type TabType = "Basic Details" | "Resume" | "About" | "Skill" | "Education" | "Work Experience" | "Settings";
 
 const TABS: TabType[] = [
   "Basic Details",
@@ -19,7 +20,7 @@ const TABS: TabType[] = [
   "Skill",
   "Education",
   "Work Experience",
-  "Social Links",
+  "Settings",
 ];
 
 export default function ProfilePage() {
@@ -80,11 +81,13 @@ export default function ProfilePage() {
         {activeTab === "Skill" && <SkillsTab />}
         {activeTab === "Education" && <EducationTab />}
         {activeTab === "Work Experience" && <WorkExperienceTab />}
-        {activeTab === "Social Links" && (
-          <div className="rounded-[16px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-6 dark:border-slate-800 dark:bg-[#1a1a1a]">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Social Links section coming soon...</p>
-          </div>
-        )}
+        {activeTab === "Settings" && <SettingsTab />
+        // (
+        //   <div className="rounded-[16px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-6 dark:border-slate-800 dark:bg-[#1a1a1a]">
+        //     <p className="text-sm text-slate-500 dark:text-slate-400">Social Links section coming soon...</p>
+        //   </div>
+        // )
+        }
       </div>
     </div>
   );
