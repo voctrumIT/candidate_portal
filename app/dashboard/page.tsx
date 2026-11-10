@@ -200,13 +200,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Global Search Bar */}
-        <div className="mt-3">
+        {/* <div className="mt-3">
           <SearchBar />
-        </div>
+        </div> */}
       </section>
 
       {/* Overview Cards: Active Jobs, Applications, Saved, Interviews */}
-      <OverviewCards applicationCount={appCount} />
+      {/* <OverviewCards applicationCount={appCount} /> */}
 
       {/* Application Status Tracker Section */}
       <ApplicationStatusSection applications={applications} />
