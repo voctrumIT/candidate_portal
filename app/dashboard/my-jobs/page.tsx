@@ -45,6 +45,11 @@ export default function MyJobsPage() {
         ]);
         if (apps && Array.isArray(apps)) {
           setAppliedJobs(apps);
+          const interviews = apps.filter((a: any) => {
+            const st = String(a.rawStatus || a.applicationStatus || a.status || "").toLowerCase();
+            return st === "interview" || st === "interview scheduled";
+          });
+          setInterviewJobs(interviews);
         }
         if (saved && Array.isArray(saved)) {
           setSavedJobs(saved);
@@ -62,11 +67,17 @@ export default function MyJobsPage() {
       loadSavedJobs();
     };
 
+    const handleJobApplied = () => {
+      fetchAll();
+    };
+
     window.addEventListener("saved_jobs_updated", handleSavedUpdated);
+    window.addEventListener("job_applied", handleJobApplied);
     window.addEventListener("storage", handleSavedUpdated);
 
     return () => {
       window.removeEventListener("saved_jobs_updated", handleSavedUpdated);
+      window.removeEventListener("job_applied", handleJobApplied);
       window.removeEventListener("storage", handleSavedUpdated);
     };
   }, []);

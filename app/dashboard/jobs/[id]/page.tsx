@@ -33,6 +33,7 @@ function mapApiJobToJobListing(apiJob: any) {
 
   return {
     id: String(apiJob.jobId || apiJob.id),
+    tenantId: apiJob.tenant?.normalizedTenantId || apiJob.tenantId || apiJob.normalizedTenantId || 'dotnetapi',
     title: apiJob.jobTitle || apiJob.title || "Job Opportunity",
     company: apiJob.companyName || apiJob.company || "Voctrum",
     location: loc || "Remote",

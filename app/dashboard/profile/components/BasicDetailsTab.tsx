@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Pencil, CheckCircle2, AlertCircle, Loader2, MapPin } from "lucide-react";
-import Image from "next/image";
 import { useAuth } from "../../../../context/AuthContext";
 import { profileService, validateProfileUpdate } from "../../../../services/profile";
 import { toast } from "../../../components/Toast";
@@ -98,6 +97,12 @@ export default function BasicDetailsTab() {
   const displayCountry = user?.country || address.country || "";
   const displayPostalCode = user?.postalCode || address.postalCode || "";
 
+  const initials = (user?.firstName && user?.lastName)
+    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    : user?.name
+    ? user.name.split(" ").filter(Boolean).map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "CP";
+
   return (
     <div>
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -136,10 +141,10 @@ export default function BasicDetailsTab() {
       )}
 
       <div className="mt-8 flex flex-col md:flex-row items-start gap-8">
-        {/* Avatar */}
+        {/* Candidate Avatar Initials - NO profile picture */}
         <div className="relative shrink-0">
-          <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-slate-100 dark:border-slate-800 bg-[#eef2ff] dark:bg-slate-800 shadow-sm">
-            <Image src="/homepage/m1.png" alt="Profile avatar" width={96} height={96} className="object-cover" />
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-slate-100 dark:border-slate-800 bg-gradient-to-br from-[#2f54eb] to-indigo-600 text-2xl font-black text-white shadow-sm ring-2 ring-slate-200/50 dark:ring-slate-700/50">
+            {initials}
           </div>
         </div>
 

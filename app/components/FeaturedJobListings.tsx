@@ -27,32 +27,45 @@ export default function FeaturedJobListings() {
     const fetchFeaturedJobs = async () => {
       try {
         setLoading(true);
-        const data = await jobsService.getJobs();
-        const apiJobs = data?.payload?.jobs || (Array.isArray(data) ? data : []);
+        const apiJobs = await jobsService.getPreferredJobs();
         if (apiJobs && Array.isArray(apiJobs) && isMounted) {
-          const mapped = apiJobs.map((j: any) => {
+          const mapped = apiJobs.map((j: any, index: number) => {
             const loc = Array.isArray(j.locations)
               ? j.locations.join(', ')
               : typeof j.locations === 'string'
               ? j.locations
-              : 'Remote';
+              : j.location || (j.remote ? 'Remote' : 'Hybrid');
+
+            const employment =
+              j.employmentType === 0
+                ? 'Full-time'
+                : j.employmentType === 1
+                ? 'Part-time'
+                : typeof j.employmentType === 'string' && j.employmentType
+                ? j.employmentType
+                : 'Full-time';
+
+            const salary = j.expectedSalary
+              ? `₹${j.expectedSalary}`
+              : j.salaryRange
+              ? (j.salaryRange.includes('$') || j.salaryRange.includes('₹')
+                  ? j.salaryRange
+                  : `₹${j.salaryRange}k/yr`)
+              : 'Negotiable';
+
             return {
-              id: String(j.jobId || j.id || Math.random()),
+              id: String(j.jobId || j.id || `pref-${index}`),
               title: j.jobTitle || j.title || 'Job Opportunity',
               company: j.companyName || j.company || 'Voctrum',
               city: loc || 'Remote',
               tags: [
-                j.employmentType === 0 ? 'Full-time' : j.employmentType === 1 ? 'Part-time' : 'Contract',
+                employment,
                 j.experience ? `${j.experience} yrs` : 'Senior',
                 ...(Array.isArray(j.skills) ? j.skills.slice(0, 1) : []),
               ].filter(Boolean),
               posted: j.createdAt ? new Date(j.createdAt).toLocaleDateString() : 'recently',
               deadline: j.lastApplicationDate ? new Date(j.lastApplicationDate).toLocaleDateString() : '30 April',
-              salary: j.salaryRange
-                ? (j.salaryRange.includes('$') || j.salaryRange.includes('₹')
-                    ? j.salaryRange
-                    : `₹${j.salaryRange}k/yr`)
-                : 'Negotiable',
+              salary,
             };
           });
           setJobs(mapped);

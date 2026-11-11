@@ -32,6 +32,7 @@ import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { authService } from "../../services/auth";
 import { profileService, validateProfileUpdate } from "../../services/profile";
+import { documentsService } from "../../services/documents";
 import { useRouter } from "next/navigation";
 import { toast } from "../components/Toast";
 
@@ -63,6 +64,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [stepLoading, setStepLoading] = useState(false);
   const [error, setError] = useState("");
@@ -108,41 +110,52 @@ export default function RegisterPage() {
     setStep((current) => Math.max(current - 1, 0) as RegisterStep);
   };
 
-  // Step 0 handler: Initial Register + initial profile update
-  const handleInitialRegister = async () => {
-    if (!name.trim() || !email.trim() || !password || !contactNumber.trim()) {
-      setError("Please fill in all required fields.");
-      return;
+  const validateStep0 = () => {
+    const errs: Record<string, string> = {};
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      errs.name = "Full name is required.";
+    } else if (trimmedName.length < 3) {
+      errs.name = "Full name must be at least 3 characters.";
     }
 
-    if (name.trim().length < 3) {
-      setError("Name must be at least 3 characters long.");
-      return;
-    }
-
+    const trimmedEmail = email.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      setError("Please enter a valid email address.");
-      return;
+    if (!trimmedEmail) {
+      errs.email = "Email address is required.";
+    } else if (!emailRegex.test(trimmedEmail)) {
+      errs.email = "Please enter a valid email address (e.g. name@example.com).";
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
-      return;
+    if (!password) {
+      errs.password = "Password is required.";
+    } else if (password.length < 6) {
+      errs.password = "Password must be at least 6 characters long.";
     }
 
+    const trimmedPhone = contactNumber.trim();
     const phoneRegex = /^[+]?[\d\s-]{7,20}$/;
-    if (!phoneRegex.test(contactNumber.trim())) {
-      setError("Please enter a valid contact number (7 to 20 digits).");
-      return;
+    if (!trimmedPhone) {
+      errs.contactNumber = "Contact number is required.";
+    } else if (!phoneRegex.test(trimmedPhone)) {
+      errs.contactNumber = "Please enter a valid contact number (7 to 20 digits).";
     }
 
     if (!agreedToTerms) {
-      setError("Please agree to the Terms & Privacy Policy to proceed.");
+      errs.terms = "Please accept the Terms & Privacy Policy to proceed.";
+    }
+
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  // Step 0 handler: Initial Register + initial profile update
+  const handleInitialRegister = async () => {
+    setError("");
+    if (!validateStep0()) {
       return;
     }
 
-    setError("");
     setLoading(true);
     try {
       const res = await authService.register({
@@ -287,6 +300,47 @@ export default function RegisterPage() {
     setShowCustomSkill(false);
   };
 
+  const handleSaveResume = async () => {
+    setError("");
+    if (resumeFiles.length > 0) {
+      setStepLoading(true);
+      try {
+        const fileObj = resumeFiles[0] as any;
+        if (fileObj && fileObj.rawFile) {
+          const formData = new FormData();
+          formData.append("file", fileObj.rawFile);
+          formData.append("File", fileObj.rawFile);
+          formData.append("DocumentType", "Resume");
+          formData.append("type", "Resume");
+          const cid = typeof window !== "undefined" ? localStorage.getItem("candidate_id") : null;
+          if (cid) {
+            formData.append("CandidateId", cid);
+          }
+          const uploadRes = await documentsService.uploadDocument(formData);
+          const doc = uploadRes?.payload || uploadRes;
+          const docId = doc?.fileUrl || doc?.id || fileObj.name;
+          if (typeof window !== "undefined") {
+            localStorage.setItem("candidate_active_resume_id", docId);
+            localStorage.setItem("candidate_active_resume_name", fileObj.name);
+            if (doc?.fileUrl) {
+              localStorage.setItem("candidate_active_resume_url", doc.fileUrl);
+            }
+            window.dispatchEvent(
+              new CustomEvent("active_resume_updated", {
+                detail: { id: docId, name: fileObj.name, fileUrl: doc?.fileUrl },
+              })
+            );
+          }
+        }
+      } catch (err: any) {
+        console.warn("Resume upload during registration notice:", err);
+      } finally {
+        setStepLoading(false);
+      }
+    }
+    next();
+  };
+
   const addFiles = (files: FileList | null, setter: (files: UploadFile[]) => void, current: UploadFile[]) => {
     if (!files) return;
     const nextFiles = Array.from(files).map((file) => ({
@@ -295,6 +349,7 @@ export default function RegisterPage() {
       size: file.size,
       type: file.type || "Uploaded file",
       url: URL.createObjectURL(file),
+      rawFile: file,
     }));
     setter([...current, ...nextFiles]);
   };
@@ -311,15 +366,31 @@ export default function RegisterPage() {
       {step === 0 ? (
         <GetStarted
           name={name}
-          setName={setName}
+          setName={(v) => {
+            setName(v);
+            if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
+          }}
           email={email}
-          setEmail={setEmail}
+          setEmail={(v) => {
+            setEmail(v);
+            if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: "" }));
+          }}
           password={password}
-          setPassword={setPassword}
+          setPassword={(v) => {
+            setPassword(v);
+            if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: "" }));
+          }}
           contactNumber={contactNumber}
-          setContactNumber={setContactNumber}
+          setContactNumber={(v) => {
+            setContactNumber(v);
+            if (fieldErrors.contactNumber) setFieldErrors((prev) => ({ ...prev, contactNumber: "" }));
+          }}
           agreedToTerms={agreedToTerms}
-          setAgreedToTerms={setAgreedToTerms}
+          setAgreedToTerms={(v) => {
+            setAgreedToTerms(v);
+            if (fieldErrors.terms) setFieldErrors((prev) => ({ ...prev, terms: "" }));
+          }}
+          fieldErrors={fieldErrors}
           loading={loading}
           error={error}
           onRegister={handleInitialRegister}
@@ -340,7 +411,8 @@ export default function RegisterPage() {
                 selected={employment}
                 onToggle={toggleEmployment}
                 onBack={back}
-                onNext={next}
+                onNext={handleSaveResume}
+                loading={stepLoading}
               />
             )}
 
@@ -412,7 +484,8 @@ export default function RegisterPage() {
                 onAddFiles={(files) => addFiles(files, setResumeFiles, resumeFiles)}
                 onRemoveFile={(id) => removeFile(id, setResumeFiles, resumeFiles)}
                 onBack={back}
-                onNext={next}
+                onNext={handleSaveResume}
+                loading={stepLoading}
               />
             )}
 
@@ -455,11 +528,12 @@ function RegisterBackground() {
 
 function GetStarted({
   onRegister,
-  name, setName,
-  email, setEmail,
-  password, setPassword,
-  contactNumber, setContactNumber,
-  agreedToTerms, setAgreedToTerms,
+  name = "", setName,
+  email = "", setEmail,
+  password = "", setPassword,
+  contactNumber = "", setContactNumber,
+  agreedToTerms = false, setAgreedToTerms,
+  fieldErrors = {},
   loading, error
 }: {
   onRegister: () => void;
@@ -468,8 +542,37 @@ function GetStarted({
   password?: string; setPassword?: (v: string) => void;
   contactNumber?: string; setContactNumber?: (v: string) => void;
   agreedToTerms?: boolean; setAgreedToTerms?: (v: boolean) => void;
+  fieldErrors?: Record<string, string>;
   loading?: boolean; error?: string;
 }) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Live registration setup progress percentage
+  const formPercentage = useMemo(() => {
+    let pct = 0;
+    if (name.trim().length >= 3) pct += 20;
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) pct += 20;
+    if (password.length >= 6) pct += 20;
+    if (/^[+]?[\d\s-]{7,20}$/.test(contactNumber.trim())) pct += 20;
+    if (agreedToTerms) pct += 20;
+    return pct;
+  }, [name, email, password, contactNumber, agreedToTerms]);
+
+  // Password strength meter
+  const passwordStrength = useMemo(() => {
+    if (!password) return { level: 0, text: "" };
+    if (password.length < 6) return { level: 1, text: "Too short", color: "bg-rose-500", labelColor: "text-rose-500" };
+    const hasNum = /\d/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+    if (password.length >= 8 && hasNum && hasSpecial) {
+      return { level: 3, text: "Strong password", color: "bg-emerald-500", labelColor: "text-emerald-500" };
+    }
+    if (password.length >= 6 && hasNum) {
+      return { level: 2, text: "Good password", color: "bg-amber-500", labelColor: "text-amber-500" };
+    }
+    return { level: 1, text: "Weak password", color: "bg-rose-500", labelColor: "text-rose-500" };
+  }, [password]);
+
   return (
     <section className="grid min-h-[calc(100vh-70px)] grid-cols-1 lg:grid-cols-2">
       <aside className="flex items-center justify-center bg-[#f8f8f9] dark:bg-slate-900 px-8 py-12 lg:px-14">
@@ -492,32 +595,130 @@ function GetStarted({
 
       <section className="flex items-center justify-center px-8 py-12 lg:px-14">
         <form className="w-full max-w-[520px]" onSubmit={(event) => { event.preventDefault(); onRegister(); }}>
-          <div className="mb-9 text-center">
-            <h2 className="text-4xl font-extrabold text-[#101828] dark:text-white">Get Started</h2>
-            <p className="mt-4 text-sm text-[#98a2b3]">Register to start exploring jobs and build your future</p>
+          <div className="mb-6 text-center">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#101828] dark:text-white">Get Started</h2>
+            <p className="mt-2 text-sm text-[#98a2b3]">Register to start exploring jobs and build your career</p>
           </div>
 
-          {error && <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">{error}</div>}
+          {/* Registration Progress Indicator */}
+          <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-[#f8faff] dark:bg-slate-900/60 p-3.5 shadow-2xs">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="text-slate-700 dark:text-slate-300">Registration Progress</span>
+              <span className={formPercentage === 100 ? "text-emerald-600 dark:text-emerald-400" : "text-[#2f54eb]"}>
+                {formPercentage}% Complete
+              </span>
+            </div>
+            <div className="mt-2 h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  formPercentage === 100 ? "bg-emerald-500" : "bg-[#2f54eb]"
+                }`}
+                style={{ width: `${formPercentage}%` }}
+              />
+            </div>
+          </div>
 
-          <LineInput icon={<User className="h-5 w-5" />} placeholder="Full Name *" value={name} onChange={(e) => setName?.(e.target.value)} />
-          <LineInput icon={<Mail className="h-5 w-5" />} placeholder="Email Address *" type="email" value={email} onChange={(e) => setEmail?.(e.target.value)} />
-          <LineInput icon={<Lock className="h-5 w-5" />} placeholder="Password (min 6 characters) *" type="password" value={password} onChange={(e) => setPassword?.(e.target.value)} />
-          <LineInput icon={<User className="h-5 w-5" />} placeholder="Contact Number (e.g. 9876543210) *" type="tel" value={contactNumber} onChange={(e) => setContactNumber?.(e.target.value)} />
+          {error && (
+            <div className="mb-4 rounded-lg bg-rose-50 dark:bg-rose-950/40 p-3.5 text-xs text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-medium">
+              {error}
+            </div>
+          )}
 
-          <label className="mt-6 flex items-center gap-3 text-sm text-[#475467] dark:text-slate-300 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={agreedToTerms}
-              onChange={(e) => setAgreedToTerms?.(e.target.checked)}
-              className="h-4 w-4 rounded border-[#d0d5dd] accent-[#2f54eb]"
+          {/* Full Name */}
+          <div className="mt-4">
+            <LineInput
+              icon={<User className="h-5 w-5" />}
+              placeholder="Full Name *"
+              value={name}
+              onChange={(e) => setName?.(e.target.value)}
             />
-            I agree to the Terms &amp; Privacy Policy
-          </label>
+            {fieldErrors.name && (
+              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.name}</p>
+            )}
+          </div>
+
+          {/* Email Address */}
+          <div className="mt-4">
+            <LineInput
+              icon={<Mail className="h-5 w-5" />}
+              placeholder="Email Address *"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail?.(e.target.value)}
+            />
+            {fieldErrors.email && (
+              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.email}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="mt-4">
+            <LineInput
+              icon={<Lock className="h-5 w-5" />}
+              placeholder="Password (min 6 characters) *"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword?.(e.target.value)}
+              trailing={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-slate-400 hover:text-slate-600 focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              }
+            />
+            {fieldErrors.password && (
+              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.password}</p>
+            )}
+            {password && (
+              <div className="mt-1.5 flex items-center justify-between text-[11px] px-1">
+                <div className="flex gap-1.5 flex-1 max-w-[120px]">
+                  <span className={`h-1 flex-1 rounded-full ${passwordStrength.level >= 1 ? passwordStrength.color : "bg-slate-200"}`} />
+                  <span className={`h-1 flex-1 rounded-full ${passwordStrength.level >= 2 ? passwordStrength.color : "bg-slate-200"}`} />
+                  <span className={`h-1 flex-1 rounded-full ${passwordStrength.level >= 3 ? passwordStrength.color : "bg-slate-200"}`} />
+                </div>
+                <span className={`font-semibold ${passwordStrength.labelColor}`}>{passwordStrength.text}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Contact Number */}
+          <div className="mt-4">
+            <LineInput
+              icon={<User className="h-5 w-5" />}
+              placeholder="Contact Number (e.g. +1 555-0199 or 9876543210) *"
+              type="tel"
+              value={contactNumber}
+              onChange={(e) => setContactNumber?.(e.target.value)}
+            />
+            {fieldErrors.contactNumber && (
+              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.contactNumber}</p>
+            )}
+          </div>
+
+          {/* Terms Checkbox */}
+          <div className="mt-6">
+            <label className="flex items-center gap-3 text-xs sm:text-sm text-[#475467] dark:text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms?.(e.target.checked)}
+                className="h-4 w-4 rounded border-[#d0d5dd] accent-[#2f54eb]"
+              />
+              <span>I agree to the Terms &amp; Privacy Policy</span>
+            </label>
+            {fieldErrors.terms && (
+              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.terms}</p>
+            )}
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="mt-7 flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-[#2f54eb] text-lg font-bold text-white transition hover:bg-[#2447d8] disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
+            className="mt-7 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#2f54eb] text-base sm:text-lg font-bold text-white transition hover:bg-[#2447d8] disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
           >
             {loading ? (
               <>
@@ -550,7 +751,7 @@ type StepProps = { onBack: () => void; onNext: () => void; loading?: boolean };
 function EmploymentPreference({ selected, onToggle, onBack, onNext }: StepProps & { selected: string[]; onToggle: (value: string) => void }) {
   return (
     <>
-      <StepHeading title="Employment Preference" copy="What type of work fits your lifestyle best?" step={1} percent={15} filled={0} />
+      <StepHeading title="Employment Preference" copy="What type of work fits your lifestyle best?" step={1} percent={20} filled={1} />
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         {employmentOptions.map((option) => {
           const Icon = option.icon;
@@ -613,7 +814,7 @@ function SkillsStep({
 
   return (
     <>
-      <StepHeading title="Your Skills" copy="Select skills that represent your expertise" step={2} percent={35} filled={1} />
+      <StepHeading title="Your Skills" copy="Select skills that represent your expertise" step={2} percent={40} filled={2} />
       <SearchBox placeholder="Search Skill..." value={search} onChange={onSearch} />
       <div className="mt-7 space-y-6">
         {groups.map((group) => (
@@ -687,7 +888,7 @@ function EducationStep({
 
   return (
     <>
-      <StepHeading title="Add Education" copy="Add your academic background and qualifications" step={3} percent={55} filled={2} />
+      <StepHeading title="Add Education" copy="Add your academic background and qualifications" step={3} percent={60} filled={3} />
       <SearchBox placeholder="Search Degree..." value={search} onChange={onSearch} />
       <div className="mt-6">
         <h3 className="mb-3 text-sm font-semibold text-[#475467] dark:text-slate-300">Degree / Qualification</h3>
@@ -777,7 +978,7 @@ function AddressStep({
 }) {
   return (
     <>
-      <StepHeading title="Address & Location" copy="Where are you currently located?" step={4} percent={75} filled={3} />
+      <StepHeading title="Address & Location" copy="Where are you currently located?" step={4} percent={80} filled={4} />
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field
@@ -835,7 +1036,7 @@ function AddressStep({
 function ResumeStep({ files, portfolioLink, onPortfolioLink, onAddFiles, onRemoveFile, onBack, onNext }: StepProps & { files: UploadFile[]; portfolioLink: string; onPortfolioLink: (value: string) => void; onAddFiles: (files: FileList | null) => void; onRemoveFile: (id: string) => void }) {
   return (
     <>
-      <StepHeading title="Resume & Portfolio" copy="Let recruiters discover your work" step={5} percent={90} filled={4} />
+      <StepHeading title="Resume & Portfolio" copy="Let recruiters discover your work" step={5} percent={95} filled={5} />
       <div className="mx-auto mt-8 w-full max-w-[470px] rounded-xl bg-white dark:bg-[#1a1a1a] px-5 py-8 text-center shadow-md border border-slate-200 dark:border-slate-800">
         <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[#e9edff] dark:bg-slate-800 text-[#2f54eb]">
           <Upload className="h-5 w-5" />
@@ -932,7 +1133,7 @@ function StepHeading({ title, copy, step, percent, filled, completeOnly }: { tit
         <span className="min-w-[170px] text-right text-xs font-bold text-[#101828] dark:text-white">
           {step ? <span className="font-semibold text-[#2f54eb]">Step {step} of 5</span> : null}
           {step ? " · " : null}
-          {percent}%
+          <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{percent}%</span> Complete
         </span>
       </div>
     </div>

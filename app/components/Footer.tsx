@@ -1,14 +1,50 @@
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter } from 'react-icons/fa6';
+"use client";
+
 import Image from 'next/image';
 import Link from 'next/link';
+import TenantSocialLinks from './TenantSocialLinks';
+import { useAuth } from '../../context/AuthContext';
 
 const footerColumns = [
   ['Company', 'About Us', 'Partners', 'Contact Us'],
-  ['Job Seekers', 'Browse Jobs', 'Job Categories', 'Featured Jobs', 'Saved Jobs'],
+  ['Job Seekers', 'Browse Jobs', 'Featured Jobs', 'Saved Jobs', 'Resume Builder'],
   ['Resources', 'Career', 'Help Center', 'Blog'],
 ];
 
 export default function Footer() {
+  const { tenant } = useAuth();
+  const companyName = tenant?.companyName || "Voctrum";
+
+  const getLinkHref = (name: string) => {
+    switch (name) {
+      // Company
+      case 'About Us':
+        return '/about';
+      case 'Partners':
+        return '/partners';
+      case 'Contact Us':
+        return '/contact-us';
+      // Job Seekers
+      case 'Browse Jobs':
+        return '/jobs';
+      case 'Featured Jobs':
+        return '/jobs?featured=true';
+      case 'Saved Jobs':
+        return '/dashboard/my-jobs';
+      case 'Resume Builder':
+        return '/dashboard/resume-builder';
+      // Resources
+      case 'Career':
+        return '/jobs';
+      case 'Help Center':
+        return '/help-center';
+      case 'Blog':
+        return '/blog';
+      default:
+        return '#';
+    }
+  };
+
   return (
     <footer className="bg-[#172a78] px-5 py-16 text-white md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1300px]">
@@ -18,13 +54,13 @@ export default function Footer() {
           <div className="max-w-[420px]">
             <Image
               src="/footer/footerLogo.png"
-              alt="Voctrum"
+              alt={companyName}
               width={240}
               height={80}
               className="w-[160px] md:w-[190px] h-auto object-contain"
             />
             <p className="mt-3 text-[14px] font-medium text-[#b4c4e5]">
-              Connecting talent with the right opportunities
+              Connecting talent with the right opportunities at {companyName}
             </p>
             
             <div className="mt-8 flex gap-3">
@@ -45,23 +81,13 @@ export default function Footer() {
               <div key={title}>
                 <h3 className="text-[17px] font-bold text-white">{title}</h3>
                 <ul className="mt-6 space-y-4 text-[15px] text-[#b4c4e5]">
-                  {links.map((link) => {
-                    const getLinkHref = (name: string) => {
-                      if (name === 'About Us') return '/about';
-                      if (name === 'Partners') return '/partners';
-                      if (name === 'Help Center') return '/help-center';
-                      if (name === 'Blog') return '/blog';
-                      if (name === 'Contact Us') return '/contact-us';
-                      return '#';
-                    };
-                    return (
-                      <li key={link}>
-                        <Link href={getLinkHref(link)} className="transition hover:text-white">
-                          {link}
-                        </Link>
-                      </li>
-                    );
-                  })}
+                  {links.map((link) => (
+                    <li key={link}>
+                      <Link href={getLinkHref(link)} className="transition hover:text-white">
+                        {link}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
@@ -69,32 +95,19 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-20 flex flex-col items-center justify-between gap-6 rounded-full bg-white dark:bg-[#1a1a1a] px-8 py-4 text-[14px] md:flex-row">
+        <div className="mt-20 flex flex-col items-center justify-between gap-6 rounded-full bg-white dark:bg-[#1a1a1a] px-8 py-4 text-[14px] md:flex-row shadow-sm">
           
           <div className="flex items-center font-medium text-[#71717a] dark:text-slate-400">
-            <a href="#" className="transition hover:text-slate-900 dark:hover:text-white">Terms of Service</a>
+            <Link href="/about" className="transition hover:text-slate-900 dark:hover:text-white">Terms of Service</Link>
             <span className="mx-3 text-[#d4d4d8] dark:text-slate-700">|</span>
-            <a href="#" className="transition hover:text-slate-900 dark:hover:text-white">Privacy Policy</a>
+            <Link href="/about" className="transition hover:text-slate-900 dark:hover:text-white">Privacy Policy</Link>
           </div>
           
           <div className="text-[#a1a1aa] dark:text-slate-400">
-            © 2026 <span className="font-bold text-[#71717a] dark:text-slate-300">Voctrum.</span> All rights reserved
+            © 2026 <span className="font-bold text-[#71717a] dark:text-slate-300">{companyName}.</span> All rights reserved
           </div>
           
-          <div className="flex items-center gap-3">
-            <a href="#" aria-label="X" className="grid h-[30px] w-[30px] place-items-center rounded-full bg-black text-white transition hover:opacity-80">
-              <FaXTwitter className="h-[14px] w-[14px]" />
-            </a>
-            <a href="#" aria-label="Facebook" className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[#1877F2] text-white transition hover:opacity-80">
-              <FaFacebookF className="h-[14px] w-[14px]" />
-            </a>
-            <a href="#" aria-label="Instagram" className="grid h-[30px] w-[30px] place-items-center rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white transition hover:opacity-80">
-              <FaInstagram className="h-[14px] w-[14px]" />
-            </a>
-            <a href="#" aria-label="LinkedIn" className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[#0A66C2] text-white transition hover:opacity-80">
-              <FaLinkedinIn className="h-[14px] w-[14px]" />
-            </a>
-          </div>
+          <TenantSocialLinks iconSize="md" />
 
         </div>
       </div>

@@ -29,8 +29,13 @@ export const documentsService = {
       const cid = localStorage.getItem("candidate_id");
       if (cid) {
         url += `?candidateId=${cid}`;
-        formData.append("CandidateId", cid);
+        if (typeof formData.has === 'function' ? !formData.has("CandidateId") : true) {
+          formData.append("CandidateId", cid);
+        }
       }
+    }
+    if (typeof formData.has === 'function' ? !formData.has("DocumentType") : true) {
+      formData.append("DocumentType", "Resume");
     }
     return fetchApi(url, {
       method: 'POST',

@@ -26,6 +26,33 @@ interface SettingItemProps {
   borderBottom?: boolean;
 }
 
+const supportedLanguages = [
+  { code: "en", name: "English", native: "English" },
+  { code: "es", name: "Spanish", native: "Español" },
+  { code: "fr", name: "French", native: "Français" },
+  { code: "de", name: "German", native: "Deutsch" },
+  { code: "ar", name: "Arabic", native: "العربية" },
+  { code: "hi", name: "Hindi", native: "हिन्दी" },
+  { code: "ur", name: "Urdu", native: "اردو" },
+  { code: "zh-CN", name: "Chinese (Simplified)", native: "简体中文" },
+  { code: "ja", name: "Japanese", native: "日本語" },
+  { code: "ru", name: "Russian", native: "Русский" },
+  { code: "pt", name: "Portuguese", native: "Português" },
+  { code: "it", name: "Italian", native: "Italiano" },
+  { code: "tr", name: "Turkish", native: "Türkçe" },
+  { code: "ko", name: "Korean", native: "한국어" },
+  { code: "nl", name: "Dutch", native: "Nederlands" },
+  { code: "id", name: "Indonesian", native: "Bahasa Indonesia" },
+  { code: "pl", name: "Polish", native: "Polski" },
+  { code: "vi", name: "Vietnamese", native: "Tiếng Việt" },
+  { code: "bn", name: "Bengali", native: "বাংলা" },
+  { code: "ta", name: "Tamil", native: "தமிழ்" },
+  { code: "te", name: "Telugu", native: "తెలుగు" },
+  { code: "mr", name: "Marathi", native: "मराठी" },
+  { code: "gu", name: "Gujarati", native: "ગુજરાતી" },
+  { code: "pa", name: "Punjabi", native: "ਪੰਜਾਬੀ" },
+];
+
 function ToggleSwitch({ active, onChange }: { active: boolean; onChange: () => void }) {
   return (
     <button
@@ -97,9 +124,21 @@ function SettingsCard({ title, children }: { title: string; children: React.Reac
 export default function SettingsTab() {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [currentLang, setCurrentLang] = useState("en");
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("preferred_language");
+      if (saved) {
+        setCurrentLang(saved);
+        return;
+      }
+      const match = document.cookie.match(/googtrans=\/en\/([a-zA-Z-]+)/);
+      if (match && match[1]) {
+        setCurrentLang(match[1]);
+      }
+    }
   }, []);
 
   const isDarkMode = mounted && resolvedTheme === "dark";
@@ -110,6 +149,37 @@ export default function SettingsTab() {
     toast.info(
       nextMode === "dark" ? "Dark Mode Enabled" : "Light Mode Enabled",
       `Switched display theme to ${nextMode} mode.`
+    );
+  };
+
+  const handleLanguageChange = (newLang: string) => {
+    setCurrentLang(newLang);
+    if (typeof window === "undefined") return;
+
+    localStorage.setItem("preferred_language", newLang);
+
+    // Set Google Translate cookie
+    const cookieValue = `/en/${newLang}`;
+    document.cookie = `googtrans=${cookieValue}; path=/;`;
+    document.cookie = `googtrans=${cookieValue}; path=/; domain=${window.location.hostname};`;
+    if (window.location.hostname.includes(".")) {
+      const rootDomain = window.location.hostname.split(".").slice(-2).join(".");
+      document.cookie = `googtrans=${cookieValue}; path=/; domain=.${rootDomain};`;
+    }
+
+    // Trigger Google Translate combo element if available
+    const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
+    if (combo) {
+      combo.value = newLang;
+      combo.dispatchEvent(new Event("change", { bubbles: true }));
+    } else {
+      window.location.reload();
+    }
+
+    const langObj = supportedLanguages.find((l) => l.code === newLang);
+    toast.success(
+      "Language Updated",
+      `Google Translation active: ${langObj?.name || newLang} (${langObj?.native || ""}).`
     );
   };
 
@@ -140,17 +210,20 @@ export default function SettingsTab() {
           icon={<Globe className="h-5 w-5" />}
           iconBg="bg-[#eff2fe]"
           iconColor="text-[#2f54eb]"
-          title="Language"
-          subtitle="Choose your preferred display language"
+          title="Google Translation & Language"
+          subtitle="Translate all portal pages instantly using Google Translate"
           action={
             <div className="relative">
               <select
-                onChange={(e) => toast.info("Language Updated", `Display language preference set to ${e.target.value}.`)}
+                value={currentLang}
+                onChange={(e) => handleLanguageChange(e.target.value)}
                 className="h-9 appearance-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] pl-4 pr-10 text-[13px] font-medium text-slate-700 dark:text-slate-300 outline-none focus:border-[#2f54eb]"
               >
-                <option>English</option>
-                <option>Spanish</option>
-                <option>French</option>
+                {supportedLanguages.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.name} - {lang.native}
+                  </option>
+                ))}
               </select>
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
@@ -186,24 +259,24 @@ export default function SettingsTab() {
           icon={<HelpCircle className="h-5 w-5" />}
           iconBg="bg-[#eff2fe]"
           iconColor="text-[#2f54eb]"
-          title="Help center"
-          subtitle="Browse candidate guides, FAQs, and tips"
+          title="Help & FAQ"
+          subtitle="Find answers to common questions and guides"
           action={<ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />}
         />
         <SettingItem
           icon={<HeadphonesIcon className="h-5 w-5" />}
-          iconBg="bg-[#fff9e6]"
-          iconColor="text-[#d4b106]"
+          iconBg="bg-[#e6fbf9]"
+          iconColor="text-[#0fa596]"
           title="Contact support"
-          subtitle="Reach out to our dedicated support team"
+          subtitle="Need assistance? Our support team is ready to help"
           action={<ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />}
         />
         <SettingItem
           icon={<Shield className="h-5 w-5" />}
-          iconBg="bg-[#faebf6]"
-          iconColor="text-[#c41d7f]"
+          iconBg="bg-[#f3e8ff]"
+          iconColor="text-[#9333ea]"
           title="Privacy policy"
-          subtitle="Read how we safeguard and protect your personal data"
+          subtitle="Read how we handle your personal data and privacy"
           action={<ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />}
           borderBottom={false}
         />
