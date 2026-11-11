@@ -5,6 +5,7 @@ import { profileService } from "../services/profile";
 import { useRouter } from "next/navigation";
 
 import { EducationDto } from "../services/profile";
+import { toast } from "../app/components/Toast";
 
 export interface UserProfile {
   candidateId?: string;
@@ -115,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.dispatchEvent(new Event("storage"));
     }
     setUser(null);
+    toast.info("Signed Out", "You have been safely signed out of your account.");
     router.push("/login");
   };
 

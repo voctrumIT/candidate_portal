@@ -38,6 +38,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { documentsService } from "../../services/documents";
+import { toast } from "./Toast";
 import TemplateGalleryModal, {
   RESUME_TEMPLATES,
   TemplateId,
@@ -1085,9 +1086,11 @@ export default function ResumeBuilderModal({
 
       setSaveSuccess(true);
       if (onSavedResume) onSavedResume();
+      toast.success("Resume Saved & Activated!", `"${fileName}" has been generated as a PDF and set as your active profile resume.`);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error saving resume as PDF:", e);
+      toast.error("Resume Save Notice", e?.message || "Could not generate or save resume PDF. Please check required fields.");
     } finally {
       setIsSaving(false);
     }
@@ -1139,6 +1142,7 @@ ${resume.certifications.map((c) => `${c.name} - ${c.issuer} (${c.date})`).join("
 
     navigator.clipboard.writeText(textResume);
     setCopied(true);
+    toast.info("Copied to Clipboard", "Resume content copied as plain text for quick applications.");
     setTimeout(() => setCopied(false), 2500);
   };
 

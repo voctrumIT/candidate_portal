@@ -6,7 +6,7 @@ import Footer from '../../components/Footer';
 import JobCard from '../components/JobCard';
 import JobDetailHeader from './components/JobDetailHeader';
 import JobDetailContent from './components/JobDetailContent';
-import { dummyJobs } from '../data';
+import { JobDetailSkeleton, JobCardSkeleton } from '../../components/Skeleton';
 import Link from 'next/link';
 import { jobsService } from '../../../services/jobs';
 
@@ -32,7 +32,7 @@ function mapApiJobToJobListing(apiJob: any) {
 
   return {
     id: String(apiJob.jobId || apiJob.id),
-    title: apiJob.jobTitle || apiJob.title || "Software Opportunity",
+    title: apiJob.jobTitle || apiJob.title || "Job Opportunity",
     company: apiJob.companyName || apiJob.company || "Voctrum",
     location: loc || "Remote",
     tags: tagsList.length > 0 ? tagsList : ["Remote", "Full-time"],
@@ -64,64 +64,95 @@ export default function JobDetailPage({
   const rawId = resolvedParams?.id || "";
   const id = decodeURIComponent(rawId).trim();
 
-  // Try synchronous match from dummyJobs first to prevent any flash or 404
-  const initialJob = dummyJobs.find((j) => String(j.id) === id) || null;
-  const [job, setJob] = useState<any>(initialJob);
-  const [similarJobs, setSimilarJobs] = useState<any[]>(
-    dummyJobs.filter((j) => String(j.id) !== id).slice(0, 3)
-  );
-  const [loading, setLoading] = useState(!initialJob);
+  const [job, setJob] = useState<any>(null);
+  const [similarJobs, setSimilarJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadJob = async () => {
-      // 1. If ID matches dummy job, we already have it
-      const localMatch = dummyJobs.find((j) => String(j.id) === id);
-      if (localMatch) {
-        if (isMounted) {
-          setJob(localMatch);
-          setSimilarJobs(dummyJobs.filter((j) => String(j.id) !== id).slice(0, 3));
-          setLoading(false);
-        }
-        return;
-      }
-
-      // 2. Fetch specific single job via getJobById (efficient, avoids fetching all jobs)
       try {
-        const res = await jobsService.getJobById(id);
-        const apiPayload = res?.payload || res;
-        const mapped = mapApiJobToJobListing(apiPayload);
-        if (mapped && isMounted) {
-          setJob(mapped);
-          setSimilarJobs(dummyJobs.slice(0, 3));
-          setLoading(false);
-          return;
+        setLoading(true);
+
+        // Fetch single job details and general jobs list in parallel
+        const [jobRes, listRes] = await Promise.allSettled([
+          jobsService.getJobById(id),
+          jobsService.getJobs(),
+        ]);
+
+        let foundJob: any = null;
+
+        if (jobRes.status === "fulfilled" && jobRes.value) {
+          const apiPayload = jobRes.value?.payload || jobRes.value;
+          foundJob = mapApiJobToJobListing(apiPayload);
+        }
+
+        let allMapped: any[] = [];
+        if (listRes.status === "fulfilled" && listRes.value) {
+          const data = listRes.value;
+          const apiJobs = data?.payload?.jobs || (Array.isArray(data) ? data : []);
+          if (Array.isArray(apiJobs)) {
+            allMapped = apiJobs.map(mapApiJobToJobListing).filter(Boolean);
+          }
+        }
+
+        // If specific ID fetch didn't return or returned null, search in list
+        if (!foundJob && allMapped.length > 0) {
+          foundJob = allMapped.find((j) => String(j.id) === id) || null;
+        }
+
+        if (isMounted) {
+          setJob(foundJob);
+          const others = allMapped.filter((j) => String(j.id) !== id);
+          setSimilarJobs(others.slice(0, 3));
         }
       } catch (err) {
-        console.warn("Could not fetch job by ID from API, falling back to dummy list:", err);
-      }
-
-      // 3. Fallback: if not found, use first dummy job gracefully so page NEVER 404s
-      if (isMounted) {
-        const fallbackJob = dummyJobs[0];
-        setJob(fallbackJob);
-        setSimilarJobs(dummyJobs.slice(1, 4));
-        setLoading(false);
+        console.error("Could not fetch job by ID from API:", err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    loadJob();
+    if (id) {
+      loadJob();
+    }
 
     return () => {
       isMounted = false;
     };
   }, [id]);
 
-  if (loading || !job) {
+  if (loading) {
     return (
-      <main className="pt-20 bg-white dark:bg-[#1a1a1a] min-h-screen flex items-center justify-center">
-        <p className="text-sm font-medium text-slate-500">Loading job details...</p>
+      <main className="pt-20 bg-white dark:bg-[#1a1a1a] min-h-screen">
+        <Navbar />
+        <JobDetailSkeleton />
+      </main>
+    );
+  }
+
+  if (!job) {
+    return (
+      <main className="pt-20 bg-white dark:bg-[#1a1a1a] min-h-screen">
+        <Navbar />
+        <div className="mx-auto max-w-xl py-24 px-6 text-center">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Job Not Found</h2>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
+            The job you are looking for does not exist or may have been closed.
+          </p>
+          <div className="mt-6">
+            <Link
+              href="/jobs"
+              className="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-blue-700 text-sm font-semibold text-white hover:bg-blue-800 transition"
+            >
+              Browse Available Jobs
+            </Link>
+          </div>
+        </div>
+        <Footer />
       </main>
     );
   }
@@ -136,28 +167,30 @@ export default function JobDetailPage({
       </div>
 
       {/* Similar Jobs Section */}
-      <div className="mx-auto max-w-[1360px] px-5 py-16 md:px-10 lg:px-16 border-t border-slate-100 dark:border-slate-800">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Similar Jobs</h2>
-            <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
-              Explore more opportunities that match your profile and interests.
-            </p>
+      {similarJobs.length > 0 && (
+        <div className="mx-auto max-w-[1360px] px-5 py-16 md:px-10 lg:px-16 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Similar Jobs</h2>
+              <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">
+                Explore more opportunities that match your profile and interests.
+              </p>
+            </div>
+            <Link
+              href="/jobs"
+              className="text-[14px] font-semibold text-slate-900 dark:text-white underline transition hover:text-blue-700"
+            >
+              View all
+            </Link>
           </div>
-          <Link
-            href="/jobs"
-            className="text-[14px] font-semibold text-slate-900 dark:text-white underline transition hover:text-blue-700"
-          >
-            View all
-          </Link>
-        </div>
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {similarJobs.map((similarJob) => (
-            <JobCard key={similarJob.id} job={similarJob} />
-          ))}
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {similarJobs.map((similarJob) => (
+              <JobCard key={similarJob.id} job={similarJob} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <Footer />
     </main>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, X, Search, CheckCircle2, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "../../../../context/AuthContext";
 import { profileService } from "../../../../services/profile";
+import { toast } from "../../../components/Toast";
 
 const DEFAULT_SUGGESTIONS = [
   "React",
@@ -83,10 +84,12 @@ export default function SkillsTab() {
       await profileService.updateProfile({ skills });
       await refreshProfile();
       setSuccessMessage("Skills updated successfully!");
+      toast.success("Skills Updated", "Your profile skills have been saved successfully.");
       setTimeout(() => setSuccessMessage(""), 5000);
     } catch (err: any) {
       console.error("Failed to update skills", err);
       setApiError(err.message || "Failed to update skills. Please try again.");
+      toast.error("Skills Update Failed", err.message || "Failed to save skills. Please try again.");
     } finally {
       setLoading(false);
     }

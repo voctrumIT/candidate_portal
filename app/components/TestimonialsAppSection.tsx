@@ -1,8 +1,6 @@
 'use client';
 
-import { Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -148,60 +146,6 @@ export default function TestimonialsAppSection() {
             </SwiperSlide>
           ))}
         </Swiper>
-
-
-        <div className="mt-20 grid items-center gap-10 rounded-lg bg-slate-50 dark:bg-slate-900 px-7 py-10 md:grid-cols-[1.1fr_0.9fr] md:px-16">
-          <div>
-            <h2 className="max-w-xl text-3xl font-black leading-tight text-slate-955 dark:text-white md:text-4xl">
-              Join thousands of users already using our{' '}
-              <span className="text-blue-700 dark:text-blue-500">Voctrum app</span>
-            </h2>
-            <p className="mt-7 text-base text-slate-400">
-              Access real-time job updates and apply seamlessly from your mobile device
-            </p>
-
-            <div className="mt-8 flex max-w-[520px] items-center rounded-full bg-[#eaf0ff] dark:bg-slate-800 p-2 shadow-inner">
-              <Phone className="ml-4 h-5 w-5 shrink-0 text-blue-700 dark:text-blue-400" />
-              <input
-                aria-label="Mobile number"
-                placeholder="Enter your mobile number"
-                className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400 !text-black dark:!text-white"
-              />
-              <button className="h-9 shrink-0 rounded-full bg-blue-700 px-5 text-xs font-bold text-white">
-                Get App Link
-              </button>
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <span className="inline-flex h-12 items-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white">
-                GET IT ON&nbsp;<strong>Google Play</strong>
-              </span>
-              <span className="inline-flex h-12 items-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white">
-                Download on the&nbsp;<strong>App Store</strong>
-              </span>
-              <span className="grid h-24 w-24 place-items-center border-2 border-dashed border-blue-400 bg-white dark:bg-[#1a1a1a] text-xs font-bold text-slate-700 dark:text-slate-300">
-                QR
-              </span>
-            </div>
-          </div>
-
-          <div className="flex justify-center gap-5">
-            <Image
-              src="/homepage/m2.png"
-              alt="Voctrum recommended jobs app screen"
-              width={210}
-              height={430}
-              className="h-auto w-36 md:w-44"
-            />
-            <Image
-              src="/homepage/m1.png"
-              alt="Voctrum saved jobs app screen"
-              width={210}
-              height={430}
-              className="h-auto w-36 md:w-44"
-            />
-          </div>
-        </div>
       </div>
     </section>
   );

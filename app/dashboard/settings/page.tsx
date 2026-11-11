@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
+import { toast } from "../../components/Toast";
 import {
   Lock,
   Key,
@@ -103,6 +104,10 @@ export default function SettingsPage() {
     const newDarkMode = !toggles.darkMode;
     setTheme(newDarkMode ? "dark" : "light");
     setToggles({ darkMode: newDarkMode });
+    toast.info(
+      newDarkMode ? "Dark Mode Enabled" : "Light Mode Enabled",
+      `Switched display theme to ${newDarkMode ? "dark" : "light"} mode.`
+    );
   };
 
   const { logout } = useAuth();
@@ -160,7 +165,10 @@ export default function SettingsPage() {
             subtitle="Choose your preferred display language"
             action={
               <div className="relative">
-                <select className="h-9 appearance-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] pl-4 pr-10 text-[13px] font-medium text-slate-700 dark:text-slate-300 outline-none focus:border-[#2f54eb]">
+                <select
+                  onChange={(e) => toast.info("Language Updated", `Display language preference set to ${e.target.value}.`)}
+                  className="h-9 appearance-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] pl-4 pr-10 text-[13px] font-medium text-slate-700 dark:text-slate-300 outline-none focus:border-[#2f54eb]"
+                >
                   <option>English</option>
                   <option>Spanish</option>
                   <option>French</option>

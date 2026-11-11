@@ -5,6 +5,7 @@ import { Pencil, CheckCircle2, AlertCircle, Loader2, MapPin } from "lucide-react
 import Image from "next/image";
 import { useAuth } from "../../../../context/AuthContext";
 import { profileService, validateProfileUpdate } from "../../../../services/profile";
+import { toast } from "../../../components/Toast";
 
 export default function BasicDetailsTab() {
   const { user, refreshProfile } = useAuth();
@@ -77,11 +78,13 @@ export default function BasicDetailsTab() {
 
       await refreshProfile();
       setSuccessMessage("Profile details updated successfully!");
+      toast.success("Profile Updated", "Your personal details and address have been saved successfully.");
       setIsEditing(false);
       setTimeout(() => setSuccessMessage(""), 5000);
     } catch (err: any) {
       console.error("Failed to update profile", err);
       setApiError(err.message || "Failed to update profile. Please try again.");
+      toast.error("Update Failed", err.message || "Failed to update profile details. Please try again.");
     } finally {
       setLoading(false);
     }

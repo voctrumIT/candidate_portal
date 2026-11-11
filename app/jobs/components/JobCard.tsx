@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { JobListing } from '../data';
 import { jobsService } from '../../../services/jobs';
 import { useAuth } from '../../../context/AuthContext';
+import { toast } from '../../components/Toast';
 
 export default function JobCard({ job, isDashboard = false }: { job: JobListing; isDashboard?: boolean }) {
   const router = useRouter();
@@ -45,9 +46,11 @@ export default function JobCard({ job, isDashboard = false }: { job: JobListing;
     if (isSaved) {
       setIsSaved(false);
       await jobsService.unsaveJob(job.id);
+      toast.info("Job Removed", `"${job.title}" removed from your saved list.`);
     } else {
       setIsSaved(true);
       await jobsService.saveJob(job.id, job);
+      toast.success("Job Saved", `"${job.title}" has been saved to your jobs.`);
     }
   };
   

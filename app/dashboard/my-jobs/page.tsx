@@ -8,6 +8,7 @@ import JobCard from "../../jobs/components/JobCard";
 import AppliedJobCard from "./components/AppliedJobCard";
 import InterviewJobCard from "./components/InterviewJobCard";
 import EmptyState from "./components/EmptyState";
+import { JobCardSkeleton } from "../../components/Skeleton";
 import { Autoplay, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
@@ -123,71 +124,81 @@ export default function MyJobsPage() {
         </div>
       </div>
 
-      {/* Content Section: Empty States or Jobs Carousel */}
+      {/* Content Section: Skeletons or Empty States or Jobs Carousel */}
       <div className="mt-12">
-        {/* Empty States */}
-        {activeTab === "saved" && savedJobs.length === 0 && (
-          <EmptyState 
-            imageSrc="/myjobs/1.jpg" 
-            title="No jobs saved yet" 
-            subtitle="Jobs you save will appear here. Find roles and click the bookmark icon to save them." 
-          />
-        )}
-        
-        {activeTab === "applied" && appliedJobs.length === 0 && (
-          <EmptyState 
-            imageSrc="/myjobs/3.jpg" 
-            title="No application yet" 
-            subtitle="Keep track of job applications here" 
-          />
-        )}
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <JobCardSkeleton />
+            <JobCardSkeleton />
+            <JobCardSkeleton />
+          </div>
+        ) : (
+          <>
+            {/* Empty States */}
+            {activeTab === "saved" && savedJobs.length === 0 && (
+              <EmptyState 
+                imageSrc="/myjobs/1.jpg" 
+                title="No jobs saved yet" 
+                subtitle="Jobs you save will appear here. Find roles and click the bookmark icon to save them." 
+              />
+            )}
+            
+            {activeTab === "applied" && appliedJobs.length === 0 && (
+              <EmptyState 
+                imageSrc="/myjobs/3.jpg" 
+                title="No application yet" 
+                subtitle="Keep track of job applications here" 
+              />
+            )}
 
-        {activeTab === "interviews" && interviewJobs.length === 0 && (
-          <EmptyState 
-            imageSrc="/myjobs/2.png" 
-            title="No interviews yet" 
-            subtitle="Scheduled interviews appear here" 
-            showButton={false}
-          />
-        )}
+            {activeTab === "interviews" && interviewJobs.length === 0 && (
+              <EmptyState 
+                imageSrc="/myjobs/2.png" 
+                title="No interviews yet" 
+                subtitle="Scheduled interviews appear here" 
+                showButton={false}
+              />
+            )}
 
-        {/* Jobs Carousel */}
-        {((activeTab === "saved" && savedJobs.length > 0) ||
-          (activeTab === "applied" && appliedJobs.length > 0) ||
-          (activeTab === "interviews" && interviewJobs.length > 0)) && (
-          <Swiper
-            key={`${activeTab}-${savedJobs.length}`} // Force reset when tab or count changes
-            modules={[Pagination, Autoplay]}
-            slidesPerView={1}
-            spaceBetween={24}
-            pagination={{ clickable: true }}
-            autoplay={{ delay: 3500, disableOnInteraction: false }}
-            breakpoints={{
-              900: { slidesPerView: 2 },
-              1200: { slidesPerView: 3 },
-            }}
-            className="!pb-16"
-          >
-            {(activeTab === "saved" ? savedJobs : activeTab === "applied" ? appliedJobs : interviewJobs).map((job, index) => {
-              return (
-                <SwiperSlide key={job.id || job.jobId || index} className="h-auto">
-                  <div className="h-full">
-                    {activeTab === "saved" && <JobCard job={job} isDashboard />}
-                    {activeTab === "applied" && <AppliedJobCard job={job} />}
-                    {activeTab === "interviews" && (
-                      <InterviewJobCard
-                        job={job}
-                        status={index % 2 === 0 ? "Completed" : "Pending"}
-                        time={index % 2 === 0 ? "2:20 PM" : "12:15 PM"}
-                        date={index % 2 === 0 ? "April 10, 2026" : "April 15, 2026"}
-                        type={index % 2 === 0 ? "Online" : "Onsite"}
-                      />
-                    )}
-                  </div>
-                </SwiperSlide>
-              );
-            })}
-          </Swiper>
+            {/* Jobs Carousel */}
+            {((activeTab === "saved" && savedJobs.length > 0) ||
+              (activeTab === "applied" && appliedJobs.length > 0) ||
+              (activeTab === "interviews" && interviewJobs.length > 0)) && (
+              <Swiper
+                key={`${activeTab}-${savedJobs.length}`} // Force reset when tab or count changes
+                modules={[Pagination, Autoplay]}
+                slidesPerView={1}
+                spaceBetween={24}
+                pagination={{ clickable: true }}
+                autoplay={{ delay: 3500, disableOnInteraction: false }}
+                breakpoints={{
+                  900: { slidesPerView: 2 },
+                  1200: { slidesPerView: 3 },
+                }}
+                className="!pb-16"
+              >
+                {(activeTab === "saved" ? savedJobs : activeTab === "applied" ? appliedJobs : interviewJobs).map((job, index) => {
+                  return (
+                    <SwiperSlide key={job.id || job.jobId || index} className="h-auto">
+                      <div className="h-full">
+                        {activeTab === "saved" && <JobCard job={job} isDashboard />}
+                        {activeTab === "applied" && <AppliedJobCard job={job} />}
+                        {activeTab === "interviews" && (
+                          <InterviewJobCard
+                            job={job}
+                            status={index % 2 === 0 ? "Completed" : "Pending"}
+                            time={index % 2 === 0 ? "2:20 PM" : "12:15 PM"}
+                            date={index % 2 === 0 ? "April 10, 2026" : "April 15, 2026"}
+                            type={index % 2 === 0 ? "Online" : "Onsite"}
+                          />
+                        )}
+                      </div>
+                    </SwiperSlide>
+                  );
+                })}
+              </Swiper>
+            )}
+          </>
         )}
       </div>
     </div>

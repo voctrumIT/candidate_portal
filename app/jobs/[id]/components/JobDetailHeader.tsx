@@ -9,6 +9,7 @@ import { JobListing } from '../../data';
 import { useAuth } from '../../../../context/AuthContext';
 import { jobsService } from '../../../../services/jobs';
 import { documentsService } from '../../../../services/documents';
+import { toast } from '../../../components/Toast';
 
 export default function JobDetailHeader({ job }: { job: JobListing }) {
   const router = useRouter();
@@ -79,15 +80,18 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
 
       setApplied(true);
       setMessage("Successfully applied!");
+      toast.success("Application Submitted!", `Your application for ${job.title} at ${job.company} was submitted.`);
     } catch (err: any) {
       // If demo job ID or live backend returned 404 for mock data
       const isDemo = ["1", "2", "3", "4", "5", "6", "7", "8", "9"].includes(String(job.id));
       if (isDemo || err?.message?.includes("404") || err?.message?.includes("Not Found")) {
         setApplied(true);
         setMessage("Successfully applied!");
+        toast.success("Application Submitted!", `Your application for ${job.title} at ${job.company} was submitted.`);
       } else {
         console.error("Apply error:", err);
         setMessage(err.message || "Failed to apply. Please try again.");
+        toast.error("Application Notice", err.message || "Failed to submit application. Please try again.");
       }
     } finally {
       setApplying(false);
@@ -104,9 +108,11 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
     if (isSaved) {
       setIsSaved(false);
       await jobsService.unsaveJob(job.id);
+      toast.info("Job Removed", `"${job.title}" removed from your saved list.`);
     } else {
       setIsSaved(true);
       await jobsService.saveJob(job.id, job);
+      toast.success("Job Saved", `"${job.title}" has been saved to your jobs.`);
     }
   };
 
