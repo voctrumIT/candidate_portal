@@ -283,20 +283,28 @@ export default function ResumeBuilderModal({
 
       // Work Experience extraction
       let extractedExp: ExperienceItem[] = [];
-      const rawExp =
+      let rawExp =
         payload?.workExperiences ||
         payload?.experiences ||
         payload?.experience ||
         user?.workExperiences;
+
+      if ((!rawExp || !Array.isArray(rawExp) || rawExp.length === 0) && typeof window !== "undefined") {
+        try {
+          const cached = localStorage.getItem("candidate_work_experience");
+          if (cached) rawExp = JSON.parse(cached);
+        } catch {}
+      }
+
       if (Array.isArray(rawExp) && rawExp.length > 0) {
         extractedExp = rawExp.map((e: any, idx: number) => ({
           id: `exp-${Date.now()}-${idx}`,
-          title: e.title || e.designation || e.role || "Software Engineer",
+          title: e.role || e.title || e.designation || e.position || "Software Engineer",
           company: e.company || e.organisation || e.name || "Company",
           location: e.location || e.city || "",
           startDate: e.startDate || e.duration?.split("-")?.[0]?.trim() || "",
-          endDate: e.endDate || e.duration?.split("-")?.[1]?.trim() || "Present",
-          current: Boolean(e.current || e.isCurrent),
+          endDate: e.endDate || e.duration?.split("-")?.[1]?.trim() || (e.currentRole || e.current ? "Present" : ""),
+          current: Boolean(e.current || e.currentRole || e.endDate === "Present"),
           description: e.description || e.responsibilities || "",
         }));
       }
@@ -1034,7 +1042,14 @@ export default function ResumeBuilderModal({
       // 2. Prepare FormData with real PDF file for candidate document endpoint
       const formData = new FormData();
       formData.append("file", pdfFile);
+      formData.append("File", pdfFile);
+      formData.append("DocumentType", "Resume");
       formData.append("type", "Resume");
+
+      const cid = typeof window !== "undefined" ? localStorage.getItem("candidate_id") : null;
+      if (cid) {
+        formData.append("CandidateId", cid);
+      }
 
       let uploadedDoc: any = null;
       let uploadedDocId = `resume-${Date.now()}`;
@@ -1044,7 +1059,7 @@ export default function ResumeBuilderModal({
         const uploadRes = await documentsService.uploadDocument(formData);
         uploadedDoc = uploadRes?.payload || uploadRes;
         if (uploadedDoc) {
-          uploadedDocId = uploadedDoc.id || uploadedDoc.documentId || uploadedDocId;
+          uploadedDocId = uploadedDoc.fileUrl || uploadedDoc.id || uploadedDoc.documentId || uploadedDoc.fileName || uploadedDocId;
           uploadedDocUrl = uploadedDoc.fileUrl || uploadedDoc.url || null;
         }
       } catch (err: any) {

@@ -9,6 +9,22 @@ export interface EducationDto {
   endDate?: string | null;
 }
 
+export interface WorkExperienceDto {
+  id?: string;
+  role?: string;
+  title?: string;
+  company?: string;
+  organization?: string;
+  location?: string;
+  employmentType?: string;
+  startDate?: string;
+  endDate?: string;
+  currentRole?: boolean;
+  current?: boolean;
+  skills?: string[];
+  description?: string;
+}
+
 export interface AddressDto {
   addressLine1?: string | null;
   addressLine2?: string | null;
@@ -30,6 +46,8 @@ export interface UpdateCandidateProfileData {
   postalCode?: string | null;
   skills?: string[] | null;
   educations?: EducationDto[] | null;
+  workExperiences?: WorkExperienceDto[] | null;
+  experiences?: WorkExperienceDto[] | null;
 }
 
 export interface CandidateProfilePayload {
@@ -40,6 +58,8 @@ export interface CandidateProfilePayload {
   address?: AddressDto | null;
   skills?: string[] | null;
   educations?: EducationDto[] | null;
+  workExperiences?: WorkExperienceDto[] | null;
+  experiences?: WorkExperienceDto[] | null;
   [key: string]: any;
 }
 
@@ -171,6 +191,8 @@ export const profileService = {
       postalCode: data.postalCode,
       skills: data.skills,
       educations: data.educations,
+      workExperiences: data.workExperiences || data.experiences,
+      experiences: data.experiences || data.workExperiences,
     };
 
     if (mergeWithExisting) {
@@ -187,6 +209,10 @@ export const profileService = {
               }
             } catch {}
           }
+
+          const existingExp = Array.isArray(current.workExperiences)
+            ? current.workExperiences
+            : (Array.isArray(current.experiences) ? current.experiences : []);
 
           payload = {
             candidateId: candidateId || current.candidateId,
@@ -213,6 +239,14 @@ export const profileService = {
                 : Array.isArray(current.educations)
                   ? current.educations
                   : [],
+            workExperiences:
+              data.workExperiences !== undefined
+                ? data.workExperiences
+                : (data.experiences !== undefined ? data.experiences : existingExp),
+            experiences:
+              data.experiences !== undefined
+                ? data.experiences
+                : (data.workExperiences !== undefined ? data.workExperiences : existingExp),
           };
         }
       } catch (err) {
@@ -225,10 +259,20 @@ export const profileService = {
       body: JSON.stringify(payload),
     });
 
-    if (res && res.payload && res.payload.address && typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('candidate_address', JSON.stringify(res.payload.address));
-      } catch {}
+    if (typeof window !== 'undefined') {
+      if (res && res.payload && res.payload.address) {
+        try {
+          localStorage.setItem('candidate_address', JSON.stringify(res.payload.address));
+        } catch {}
+      }
+      if (data.workExperiences || data.experiences) {
+        try {
+          localStorage.setItem(
+            'candidate_work_experience',
+            JSON.stringify(data.workExperiences || data.experiences)
+          );
+        } catch {}
+      }
     }
 
     return res;

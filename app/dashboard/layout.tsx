@@ -7,7 +7,6 @@ import { useState } from "react";
 import {
   Bell,
   Bookmark,
-  Crown,
   Download,
   Home,
   LogOut,
@@ -16,9 +15,11 @@ import {
   Settings,
   User,
   X,
+  ChevronDown,
+  Phone,
 } from "lucide-react";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
 import { useAuth } from "../../context/AuthContext";
+import TenantSocialLinks from "../components/TenantSocialLinks";
 
 const navItems = [
   { label: "Home", href: "/dashboard", icon: Home },
@@ -63,7 +64,7 @@ function DashboardSidebar() {
   return (
     <aside className="fixed bottom-0 left-0 top-0 w-[286px] flex flex-col overflow-y-auto bg-[#172a78] dark:bg-[#0f172a] text-white z-20 shadow-lg">
       <div className="flex h-[100px] shrink-0 items-center px-8">
-        <Link href="/dashboard" className="flex items-center">
+        <Link href="/" className="flex items-center" title="Go to main homepage">
           {tenantLoading ? (
             <div className="h-10 w-32 animate-pulse rounded-md bg-slate-200/70 dark:bg-slate-800" />
           ) : tenant?.logoUrl ? (
@@ -131,50 +132,62 @@ function DashboardSidebar() {
         </button>
       </nav>
 
-      <div className="mt-auto px-5 pb-6 pt-4">
-        <div className="rounded-xl bg-[#f4f5f7] p-4 dark:bg-[#1e293b]">
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-[#101828] dark:text-white">Voctrum Pro</h4>
-            <Crown className="h-5 w-5 text-[#d4b106]" />
-          </div>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-[#667085] dark:text-slate-400">
-            Unlock priority applications and recruiter insights
-          </p>
-          <button className="mt-3.5 w-full rounded-lg bg-[#2f54eb] py-2 text-[12px] font-semibold text-white transition hover:bg-[#2447d8] shadow-sm">
-            Upgrade Now
-          </button>
-        </div>
-      </div>
     </aside>
   );
+}
+
+function getInitials(name?: string, firstName?: string, lastName?: string) {
+  if (firstName && lastName) {
+    return `${firstName[0]}${lastName[0]}`.toUpperCase();
+  }
+  if (name && name.trim()) {
+    const parts = name.trim().split(" ").filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  if (firstName && firstName.trim()) {
+    return firstName.trim().slice(0, 2).toUpperCase();
+  }
+  return "CP";
 }
 
 function DashboardHeader({ onProfileClick }: { onProfileClick: () => void }) {
   const { user } = useAuth();
   const displayName =
     user?.name ||
-    (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Profile");
+    (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Candidate");
+  const displayEmail = user?.email || "candidate@voctrum.com";
+  const initials = getInitials(user?.name, user?.firstName, user?.lastName);
 
   return (
-    <header className="flex h-[88px] shrink-0 items-center justify-end px-10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md sticky top-0 z-10 border-b border-slate-200/60 dark:border-slate-800">
+    <header className="flex h-[88px] shrink-0 items-center justify-end px-6 md:px-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200/70 dark:border-slate-800">
       <button
         onClick={onProfileClick}
-        className="flex items-center justify-center gap-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 p-1.5 pr-4 transition-colors"
-        title="Open Profile Menu"
+        className="group flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#141416] p-2 pr-3.5 shadow-xs hover:border-[#2f54eb]/60 hover:shadow-sm transition-all focus:outline-none"
+        title="View Candidate Account"
+        aria-label="View Candidate Account"
       >
-        <span className="hidden sm:inline text-xs font-semibold text-slate-700 dark:text-slate-300">
-          {displayName}
-        </span>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f0f4ff] dark:bg-slate-800 text-[#2f54eb] dark:text-slate-300">
-          <MessageCircle className="h-5 w-5" />
+        {/* Candidate Initials Badge - NO static image */}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#2f54eb] to-indigo-600 text-sm font-black text-white shadow-xs">
+          {initials}
         </div>
-        <Image
-          src="/userdash/841fef2f2fee74c06511142a265d3665766990d3.png"
-          alt={displayName}
-          width={40}
-          height={40}
-          className="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
-        />
+
+        {/* Candidate Info Text */}
+        <div className="flex flex-col text-left">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px] font-bold text-slate-900 dark:text-white leading-tight group-hover:text-[#2f54eb] transition-colors">
+              {displayName}
+            </span>
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" title="Active" />
+          </div>
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-tight truncate max-w-[150px]">
+            {displayEmail}
+          </span>
+        </div>
+
+        <ChevronDown className="h-4 w-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-transform duration-200 group-hover:translate-y-0.5 ml-1" />
       </button>
     </header>
   );
@@ -186,9 +199,13 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
     user?.name ||
     (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Candidate Profile");
   const displayEmail = user?.email || "candidate@voctrum.com";
+  const displayPhone = user?.contactNumber || user?.mobile || null;
   const displayLocation =
-    user?.currentLocation || user?.preferredWorkLocation || "Location Not Set";
-  const displayRole = user?.headline || "Candidate Member";
+    user?.currentLocation ||
+    user?.preferredWorkLocation ||
+    (user?.address?.city ? `${user.address.city}${user.address.country ? `, ${user.address.country}` : ""}` : null);
+  const displayRole = user?.headline || "Registered Candidate";
+  const initials = getInitials(user?.name, user?.firstName, user?.lastName);
 
   const handleSignOut = () => {
     onClose();
@@ -197,57 +214,93 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity"
+      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs transition-opacity"
       onClick={onClose}
     >
       <section
-        className="absolute right-10 top-[80px] w-[460px] max-w-[90vw] overflow-hidden rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl border border-slate-200 dark:border-slate-800"
+        className="absolute right-6 md:right-10 top-[76px] w-[380px] max-w-[92vw] overflow-hidden rounded-2xl bg-white dark:bg-[#18181b] shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative h-[120px] bg-gradient-to-br from-blue-700 via-indigo-600 to-blue-800">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close profile"
-            className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="-mt-14 px-6 pb-6 text-center">
-          <div className="mx-auto h-[96px] w-[96px] rounded-full border-4 border-white dark:border-slate-800 bg-white dark:bg-[#1a1a1a] shadow-xl overflow-hidden">
-            <Image
-              src="/userdash/841fef2f2fee74c06511142a265d3665766990d3.png"
-              alt={displayName}
-              width={96}
-              height={96}
-              className="h-full w-full object-cover"
-            />
+        {/* Banner with close button */}
+        <div className="relative h-28 bg-gradient-to-r from-[#172a78] via-[#2f54eb] to-indigo-600 p-4">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-bold text-white backdrop-blur-sm">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              Active Candidate
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close profile menu"
+              className="grid h-7 w-7 place-items-center rounded-lg bg-black/20 text-white hover:bg-black/40 transition cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <h2 className="mt-3 text-lg font-bold text-[#101828] dark:text-white">{displayName}</h2>
-          <p className="mt-0.5 text-xs text-[#98a2b3] dark:text-slate-400">{displayEmail}</p>
-          <p className="mt-2 text-xs font-semibold text-[#2f54eb] dark:text-blue-400">{displayRole}</p>
-          <p className="mt-1 flex items-center justify-center gap-1.5 text-xs text-[#667085] dark:text-slate-400">
-            <MapPin className="h-3 w-3 text-[#2f54eb]" />
-            {displayLocation}
+        </div>
+
+        {/* Candidate Info Card */}
+        <div className="relative z-10 -mt-12 px-6 pb-6 text-center">
+          {/* Avatar Initials - completely unclipped and elevated with z-20 */}
+          <div className="relative z-20 mx-auto flex h-24 w-24 items-center justify-center rounded-full border-4 border-white dark:border-[#18181b] bg-gradient-to-br from-[#2f54eb] via-indigo-600 to-blue-700 text-3xl font-black text-white shadow-xl ring-4 ring-blue-500/20">
+            {initials}
+          </div>
+
+          <h3 className="mt-3 text-lg font-bold text-slate-900 dark:text-white leading-tight">
+            {displayName}
+          </h3>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+            {displayEmail}
           </p>
 
-          <div className="mt-6 flex flex-col gap-2.5">
+          <span className="mt-2 inline-block rounded-full bg-blue-50 dark:bg-blue-950/60 px-3 py-1 text-[11px] font-semibold text-[#2f54eb] dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
+            {displayRole}
+          </span>
+
+          {/* Details Pill Box */}
+          {(displayPhone || displayLocation) && (
+            <div className="mt-5 rounded-xl bg-slate-50 dark:bg-slate-900/60 p-3.5 border border-slate-100 dark:border-slate-800 text-left space-y-2 text-xs">
+              {displayPhone && (
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                  <Phone className="h-3.5 w-3.5 text-[#2f54eb] shrink-0" />
+                  <span className="truncate">{displayPhone}</span>
+                </div>
+              )}
+              {displayLocation && (
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                  <MapPin className="h-3.5 w-3.5 text-[#2f54eb] shrink-0" />
+                  <span className="truncate">{displayLocation}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Action Links */}
+          <div className="mt-5 flex flex-col gap-2">
             <Link
               href="/dashboard/profile"
               onClick={onClose}
-              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#2f54eb] text-sm font-semibold !text-white transition hover:bg-[#2447d8] shadow-sm"
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2f54eb] text-xs font-bold text-white transition hover:bg-[#2447d8] shadow-xs"
             >
               <User className="h-4 w-4" />
-              View Full Profile
+              Manage Profile & Resume
+            </Link>
+
+            <Link
+              href="/dashboard/my-jobs"
+              onClick={onClose}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#18181b] text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-2xs"
+            >
+              <Bookmark className="h-4 w-4 text-[#2f54eb]" />
+              My Saved & Applied Jobs
             </Link>
 
             <button
               type="button"
               onClick={handleSignOut}
-              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 text-sm font-semibold text-red-600 transition hover:bg-red-100 hover:border-red-300 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50"
+              className="mt-1 inline-flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-red-200/80 bg-red-50/80 text-xs font-semibold text-red-600 transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-900/40"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-3.5 w-3.5" />
               Sign Out
             </button>
           </div>
@@ -258,24 +311,56 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
 }
 
 function DashboardFooter() {
+  const { tenant } = useAuth();
+  const companyName = tenant?.companyName || "Voctrum";
+
   const columns = [
     ["Company", "About Us", "Careers", "Partners"],
-    ["Job Seekers", "Browse Jobs", "Job Categories", "Featured Jobs", "Saved Jobs"],
+    ["Job Seekers", "Browse Jobs", "Featured Jobs", "Saved Jobs", "Resume Builder"],
     ["Resources", "Privacy & Security", "Help Center", "FAQs", "Blog"],
   ];
+
+  const getDashboardLinkHref = (name: string) => {
+    switch (name) {
+      case "About Us":
+        return "/about";
+      case "Careers":
+      case "Browse Jobs":
+      case "Featured Jobs":
+        return "/dashboard/jobs";
+      case "Partners":
+        return "/partners";
+      case "Saved Jobs":
+        return "/dashboard/my-jobs";
+      case "Resume Builder":
+        return "/dashboard/resume-builder";
+      case "Privacy & Security":
+        return "/about";
+      case "Help Center":
+      case "FAQs":
+        return "/help-center";
+      case "Blog":
+        return "/blog";
+      default:
+        return "/dashboard";
+    }
+  };
+
   return (
     <footer className="bg-[#172a78] dark:bg-[#0f172a] px-10 py-10 text-white mt-auto border-t dark:border-slate-800">
       <div className="grid gap-12 lg:grid-cols-[1.15fr_1.5fr]">
         <div>
-          <Image
-            src="/common/logo.png"
-            alt="Voctrum"
-            width={130}
-            height={46}
-            className="h-10 w-auto brightness-0 invert"
-          />
+          <Link href="/" title="Go to main homepage" className="inline-block">
+            <Image
+              src="/common/logo.png"
+              alt={companyName}
+              width={130}
+              height={46}
+              className="h-10 w-auto brightness-0 invert"
+            />
+          </Link>
           <p className="mt-2 text-sm text-white/85 dark:text-slate-300">
-            Connecting talent with the right opportunities
+            Connecting talent with the right opportunities at {companyName}
           </p>
           <div className="mt-7 flex max-w-lg gap-4">
             <input
@@ -291,12 +376,12 @@ function DashboardFooter() {
           {columns.map(([title, ...links]) => (
             <div key={title}>
               <h3 className="text-lg font-black">{title}</h3>
-              <ul className="mt-7 space-y-5 text-sm text-white/75 dark:text-slate-400">
+              <ul className="mt-7 space-y-4 text-sm text-white/75 dark:text-slate-400">
                 {links.map((link) => (
                   <li key={link}>
-                    <a href="#" className="transition hover:text-white">
+                    <Link href={getDashboardLinkHref(link)} className="transition hover:text-white">
                       {link}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -306,41 +391,16 @@ function DashboardFooter() {
       </div>
       <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/20 pt-8 text-xs text-white/60 dark:text-slate-400 sm:flex-row">
         <div className="flex gap-4">
-          <a href="#" className="hover:text-white transition">
+          <Link href="/about" className="hover:text-white transition">
             Terms of Service
-          </a>
+          </Link>
           <span>|</span>
-          <a href="#" className="hover:text-white transition">
+          <Link href="/about" className="hover:text-white transition">
             Privacy Policy
-          </a>
+          </Link>
         </div>
-        <p>© 2026 Voctrum. All rights reserved</p>
-        <div className="flex gap-3">
-          <a
-            href="#"
-            className="grid h-[28px] w-[28px] place-items-center rounded-full bg-black text-white hover:opacity-80 transition"
-          >
-            <FaXTwitter className="h-3.5 w-3.5" />
-          </a>
-          <a
-            href="#"
-            className="grid h-[28px] w-[28px] place-items-center rounded-full bg-[#1877F2] text-white hover:opacity-80 transition"
-          >
-            <FaFacebookF className="h-3.5 w-3.5" />
-          </a>
-          <a
-            href="#"
-            className="grid h-[28px] w-[28px] place-items-center rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white hover:opacity-80 transition"
-          >
-            <FaInstagram className="h-3.5 w-3.5" />
-          </a>
-          <a
-            href="#"
-            className="grid h-[28px] w-[28px] place-items-center rounded-full bg-[#0A66C2] text-white hover:opacity-80 transition"
-          >
-            <FaLinkedinIn className="h-3 w-3" />
-          </a>
-        </div>
+        <p>© 2026 {companyName}. All rights reserved</p>
+        <TenantSocialLinks iconSize="sm" />
       </div>
     </footer>
   );

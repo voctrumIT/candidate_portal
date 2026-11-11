@@ -16,7 +16,7 @@ import { Autoplay, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
-import { jobsService } from "../../services/jobs";
+import { jobsService, parseApplicationStatus } from "../../services/jobs";
 import { ApplicationCardSkeleton, JobCardSkeleton } from "../components/Skeleton";
 import { toast } from "../components/Toast";
 
@@ -26,6 +26,7 @@ import "swiper/css/pagination";
 export interface ApplicationItem {
   id: string;
   jobId: string;
+  jobApplicationId?: string;
   title: string;
   company: string;
   location: string;
@@ -33,9 +34,12 @@ export interface ApplicationItem {
   salary: string;
   appliedDate: string;
   currentStep: number; // 1 to 4
-  status: "In Review" | "Interview" | "Shortlisted" | "Applied";
+  status: "Applied" | "In Review" | "Interview" | "Shortlisted" | "Offered" | "Hired" | "Rejected";
+  rawStatus: string;
+  statusLabel: string;
   statusNote: string;
-  badgeColor: string;
+  badgeClass: string;
+  dotColor: string;
   interviewDate?: string;
 }
 
@@ -119,41 +123,35 @@ function ApplicationStatusSection() {
         const res = await jobsService.getApplications();
         if (isMounted && res && Array.isArray(res)) {
           const mapped: ApplicationItem[] = res.map((app: any, idx: number) => {
-            const statusVal: ApplicationItem["status"] =
-              app.status === "Interview" ||
-              app.status === "In Review" ||
-              app.status === "Shortlisted"
-                ? app.status
-                : "Applied";
+            const raw = String(app.rawStatus || app.applicationStatus || app.status || "applied").toLowerCase();
+            const statusInfo = parseApplicationStatus(raw);
+
+            const displayStatus: ApplicationItem["status"] =
+              statusInfo.status === "Interview" ? "Interview"
+              : statusInfo.status === "In Review" ? "In Review"
+              : statusInfo.status === "Shortlisted" ? "Shortlisted"
+              : statusInfo.status === "Offered" ? "Offered"
+              : statusInfo.status === "Hired" ? "Hired"
+              : statusInfo.status === "Rejected" ? "Rejected"
+              : "Applied";
 
             return {
-              id: String(app.id || app.applicationId || `app-${idx}`),
-              jobId: String(app.jobId || app.job?.id || "1"),
-              title: app.jobTitle || app.job?.title || app.title || "Job Application",
-              company: app.companyName || app.job?.company || app.company || "Voctrum Partner",
-              location: app.location || app.job?.location || "Remote",
-              type: app.employmentType || "Full-time",
-              salary: app.salaryRange || app.job?.salary || "Competitive",
-              appliedDate: app.appliedAt
-                ? `Applied ${new Date(app.appliedAt).toLocaleDateString()}`
-                : "Applied recently",
-              currentStep:
-                app.step || (statusVal === "Interview" ? 3 : statusVal === "Shortlisted" ? 2 : 1),
-              status: statusVal,
-              statusNote:
-                app.notes ||
-                app.statusNote ||
-                (statusVal === "Interview"
-                  ? "Interview invitation scheduled."
-                  : statusVal === "Shortlisted"
-                  ? "Shortlisted for next interview round."
-                  : "Application submitted and under review by recruiter."),
-              badgeColor:
-                statusVal === "Interview"
-                  ? "indigo"
-                  : statusVal === "Shortlisted"
-                  ? "emerald"
-                  : "blue",
+              id: String(app.id || app.jobApplicationId || `app-${idx}`),
+              jobId: String(app.jobId || app.job?.jobId || app.job?.id || "1"),
+              jobApplicationId: app.jobApplicationId,
+              title: app.title || app.job?.jobTitle || "Job Opportunity",
+              company: app.company || app.job?.companyName || "Voctrum Partner",
+              location: app.location || "Remote",
+              type: app.tags?.[0] || "Full-time",
+              salary: app.salaryRange || "Competitive",
+              appliedDate: app.postedDate || (app.applyDate ? `Applied ${new Date(app.applyDate).toLocaleDateString()}` : "Applied recently"),
+              currentStep: app.currentStep || statusInfo.currentStep,
+              status: displayStatus,
+              rawStatus: statusInfo.rawStatus,
+              statusLabel: app.statusLabel || statusInfo.statusLabel,
+              statusNote: app.statusNote || statusInfo.statusNote,
+              badgeClass: app.badgeClass || statusInfo.badgeClass,
+              dotColor: app.dotColor || statusInfo.dotColor,
               interviewDate: app.interviewDate || undefined,
             };
           });
@@ -167,51 +165,25 @@ function ApplicationStatusSection() {
     };
 
     loadApps();
+    const handleJobApplied = () => {
+      loadApps();
+    };
+    window.addEventListener("job_applied", handleJobApplied);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("job_applied", handleJobApplied);
     };
   }, []);
 
   const filteredApps = applications.filter((app) => {
     if (filter === "All") return true;
+    if (filter === "Applied") return app.status === "Applied";
     if (filter === "In Review") return app.status === "In Review";
     if (filter === "Interview") return app.status === "Interview";
     if (filter === "Shortlisted") return app.status === "Shortlisted";
     return true;
   });
-
-  const getStatusBadge = (status: ApplicationItem["status"]) => {
-    switch (status) {
-      case "Interview":
-        return {
-          label: "Interview Scheduled",
-          classes:
-            "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800",
-          dotColor: "bg-indigo-600",
-        };
-      case "In Review":
-        return {
-          label: "Under Review",
-          classes:
-            "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
-          dotColor: "bg-amber-500",
-        };
-      case "Shortlisted":
-        return {
-          label: "Shortlisted",
-          classes:
-            "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
-          dotColor: "bg-emerald-600",
-        };
-      default:
-        return {
-          label: "Application Submitted",
-          classes:
-            "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
-          dotColor: "bg-blue-600",
-        };
-    }
-  };
 
   const steps = ["Applied", "Screening", "Interview", "Offer"];
 
@@ -237,7 +209,7 @@ function ApplicationStatusSection() {
 
         {/* Tab Filters */}
         <div className="flex items-center gap-1.5 self-start sm:self-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800/80">
-          {["All", "In Review", "Interview", "Shortlisted"].map((tab) => (
+          {["All", "Applied", "In Review", "Interview", "Shortlisted"].map((tab) => (
             <button
               key={tab}
               type="button"
@@ -286,7 +258,11 @@ function ApplicationStatusSection() {
           </div>
         ) : (
           filteredApps.map((app) => {
-            const badge = getStatusBadge(app.status);
+            const badge = {
+              classes: app.badgeClass,
+              dotColor: app.dotColor,
+              label: app.statusLabel,
+            };
 
             return (
               <article
@@ -439,23 +415,35 @@ function RecommendedJobs() {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const data = await jobsService.getJobs();
-        const apiJobs = data?.payload?.jobs || data?.jobs || data;
+        const apiJobs = await jobsService.getPreferredJobs();
         if (isMounted && apiJobs && Array.isArray(apiJobs)) {
-          const mapped = apiJobs.map((apiJob: any) => {
+          const mapped = apiJobs.map((apiJob: any, index: number) => {
             const loc = Array.isArray(apiJob.locations)
               ? apiJob.locations.join(", ")
               : typeof apiJob.locations === "string"
               ? apiJob.locations
-              : "Remote";
+              : apiJob.location || (apiJob.remote ? "Remote" : "Hybrid");
+
+            const employment =
+              apiJob.employmentType === 0
+                ? "Full-time"
+                : apiJob.employmentType === 1
+                ? "Part-time"
+                : typeof apiJob.employmentType === "string" && apiJob.employmentType
+                ? apiJob.employmentType
+                : "Full-time";
+
+            const salary = apiJob.expectedSalary
+              ? `₹${apiJob.expectedSalary}`
+              : apiJob.salaryRange || "Competitive";
 
             return {
-              id: String(apiJob.jobId || apiJob.id || Math.random()),
+              id: String(apiJob.jobId || apiJob.id || `pref-${index}`),
               title: apiJob.jobTitle || apiJob.title || "Job Opportunity",
               company: apiJob.companyName || apiJob.company || "Voctrum",
               tags: [
-                apiJob.employmentType === 0 ? "Full-time" : apiJob.employmentType === 1 ? "Part-time" : "Contract",
-                apiJob.experience || "Senior Level",
+                employment,
+                apiJob.experience ? `${apiJob.experience} yrs` : "Senior Level",
                 loc,
               ],
               posted: apiJob.createdAt
@@ -464,7 +452,7 @@ function RecommendedJobs() {
               apply: apiJob.lastApplicationDate
                 ? `Apply by ${new Date(apiJob.lastApplicationDate).toLocaleDateString()}`
                 : "Apply by 30 April",
-              salary: apiJob.salaryRange || "Competitive",
+              salary,
             };
           });
           setJobs(mapped.slice(0, 8));
@@ -688,12 +676,6 @@ function ResumeBanner({
             className="h-12 rounded-lg bg-blue-700 px-6 text-sm font-bold text-white transition hover:bg-blue-800 shadow-md"
           >
             Create Resume
-          </button>
-          <button
-            onClick={onOpenChat}
-            className="h-12 rounded-lg border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 px-6 text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-white dark:hover:bg-slate-800"
-          >
-            AI Assistant
           </button>
         </div>
       </div>

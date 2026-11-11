@@ -1,5 +1,6 @@
 export interface JobListing {
   id: string;
+  tenantId?: string;
   title: string;
   company: string;
   location: string;

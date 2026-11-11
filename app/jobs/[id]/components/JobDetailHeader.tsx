@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { MapPin, Clock, CalendarDays, Wallet, ExternalLink, Bookmark, Share2, Loader2 } from 'lucide-react';
+import { MapPin, Clock, CalendarDays, Wallet, ExternalLink, Bookmark, Share2, Loader2, BadgeCheck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -13,7 +13,7 @@ import { toast } from '../../../components/Toast';
 
 export default function JobDetailHeader({ job }: { job: JobListing }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, tenant } = useAuth();
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
   const [message, setMessage] = useState("");
@@ -21,6 +21,9 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
 
   useEffect(() => {
     setIsSaved(jobsService.isJobSaved(job.id));
+    if (jobsService.isJobApplied(job.id)) {
+      setApplied(true);
+    }
 
     const handleSavedUpdated = (e: any) => {
       if (!e?.detail?.jobId || String(e.detail.jobId) === String(job.id)) {
@@ -28,8 +31,15 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
       }
     };
 
+    const handleJobApplied = (e: any) => {
+      if (String(e?.detail?.jobId) === String(job.id)) {
+        setApplied(true);
+      }
+    };
+
     window.addEventListener('saved_jobs_updated', handleSavedUpdated);
     window.addEventListener('storage', handleSavedUpdated);
+    window.addEventListener('job_applied', handleJobApplied);
 
     // Check if user already applied to this job
     const checkAppliedStatus = async () => {
@@ -38,7 +48,7 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
         const apps = await jobsService.getApplications();
         if (apps && Array.isArray(apps)) {
           const alreadyApplied = apps.some((app: any) => String(app.jobId) === String(job.id));
-          setApplied(alreadyApplied);
+          if (alreadyApplied) setApplied(true);
         }
       } catch (e) {
         // Silent catch for applied status check
@@ -49,12 +59,14 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
     return () => {
       window.removeEventListener('saved_jobs_updated', handleSavedUpdated);
       window.removeEventListener('storage', handleSavedUpdated);
+      window.removeEventListener('job_applied', handleJobApplied);
     };
   }, [user, job.id]);
 
   const handleApply = async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('candidate_token') : null;
     if (!token && !user) {
+      toast.info("Sign In Required", "Please sign in or create an account to apply for this position.");
       router.push(`/register?redirect=/jobs/${job.id}`);
       return;
     }
@@ -66,32 +78,33 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
     try {
       // 1. Fetch user documents to find a resume
       const docs = await documentsService.getDocuments();
-      const resume = docs && Array.isArray(docs) ? docs.find((d: any) => (d.name || d.fileName || "")?.toLowerCase().match(/\.(pdf|doc|docx)$/)) : null;
+      const resume = docs && Array.isArray(docs) ? docs.find((d: any) => (d.name || d.fileName || "")?.toLowerCase().match(/\.(pdf|doc|docx)$/)) || docs[0] : null;
       
-      const resumeLink = resume?.url || resume?.fileUrl || "https://erp-api.voctrum.com/placeholder-resume.pdf";
+      const resumeLink = resume?.fileUrl || resume?.url || "https://dotnetapi.voctrum.com/resumes/default-candidate-resume.pdf";
+      const activeTenantId = (job as any).tenantId || (job as any).tenant?.normalizedTenantId || tenant?.normalizedTenantId || (typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null) || 'dotnetapi';
 
       // 2. Apply for job
       await jobsService.applyForJob({
         jobId: job.id,
-        tenantId: "production_test",
+        tenantId: activeTenantId,
         resumeLink,
-        note: "Applied from Voctrum Candidate Portal"
+        note: `Applied for ${job.title} at ${job.company}`,
+        candidateId: user?.candidateId || (typeof window !== 'undefined' ? localStorage.getItem('candidate_id') || undefined : undefined),
       });
 
       setApplied(true);
       setMessage("Successfully applied!");
       toast.success("Application Submitted!", `Your application for ${job.title} at ${job.company} was submitted.`);
     } catch (err: any) {
-      // If demo job ID or live backend returned 404 for mock data
-      const isDemo = ["1", "2", "3", "4", "5", "6", "7", "8", "9"].includes(String(job.id));
-      if (isDemo || err?.message?.includes("404") || err?.message?.includes("Not Found")) {
+      const errMsg = err?.message || "Failed to apply. Please try again.";
+      if (errMsg.toLowerCase().includes("already applied")) {
         setApplied(true);
-        setMessage("Successfully applied!");
-        toast.success("Application Submitted!", `Your application for ${job.title} at ${job.company} was submitted.`);
+        setMessage("You have already applied for this job.");
+        toast.info("Already Applied", `You have already submitted an application for ${job.title}.`);
       } else {
         console.error("Apply error:", err);
-        setMessage(err.message || "Failed to apply. Please try again.");
-        toast.error("Application Notice", err.message || "Failed to submit application. Please try again.");
+        setMessage(errMsg);
+        toast.error("Application Failed", errMsg);
       }
     } finally {
       setApplying(false);
@@ -176,11 +189,14 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
           >
             {applying ? (
               <>
-                Applying...
                 <Loader2 className="h-4 w-4 animate-spin" />
+                Applying...
               </>
             ) : applied && user ? (
-              "Applied"
+              <>
+                <BadgeCheck className="h-4 w-4" />
+                Applied
+              </>
             ) : (
               <>
                 Apply Now

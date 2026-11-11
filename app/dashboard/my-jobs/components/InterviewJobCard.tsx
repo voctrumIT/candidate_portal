@@ -1,42 +1,44 @@
 import { Clock, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
-import { JobListing } from '../../../jobs/data';
 
 interface InterviewJobCardProps {
-  job: JobListing;
-  status: 'Completed' | 'Pending';
-  time: string;
-  date: string;
-  type: 'Online' | 'Onsite';
+  job: any;
+  status?: 'Completed' | 'Pending' | string;
+  time?: string;
+  date?: string;
+  type?: 'Online' | 'Onsite' | string;
 }
 
-export default function InterviewJobCard({ job, status, time, date, type }: InterviewJobCardProps) {
-  const targetId = job.id || (job as any).jobId || "1";
+export default function InterviewJobCard({ job, status = 'Pending', time = '11:00 AM', date = 'Upcoming', type = 'Online' }: InterviewJobCardProps) {
+  const targetId = job.jobId || job.id || (job as any).job?.jobId || "1";
+  const displayTitle = job.title || job.jobTitle || "Job Opportunity";
+  const displayCompany = job.company || job.companyName || "Voctrum Partner";
+  const displayLocation = job.location || "Remote";
 
   return (
     <div className="flex flex-col justify-between rounded-[16px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-6 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-[#1a1a1a]">
       <div>
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{job.title}</h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate">{displayTitle}</h3>
             <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
-              {job.company} - {job.location}
+              {displayCompany} • {displayLocation}
             </p>
           </div>
           {status === 'Completed' ? (
-            <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-600">
+            <span className="shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
               Completed
             </span>
           ) : (
-            <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-600">
-              Pending
+            <span className="shrink-0 rounded-full bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+              Scheduled
             </span>
           )}
         </div>
 
         {/* Tags */}
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          {job.tags && job.tags.map((tag) => (
+          {job.tags && job.tags.map((tag: string) => (
             <span
               key={tag}
               className="inline-flex h-7 items-center rounded-full bg-[#F3F6FF] px-4 text-[12px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-200"

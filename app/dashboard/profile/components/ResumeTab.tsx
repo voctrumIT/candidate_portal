@@ -96,17 +96,18 @@ export default function ResumeTab() {
   }, [syncActiveResume]);
 
   const handleSetActive = (resume: any) => {
-    const id = resume.id || resume.name || resume.fileName || resume.fileUrl;
+    const id = resume.fileUrl || resume.id || resume.name || resume.fileName;
     const displayName = resume.name || resume.fileName || "Resume";
     if (typeof window !== "undefined") {
       localStorage.setItem("candidate_active_resume_id", id);
-      if (resume.name || resume.fileName) {
-        localStorage.setItem("candidate_active_resume_name", displayName);
+      localStorage.setItem("candidate_active_resume_name", displayName);
+      if (resume.fileUrl) {
+        localStorage.setItem("candidate_active_resume_url", resume.fileUrl);
       }
       setActiveResumeId(id);
       window.dispatchEvent(
         new CustomEvent("active_resume_updated", {
-          detail: { id, name: displayName },
+          detail: { id, name: displayName, fileUrl: resume.fileUrl },
         })
       );
       toast.success("Active Resume Set", `"${displayName}" is now set as your active profile resume.`);
@@ -130,14 +131,33 @@ export default function ResumeTab() {
       setUploading(true);
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("File", file);
+      formData.append("DocumentType", "Resume");
+      formData.append("type", "Resume");
+
+      const cid = typeof window !== "undefined" ? localStorage.getItem("candidate_id") : null;
+      if (cid) {
+        formData.append("CandidateId", cid);
+      }
+
       const uploadRes = await documentsService.uploadDocument(formData);
+      const newDoc = uploadRes?.payload || uploadRes;
+      const newId = newDoc?.fileUrl || newDoc?.id || newDoc?.documentId || file.name;
+      const newUrl = newDoc?.fileUrl || null;
 
       // Automatically set newly uploaded resume as active if none exists or as primary
       if (typeof window !== "undefined") {
-        const newId = uploadRes?.id || uploadRes?.payload?.id || file.name;
         localStorage.setItem("candidate_active_resume_id", newId);
         localStorage.setItem("candidate_active_resume_name", file.name);
+        if (newUrl) {
+          localStorage.setItem("candidate_active_resume_url", newUrl);
+        }
         setActiveResumeId(newId);
+        window.dispatchEvent(
+          new CustomEvent("active_resume_updated", {
+            detail: { id: newId, name: file.name, fileUrl: newUrl },
+          })
+        );
       }
 
       await fetchDocs();
@@ -151,18 +171,33 @@ export default function ResumeTab() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (identifier: string) => {
     try {
-      await documentsService.deleteDocument(id);
-      if (activeResumeId === id) {
+      if (identifier && !identifier.startsWith("blob:") && !identifier.startsWith("active-builder-") && identifier.length > 5) {
+        await documentsService.deleteDocument(identifier);
+      }
+      if (
+        activeResumeId === identifier ||
+        (identifier && activeResumeId && (activeResumeId.includes(identifier) || identifier.includes(activeResumeId)))
+      ) {
         localStorage.removeItem("candidate_active_resume_id");
         localStorage.removeItem("candidate_active_resume_name");
+        localStorage.removeItem("candidate_active_resume_url");
+        localStorage.removeItem("candidate_active_resume");
         setActiveResumeId(null);
       }
       await fetchDocs();
       toast.info("Resume Removed", "The document has been removed from your profile.");
     } catch (err: any) {
       console.error("Delete failed", err);
+      // Even if API returns error (e.g. document not found on s3), clean local state if active
+      if (activeResumeId === identifier) {
+        localStorage.removeItem("candidate_active_resume_id");
+        localStorage.removeItem("candidate_active_resume_name");
+        localStorage.removeItem("candidate_active_resume_url");
+        setActiveResumeId(null);
+        await fetchDocs();
+      }
       toast.error("Delete Failed", err?.message || "Could not remove document. Please try again.");
     }
   };
@@ -221,8 +256,8 @@ export default function ResumeTab() {
               <div
                 key={resume.id || resume.fileUrl || resume.name || index}
                 className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[12px] p-5 transition-colors ${isResumeActive
-                    ? "bg-blue-50/60 dark:bg-blue-950/20 border-2 border-blue-500/40"
-                    : "bg-[#f8f9fa] dark:bg-[#1a1a1a] border border-slate-200/80 dark:border-slate-800 hover:bg-[#f1f3f5] dark:hover:bg-slate-800"
+                  ? "bg-blue-50/60 dark:bg-blue-950/20 border-2 border-blue-500/40"
+                  : "bg-[#f8f9fa] dark:bg-[#1a1a1a] border border-slate-200/80 dark:border-slate-800 hover:bg-[#f1f3f5] dark:hover:bg-slate-800"
                   }`}
               >
                 <div className="flex items-center gap-4">
@@ -273,8 +308,8 @@ export default function ResumeTab() {
                   )}
                   <button
                     type="button"
-                    onClick={() => handleDelete(resume.id)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-white dark:bg-[#1a1a1a] text-red-500 border border-slate-200 dark:border-slate-700 transition hover:bg-red-50 shadow-2xs"
+                    onClick={() => handleDelete(resume.fileUrl || resume.id || resume.fileName || resume.name)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-white dark:bg-[#1a1a1a] text-red-500 border border-slate-200 dark:border-slate-700 transition hover:bg-red-50 dark:hover:bg-red-950/40 shadow-2xs"
                     title="Delete Resume"
                   >
                     <Trash2 className="h-4 w-4" />
