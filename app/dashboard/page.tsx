@@ -90,6 +90,12 @@ export default function DashboardPage() {
         onOpenChat={() => setIsChatOpen(true)}
       />
 
+      {/* Platform & Community Stats */}
+      {/* <ActiveUsers /> */}
+
+      {/* App Download Promo */}
+      {/* <AppDownload /> */}
+
       {/* Modals */}
       <VoctrumAIChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       <ResumeBuilderModal

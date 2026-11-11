@@ -15,7 +15,7 @@ const navLinks: { label: string; href: string }[] = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, tenant, tenantLoading, logout } = useAuth();
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,15 +39,25 @@ export default function Navbar() {
       className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur"
     >
       <nav className="mx-auto flex h-20 max-w-[1360px] items-center justify-between px-5 md:px-10 lg:px-16">
-        <Link href="/" aria-label="Voctrum home" className="flex items-center">
-          <Image
-            src="/common/logo.png"
-            alt="Voctrum"
-            width={156}
-            height={54}
-            priority
-            className="h-10 w-auto object-contain"
-          />
+        <Link href="/" aria-label="Home" className="flex items-center">
+          {tenantLoading ? (
+            <div className="h-10 w-32 animate-pulse rounded-md bg-slate-200/70 dark:bg-slate-800" />
+          ) : tenant?.logoUrl ? (
+            <img
+              src={tenant.logoUrl}
+              alt={tenant.companyName || "Logo"}
+              className="h-10 w-auto object-contain max-w-[160px]"
+            />
+          ) : (
+            <Image
+              src="/common/logo.png"
+              alt="Voctrum"
+              width={156}
+              height={54}
+              priority
+              className="h-10 w-auto object-contain"
+            />
+          )}
         </Link>
 
         <div className="hidden items-center gap-16 md:flex">

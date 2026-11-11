@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <section className="min-h-screen pl-[286px] flex flex-col">
         <DashboardHeader onProfileClick={() => setShowProfile(true)} />
         <div className="flex-1">{children}</div>
-        {showFooter && <DashboardFooter />}
+        {/* {showFooter && <DashboardFooter />} */}
       </section>
       {showProfile ? <ProfileModal onClose={() => setShowProfile(false)} /> : null}
     </main>
@@ -58,20 +58,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
 function DashboardSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { tenant, tenantLoading, logout } = useAuth();
 
   return (
     <aside className="fixed bottom-0 left-0 top-0 w-[286px] flex flex-col overflow-y-auto bg-[#172a78] dark:bg-[#0f172a] text-white z-20 shadow-lg">
       <div className="flex h-[100px] shrink-0 items-center px-8">
-        <Link href="/">
-          <Image
-            src="/common/logo.png"
-            alt="Voctrum"
-            width={120}
-            height={42}
-            className="h-9 w-auto brightness-0 invert"
-            priority
-          />
+        <Link href="/dashboard" className="flex items-center">
+          {tenantLoading ? (
+            <div className="h-10 w-32 animate-pulse rounded-md bg-slate-200/70 dark:bg-slate-800" />
+          ) : tenant?.logoUrl ? (
+            <img
+              src={tenant.logoUrl}
+              alt={tenant.companyName || "Logo"}
+              className="h-9 w-auto object-contain max-w-[150px]"
+            />
+          ) : (
+            <Image
+              src="/common/logo.png"
+              alt="Voctrum"
+              width={120}
+              height={42}
+              className="h-9 w-auto brightness-0 invert"
+              priority
+            />
+          )}
         </Link>
       </div>
 
