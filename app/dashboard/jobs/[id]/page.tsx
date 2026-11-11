@@ -3,10 +3,12 @@
 import { useEffect, useState, use } from "react";
 import { MapPin, Clock, Calendar, Wallet, Bookmark, Share2, Network } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { dummyJobs } from "../../../jobs/data";
 import JobCard from "../../../jobs/components/JobCard";
 import ApplyButton from "./components/ApplyButton";
 import { jobsService } from "../../../../services/jobs";
+import { useAuth } from "../../../../context/AuthContext";
 
 function mapApiJobToJobListing(apiJob: any) {
   if (!apiJob) return null;
@@ -54,6 +56,8 @@ function mapApiJobToJobListing(apiJob: any) {
 }
 
 export default function JobDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
+  const { user } = useAuth();
   const resolvedParams = use(params);
   const rawId = resolvedParams?.id || "";
   const id = decodeURIComponent(rawId).trim();
@@ -65,6 +69,25 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     dummyJobs.filter((j) => String(j.id) !== id).slice(0, 3)
   );
   const [loading, setLoading] = useState(!initialJob);
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    setIsSaved(jobsService.isJobSaved(id));
+
+    const handleSavedUpdated = (e: any) => {
+      if (!e?.detail?.jobId || String(e.detail.jobId) === id) {
+        setIsSaved(jobsService.isJobSaved(id));
+      }
+    };
+
+    window.addEventListener("saved_jobs_updated", handleSavedUpdated);
+    window.addEventListener("storage", handleSavedUpdated);
+
+    return () => {
+      window.removeEventListener("saved_jobs_updated", handleSavedUpdated);
+      window.removeEventListener("storage", handleSavedUpdated);
+    };
+  }, [id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -112,6 +135,22 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     };
   }, [id]);
 
+  const handleToggleSave = async () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("candidate_token") : null;
+    if (!token && !user) {
+      router.push(`/register?redirect=/dashboard/jobs/${id}`);
+      return;
+    }
+
+    if (isSaved) {
+      setIsSaved(false);
+      await jobsService.unsaveJob(id);
+    } else {
+      setIsSaved(true);
+      await jobsService.saveJob(id, job);
+    }
+  };
+
   if (loading || !job) {
     return (
       <div className="px-10 py-10 min-h-screen flex items-center justify-center">
@@ -138,40 +177,38 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
       {/* Header Section */}
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          {/* Company Logo Placeholder */}
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-[#2f54eb]">
-            <Network className="h-6 w-6" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 p-2 dark:bg-slate-800">
+            <div className="h-full w-full rounded-full bg-gradient-to-br from-[#2f54eb] to-cyan-400" />
           </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{job.company}</p>
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white">{job.title}</h1>
-          </div>
+          <span className="text-[15px] font-medium text-slate-600 dark:text-slate-400">{job.company}</span>
         </div>
+
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white md:text-4xl">{job.title}</h1>
 
         {/* Tags */}
         <div className="flex flex-wrap items-center gap-2">
           {tags.map((tag: string) => (
             <span
               key={tag}
-              className="inline-flex h-8 items-center rounded-full bg-[#f4f7ff] dark:bg-slate-800 px-5 text-[13px] font-medium text-slate-600 dark:text-slate-300"
+              className="inline-flex h-8 items-center rounded-full bg-[#f3f6ff] px-5 text-[13px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
             >
               {tag}
             </span>
           ))}
         </div>
 
-        {/* Meta Info Row */}
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-[14px] text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-[#2f54eb]" />
+        {/* Details Grid */}
+        <div className="flex flex-wrap items-center gap-6 text-[14px] text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <MapPin className="h-4 w-4 text-[#2f54eb]" />
             <span className="font-semibold text-slate-700 dark:text-slate-300">Location :</span> {job.location}
           </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-[#2f54eb]" />
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-4 w-4 text-[#2f54eb]" />
             {job.postedDate}
           </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-[#2f54eb]" />
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-4 w-4 text-[#2f54eb]" />
             {job.applyByDate}
           </div>
         </div>
@@ -185,11 +222,22 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
         {/* Action Buttons */}
         <div className="mt-2 flex items-center gap-4">
           <ApplyButton jobId={job.id} jobCompany={job.company} jobTitle={job.title} />
-          <button className="flex h-11 items-center gap-2 rounded-lg border border-[#2f54eb] bg-white dark:bg-[#1a1a1a] px-6 text-sm font-semibold text-[#2f54eb] transition hover:bg-[#f4f7ff]">
-            Save for Later
-            <Bookmark className="h-4 w-4" />
+          <button
+            type="button"
+            onClick={handleToggleSave}
+            className={`flex h-11 items-center gap-2 rounded-lg border px-6 text-sm font-semibold transition ${
+              isSaved
+                ? "border-[#2f54eb] bg-[#2f54eb] text-white hover:bg-[#2447d8]"
+                : "border-[#2f54eb] bg-white dark:bg-[#1a1a1a] text-[#2f54eb] hover:bg-[#f4f7ff] dark:hover:bg-slate-800"
+            }`}
+          >
+            {isSaved ? "Saved" : "Save for Later"}
+            <Bookmark className={`h-4 w-4 ${isSaved ? "fill-white text-white" : ""}`} />
           </button>
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200">
+          <button
+            type="button"
+            className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
             <Share2 className="h-5 w-5" />
           </button>
         </div>
@@ -223,57 +271,37 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
         </ul>
 
         <SectionHeading title="Key Skills" />
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {keySkills.map((skill: string) => (
             <span
               key={skill}
-              className="inline-flex h-9 items-center rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 text-[13px] font-medium text-slate-600 dark:text-slate-300"
+              className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:bg-[#1a1a1a] dark:text-slate-300"
             >
               {skill}
             </span>
           ))}
         </div>
 
-        <SectionHeading title="About the Company" />
-        <div className="space-y-4 text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">
-          {aboutText.split("\n\n").map((para: string, idx: number) => {
-            if (idx === 0) {
-              return (
-                <p key={idx} className="font-bold text-slate-700 dark:text-slate-300">
-                  {para}
-                </p>
-              );
-            }
-            return <p key={idx}>{para}</p>;
-          })}
-        </div>
+        <SectionHeading title="About Company" />
+        <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">
+          {aboutText}
+        </p>
       </div>
 
-      <hr className="my-12 border-slate-200 dark:border-slate-700" />
+      <hr className="my-14 border-slate-200 dark:border-slate-700" />
 
-      {/* Similar Jobs Section */}
+      {/* Similar Jobs */}
       <div>
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white">Similar Jobs</h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Explore more opportunities that match your profile and interests.</p>
-          </div>
-          <Link href="/dashboard/jobs" className="text-sm font-bold text-slate-900 dark:text-white underline underline-offset-4 hover:text-[#2f54eb]">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Similar Jobs</h2>
+          <Link href="/dashboard/jobs" className="text-sm font-semibold text-[#2f54eb] underline">
             View all
           </Link>
         </div>
-
-        <div className="mt-8 grid gap-6 xl:grid-cols-3">
-          {similarJobs.slice(0, 3).map((similarJob: any) => (
-            <JobCard key={similarJob.id} job={similarJob} isDashboard />
+        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {similarJobs.map((simJob) => (
+            <JobCard key={simJob.id} job={simJob} isDashboard />
           ))}
-        </div>
-
-        {/* Pagination Dots */}
-        <div className="mt-10 flex justify-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-[#2f54eb]"></div>
-          <div className="h-2 w-2 rounded-full bg-slate-300"></div>
-          <div className="h-2 w-2 rounded-full bg-slate-300"></div>
         </div>
       </div>
     </div>

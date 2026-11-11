@@ -4,25 +4,39 @@ import { useState, useEffect } from 'react';
 import { MapPin, Clock, CalendarDays, Wallet, ExternalLink, Bookmark, Share2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { JobListing } from '../../data';
 import { useAuth } from '../../../../context/AuthContext';
 import { jobsService } from '../../../../services/jobs';
 import { documentsService } from '../../../../services/documents';
 
 export default function JobDetailHeader({ job }: { job: JobListing }) {
+  const router = useRouter();
   const { user } = useAuth();
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
+    setIsSaved(jobsService.isJobSaved(job.id));
+
+    const handleSavedUpdated = (e: any) => {
+      if (!e?.detail?.jobId || String(e.detail.jobId) === String(job.id)) {
+        setIsSaved(jobsService.isJobSaved(job.id));
+      }
+    };
+
+    window.addEventListener('saved_jobs_updated', handleSavedUpdated);
+    window.addEventListener('storage', handleSavedUpdated);
+
     // Check if user already applied to this job
     const checkAppliedStatus = async () => {
       if (!user) return;
       try {
         const apps = await jobsService.getApplications();
         if (apps && Array.isArray(apps)) {
-          const alreadyApplied = apps.some((app: any) => app.jobId === job.id);
+          const alreadyApplied = apps.some((app: any) => String(app.jobId) === String(job.id));
           setApplied(alreadyApplied);
         }
       } catch (e) {
@@ -30,9 +44,20 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
       }
     };
     checkAppliedStatus();
+
+    return () => {
+      window.removeEventListener('saved_jobs_updated', handleSavedUpdated);
+      window.removeEventListener('storage', handleSavedUpdated);
+    };
   }, [user, job.id]);
 
   const handleApply = async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('candidate_token') : null;
+    if (!token && !user) {
+      router.push(`/register?redirect=/jobs/${job.id}`);
+      return;
+    }
+
     if (applying || applied) return;
     setApplying(true);
     setMessage("");
@@ -69,11 +94,27 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
     }
   };
 
+  const handleToggleSave = async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('candidate_token') : null;
+    if (!token && !user) {
+      router.push(`/register?redirect=/jobs/${job.id}`);
+      return;
+    }
+
+    if (isSaved) {
+      setIsSaved(false);
+      await jobsService.unsaveJob(job.id);
+    } else {
+      setIsSaved(true);
+      await jobsService.saveJob(job.id, job);
+    }
+  };
+
   return (
     <div className="border-b border-slate-200 dark:border-slate-700 pb-8">
       {/* Company Info */}
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 p-2">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 p-2 dark:bg-slate-800">
           {/* Fallback avatar/logo */}
           <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-500 to-cyan-400" />
         </div>
@@ -118,46 +159,47 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
       {/* Action Buttons */}
       <div className="mt-8 flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-4">
-          {user ? (
-            <button
-              onClick={handleApply}
-              disabled={applying || applied}
-              className={`flex items-center gap-2 rounded-md px-8 py-2.5 text-[14px] font-semibold text-white shadow-sm transition ${
-                applied 
-                  ? "bg-green-600 hover:bg-green-700" 
-                  : "bg-blue-700 hover:bg-blue-800 disabled:opacity-75"
-              }`}
-            >
-              {applying ? (
-                <>
-                  Applying...
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </>
-              ) : applied ? (
-                "Applied"
-              ) : (
-                <>
-                  Apply Now
-                  <ExternalLink className="h-4 w-4" />
-                </>
-              )}
-            </button>
-          ) : (
-            <Link 
-              href="/login" 
-              className="flex items-center gap-2 rounded-md bg-blue-700 px-8 py-2.5 text-[14px] font-semibold !text-white shadow-sm transition hover:bg-blue-800"
-            >
-              Login to Apply
-              <ExternalLink className="h-4 w-4" />
-            </Link>
-          )}
-
-          <button className="flex items-center gap-2 rounded-md border border-blue-600 px-6 py-2.5 text-[14px] font-semibold text-blue-700 transition hover:bg-blue-50 dark:hover:bg-slate-800">
-            Save for Later
-            <Bookmark className="h-4 w-4" />
+          <button
+            onClick={handleApply}
+            disabled={applying || (applied && Boolean(user))}
+            className={`flex items-center gap-2 rounded-md px-8 py-2.5 text-[14px] font-semibold text-white shadow-sm transition ${
+              applied && user
+                ? "bg-green-600 hover:bg-green-700" 
+                : "bg-blue-700 hover:bg-blue-800 disabled:opacity-75"
+            }`}
+          >
+            {applying ? (
+              <>
+                Applying...
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </>
+            ) : applied && user ? (
+              "Applied"
+            ) : (
+              <>
+                Apply Now
+                <ExternalLink className="h-4 w-4" />
+              </>
+            )}
           </button>
 
-          <button className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-slate-700">
+          <button
+            type="button"
+            onClick={handleToggleSave}
+            className={`flex items-center gap-2 rounded-md border px-6 py-2.5 text-[14px] font-semibold transition ${
+              isSaved
+                ? "border-blue-700 bg-blue-700 text-white hover:bg-blue-800"
+                : "border-blue-600 text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800"
+            }`}
+          >
+            {isSaved ? "Saved" : "Save for Later"}
+            <Bookmark className={`h-4 w-4 ${isSaved ? "fill-white text-white" : ""}`} />
+          </button>
+
+          <button
+            type="button"
+            className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-slate-700"
+          >
             <Share2 className="h-4 w-4" />
           </button>
         </div>

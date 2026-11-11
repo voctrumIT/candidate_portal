@@ -3,26 +3,17 @@
 import Image from "next/image";
 import {
   ArrowRight,
-  ArrowUpRight,
   Bookmark,
   BriefcaseBusiness,
-  Building2,
   CalendarCheck2,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
   Clock,
-  ExternalLink,
-  Eye,
   Filter,
-  Flame,
-  Layers,
-  MapPin,
   Phone,
   Search,
   Send,
-  Sparkles,
-  TrendingUp,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -114,71 +105,110 @@ const defaultApplications: ApplicationItem[] = [
     jobId: "1",
     title: "Senior Product Designer",
     company: "Niscala.io",
-    location: "San Francisco, USA (Remote)",
+    location: "San Francisco, USA",
     type: "Full-time",
     salary: "₹520k - 660k/yr",
-    appliedDate: "Applied 3 days ago",
+    appliedDate: "Applied 4 days ago",
     currentStep: 2,
     status: "In Review",
-    statusNote: "Portfolio & design challenge being evaluated by Hiring Team.",
+    statusNote: "Application under hiring manager portfolio review.",
     badgeColor: "amber",
   },
   {
     id: "app-3",
-    jobId: "4",
-    title: "Product Manager",
-    company: "Quantify",
-    location: "Mumbai, India (Hybrid)",
-    type: "Full-time",
-    salary: "₹780k - 940k/yr",
-    appliedDate: "Applied 5 days ago",
-    currentStep: 2,
-    status: "Shortlisted",
-    statusNote: "Profile shortlisted. Recruiter will coordinate interview schedule shortly.",
-    badgeColor: "emerald",
-  },
-  {
-    id: "app-4",
     jobId: "3",
     title: "Data Scientist",
     company: "UNICA",
-    location: "Berlin, Germany (Onsite)",
+    location: "Berlin, Germany",
     type: "Full-time",
     salary: "₹720k - 960k/yr",
     appliedDate: "Applied 1 week ago",
-    currentStep: 1,
-    status: "Applied",
-    statusNote: "Application received and queued for initial talent screening.",
-    badgeColor: "blue",
+    currentStep: 2,
+    status: "Shortlisted",
+    statusNote: "Candidate shortlisted for algorithmic interview stage.",
+    badgeColor: "emerald",
   },
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
-  const [applications, setApplications] = useState<ApplicationItem[]>(defaultApplications);
+  const [applications] = useState<ApplicationItem[]>(defaultApplications);
   const [appCount, setAppCount] = useState<number>(defaultApplications.length);
-  const { user } = useAuth();
+  const [savedJobsCount, setSavedJobsCount] = useState<number>(8);
 
   useEffect(() => {
-    async function loadApplications() {
+    async function loadData() {
       try {
         const liveApps = await jobsService.getApplications();
         if (liveApps && Array.isArray(liveApps) && liveApps.length > 0) {
           setAppCount(liveApps.length);
         }
       } catch {
-        // Fallback to default realistic candidate applications
+        // Fallback
+      }
+
+      try {
+        const saved = await jobsService.getSavedJobs();
+        if (saved && Array.isArray(saved) && saved.length > 0) {
+          setSavedJobsCount(saved.length);
+        }
+      } catch {
+        // Fallback
       }
     }
-    loadApplications();
+
+    loadData();
+
+    const handleSavedUpdated = async () => {
+      try {
+        const saved = await jobsService.getSavedJobs();
+        if (saved && Array.isArray(saved) && saved.length > 0) {
+          setSavedJobsCount(saved.length);
+        }
+      } catch {}
+    };
+
+    window.addEventListener("saved_jobs_updated", handleSavedUpdated);
+    window.addEventListener("storage", handleSavedUpdated);
+    return () => {
+      window.removeEventListener("saved_jobs_updated", handleSavedUpdated);
+      window.removeEventListener("storage", handleSavedUpdated);
+    };
   }, []);
+
+  const handleOpenResumeBuilder = () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("candidate_token") : null;
+    if (!token && !user) {
+      router.push("/register?redirect=/dashboard/resume-builder");
+      return;
+    }
+    setIsResumeBuilderOpen(true);
+  };
 
   const candidateFirstName =
     user?.firstName ||
     (user?.name ? user.name.split(" ")[0] : "Candidate");
 
   return (
+    <div className="px-10 py-7 space-y-10">
+      {/* Search Header */}
+      <div>
+        <div className="mb-4">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+            Welcome back, {candidateFirstName}!
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Track your job applications, interview invites, and matching career opportunities.
+          </p>
+        </div>
+        <SearchBar />
+      </div>
+
+      {/* Overview Cards: Active Jobs, Applications, Saved, Interviews */}
+      <OverviewCards applicationCount={appCount} savedCount={savedJobsCount} />
     <div className="px-6 py-6 md:px-10 md:py-8 space-y-10">
       {/* Welcome & Overview Header */}
       <section className="flex flex-col gap-2">
@@ -216,7 +246,7 @@ export default function DashboardPage() {
 
       {/* AI Resume Banner */}
       <ResumeBanner
-        onOpenResumeBuilder={() => setIsResumeBuilderOpen(true)}
+        onOpenResumeBuilder={handleOpenResumeBuilder}
         onOpenChat={() => setIsChatOpen(true)}
       />
 
@@ -249,27 +279,27 @@ function SearchBar() {
   };
 
   return (
-    <div className="flex h-14 w-full items-center gap-3 rounded-2xl bg-white dark:bg-[#1a1a1a] px-5 shadow-sm border border-slate-200/80 dark:border-slate-800 transition focus-within:border-[#2f54eb] focus-within:ring-2 focus-within:ring-[#2f54eb]/10">
+    <div className="mx-auto flex h-14 w-full items-center gap-4 rounded-full bg-[#e9edff] px-6 dark:bg-slate-800">
       <Search className="h-5 w-5 shrink-0 text-[#2f54eb]" />
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-        placeholder="Search jobs by title, skill, or company (e.g. React, UX Designer, Google)..."
-        className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#98a2b3] dark:text-white dark:placeholder:text-slate-500"
+        placeholder="Enter skills / designations / companies"
+        className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#667085] dark:text-slate-400 dark:text-white"
       />
       <button
         type="button"
         onClick={handleSearch}
-        className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-3.5 text-xs font-semibold text-slate-700 dark:text-slate-200 transition"
+        className="inline-flex h-11 items-center gap-2 rounded-full bg-[#2f54eb] px-6 text-sm font-bold text-white transition hover:bg-[#2447d8]"
       >
-        <Filter className="h-3.5 w-3.5" />
-        Filters
+        <Filter className="h-4 w-4" />
+        Filter
       </button>
       <button
         type="button"
         onClick={handleSearch}
-        className="h-10 rounded-xl bg-[#2f54eb] px-5 text-xs sm:text-sm font-semibold !text-white transition hover:bg-[#2447d8] shadow-sm shrink-0"
+        className="h-11 rounded-full bg-[#2f54eb] px-7 text-sm font-bold text-white transition hover:bg-[#2447d8]"
       >
         Search Jobs
       </button>
@@ -277,7 +307,7 @@ function SearchBar() {
   );
 }
 
-function OverviewCards({ applicationCount }: { applicationCount: number }) {
+function OverviewCards({ applicationCount, savedCount }: { applicationCount: number; savedCount: number }) {
   const cards = [
     {
       title: "Active Jobs",
@@ -294,7 +324,7 @@ function OverviewCards({ applicationCount }: { applicationCount: number }) {
       title: "Applications",
       count: applicationCount.toString(),
       subtext: "Active recruiter reviews",
-      badge: "3 In Review",
+      badge: `${applicationCount} In Review`,
       badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800",
       icon: Send,
       iconBg: "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400",
@@ -303,9 +333,9 @@ function OverviewCards({ applicationCount }: { applicationCount: number }) {
     },
     {
       title: "Saved Jobs",
-      count: "8",
+      count: savedCount.toString(),
       subtext: "Saved for quick apply",
-      badge: "2 Closing Soon",
+      badge: "Quick Apply Ready",
       badgeColor: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
       icon: Bookmark,
       iconBg: "bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400",
@@ -590,8 +620,8 @@ function ApplicationStatusSection({ applications }: { applications: ApplicationI
           href="/dashboard/my-jobs"
           className="inline-flex items-center gap-1 text-xs font-bold text-[#2f54eb] hover:underline dark:text-blue-400"
         >
-          <span>View All in My Jobs</span>
-          <ArrowRight className="h-3.5 w-3.5" />
+          <span>View all applications</span>
+          <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </section>
@@ -599,81 +629,114 @@ function ApplicationStatusSection({ applications }: { applications: ApplicationI
 }
 
 function RecommendedJobs() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [savedMap, setSavedMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const refreshSaved = () => {
+      const map: Record<string, boolean> = {};
+      jobs.forEach((j) => {
+        map[j.id] = jobsService.isJobSaved(j.id);
+      });
+      setSavedMap(map);
+    };
+
+    refreshSaved();
+    window.addEventListener("saved_jobs_updated", refreshSaved);
+    window.addEventListener("storage", refreshSaved);
+
+    return () => {
+      window.removeEventListener("saved_jobs_updated", refreshSaved);
+      window.removeEventListener("storage", refreshSaved);
+    };
+  }, []);
+
+  const handleToggleSave = async (e: React.MouseEvent, job: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("candidate_token") : null;
+    if (!token && !user) {
+      router.push(`/register?redirect=/dashboard/jobs/${job.id}`);
+      return;
+    }
+
+    const currentlySaved = Boolean(savedMap[job.id]);
+    setSavedMap((prev) => ({ ...prev, [job.id]: !currentlySaved }));
+
+    if (currentlySaved) {
+      await jobsService.unsaveJob(job.id);
+    } else {
+      await jobsService.saveJob(job.id, {
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        location: job.company.includes("-") ? job.company.split("-")[1].trim() : "Remote",
+        tags: job.tags,
+        postedDate: job.posted,
+        applyByDate: job.apply,
+        salaryRange: job.salary,
+      });
+    }
+  };
+
   return (
-    <section className="overflow-hidden">
-      <SectionHeader
-        title="Recommended Jobs for You"
-        copy="Curated roles based on your profile, activity, and career goals"
-      />
-      <Swiper
-        modules={[Pagination, Autoplay]}
-        slidesPerView={1}
-        spaceBetween={20}
-        pagination={{ clickable: true }}
-        autoplay={{ delay: 3500, disableOnInteraction: false }}
-        breakpoints={{
-          900: { slidesPerView: 2 },
-          1180: { slidesPerView: 3 },
-        }}
-        className="mt-6 !pb-14"
-      >
-        {jobs.map((job) => (
-          <SwiperSlide key={job.id} className="h-auto">
-            <article className="flex h-full min-h-[300px] flex-col rounded-2xl border border-slate-200/90 bg-white p-6 transition-all duration-300 hover:border-[#2f54eb] hover:shadow-lg dark:border-slate-800 dark:bg-[#1a1a1a]">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="line-clamp-1 text-base font-bold text-[#101828] dark:text-white">
-                    {job.title}
-                  </h3>
-                  <p className="mt-1 line-clamp-1 text-xs sm:text-sm text-[#667085] dark:text-slate-400">
-                    {job.company}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  aria-label="Bookmark job"
-                  className="shrink-0 rounded-lg p-1.5 transition hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  <Bookmark className="h-5 w-5 text-[#98a2b3] transition hover:fill-[#2f54eb] hover:text-[#2f54eb]" />
-                </button>
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {job.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-[#f0f4ff] px-3 py-1 text-xs font-medium text-[#344054] dark:bg-slate-800 dark:text-slate-200"
+    <section className="mt-14 overflow-hidden">
+      <SectionHeader title="Recommended jobs for you" copy="Curated roles based on your profile and activity to match your career goals" />
+      <Swiper modules={[Pagination, Autoplay]} slidesPerView={1} spaceBetween={20} pagination={{ clickable: true }} autoplay={{ delay: 3000, disableOnInteraction: false }} breakpoints={{ 900: { slidesPerView: 2 }, 1180: { slidesPerView: 3 } }} className="mt-8 !pb-16">
+        {jobs.map((job) => {
+          const isSaved = Boolean(savedMap[job.id]);
+          return (
+            <SwiperSlide key={job.id} className="h-auto">
+              <article className="flex h-full min-h-[320px] flex-col rounded-2xl border border-[#e4e7ec] bg-white dark:bg-[#1a1a1a] p-6 transition-all duration-300 hover:border-[#2f54eb] hover:shadow-lg dark:border-slate-800">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <h3 className="line-clamp-1 text-lg font-bold text-[#101828] dark:text-white">{job.title}</h3>
+                    <p className="mt-1.5 line-clamp-1 text-sm text-[#667085] dark:text-slate-400">{job.company}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => handleToggleSave(e, job)}
+                    aria-label={isSaved ? `Remove ${job.title} from saved jobs` : `Save ${job.title}`}
+                    title={isSaved ? "Saved" : "Save job"}
+                    className="shrink-0 p-1.5 rounded-lg transition hover:scale-110"
                   >
-                    {tag}
+                    <Bookmark
+                      className={`h-5 w-5 transition ${
+                        isSaved
+                          ? "fill-[#2f54eb] text-[#2f54eb]"
+                          : "text-[#98a2b3] hover:fill-[#2f54eb] hover:text-[#2f54eb]"
+                      }`}
+                    />
+                  </button>
+                </div>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {job.tags.map((tag) => <span key={tag} className="rounded-full bg-[#f0f4ff] px-4 py-1.5 text-xs font-medium text-[#344054] dark:bg-slate-800 dark:text-slate-200">{tag}</span>)}
+                </div>
+                <div className="mt-5 flex flex-col gap-2.5 text-xs text-[#667085] dark:text-slate-400">
+                  <span className="inline-flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-[#2f54eb]" />
+                    {job.posted}
                   </span>
-                ))}
-              </div>
-
-              <div className="mt-4 flex flex-col gap-2 text-xs text-[#667085] dark:text-slate-400">
-                <span className="inline-flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-[#2f54eb]" />
-                  {job.posted}
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <CalendarDays className="h-3.5 w-3.5 text-[#2f54eb]" />
-                  {job.apply}
-                </span>
-              </div>
-
-              <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
-                <p className="text-sm font-bold text-[#172a78] dark:text-blue-400">
-                  {job.salary}
-                </p>
-                <Link
-                  href={`/dashboard/jobs/${job.id}`}
-                  className="inline-flex items-center justify-center rounded-lg bg-[#2f54eb] px-4 py-2 text-xs font-semibold !text-white transition hover:bg-[#2447d8] shadow-xs"
-                >
-                  View Job
-                </Link>
-              </div>
-            </article>
-          </SwiperSlide>
-        ))}
+                  <span className="inline-flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-[#2f54eb]" />
+                    {job.apply}
+                  </span>
+                </div>
+                <div className="mt-auto flex items-center justify-between border-t border-[#e4e7ec] pt-4 dark:border-slate-800">
+                  <p className="text-sm font-bold text-[#344054] dark:text-slate-200">{job.salary}</p>
+                  <Link
+                    href={`/dashboard/jobs/${job.id}`}
+                    className="inline-flex items-center justify-center rounded-lg bg-[#2f54eb] px-5 py-2.5 text-sm font-semibold !text-white transition hover:bg-[#2447d8]"
+                  >
+                    View Job
+                  </Link>
+                </div>
+              </article>
+            </SwiperSlide>
+          );
+        })}
       </Swiper>
     </section>
   );
@@ -683,19 +746,11 @@ function SectionHeader({ title, copy }: { title: string; copy: string }) {
   return (
     <div className="flex items-end justify-between gap-6">
       <div>
-        <h2 className="text-xl sm:text-2xl font-black text-[#101828] dark:text-white">
-          {title}
-        </h2>
-        <p className="mt-1 text-xs sm:text-sm text-[#667085] dark:text-slate-400">
-          {copy}
-        </p>
+        <h2 className="text-2xl font-extrabold text-[#101828] dark:text-white">{title}</h2>
+        <p className="mt-2 text-sm text-[#98a2b3] dark:text-slate-400">{copy}</p>
       </div>
-      <Link
-        href="/dashboard/jobs"
-        className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#2f54eb] hover:underline dark:text-blue-400 shrink-0"
-      >
-        <span>View all jobs</span>
-        <ArrowRight className="h-3.5 w-3.5" />
+      <Link href="/dashboard/my-jobs" className="text-sm font-semibold text-[#344054] underline dark:text-slate-300">
+        View all
       </Link>
     </div>
   );
@@ -709,50 +764,22 @@ function ResumeBanner({
   onOpenChat?: () => void;
 }) {
   return (
-    <section className="relative min-h-[380px] overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-[#172a78] text-white p-8 md:p-14 shadow-md">
-      <div className="relative z-10 max-w-xl">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-sm px-3.5 py-1 text-xs font-semibold text-blue-200 border border-white/20">
-          <Sparkles className="h-3.5 w-3.5 text-yellow-300" />
-          AI-Powered Career Toolkit
+    <section className="relative min-h-[420px] overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-900 dark:bg-slate-900/50">
+      <Image src="/homepage/section.png" alt="Professional building a resume on a laptop" fill sizes="1100px" className="object-cover opacity-100 dark:opacity-30 mix-blend-multiply dark:mix-blend-screen" />
+      <div className="relative z-10 max-w-2xl px-9 py-14 md:px-20">
+        <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white/80 px-4 py-1.5 text-sm font-semibold italic text-slate-600 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300">
+          <span className="h-3 w-3 rounded-full bg-blue-800 ring-2 ring-blue-100" />
+          AI-Powered
         </span>
-
-        <h2 className="mt-6 text-2xl sm:text-3xl font-black leading-tight text-white">
-          No resume ready? <br />
-          <span className="text-blue-300">Create one in minutes</span>
-        </h2>
-
-        <p className="mt-3 text-sm text-blue-100 leading-relaxed">
-          Enhance your hiring chances with ATS-friendly templates, AI-guided bullet points, and personalized job matching keywords.
-        </p>
-
-        <ul className="mt-6 space-y-2.5 text-xs sm:text-sm text-blue-100/90">
-          {[
-            "Create or improve your resume with AI-powered assistance",
-            "Tailor summaries and skills directly for recruiter screening",
-            "Download instant PDF exports ready to submit",
-          ].map((item) => (
-            <li key={item} className="flex items-center gap-2.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>{item}</span>
-            </li>
+        <h2 className="mt-8 text-2xl font-black text-slate-950 dark:text-white">No resume? <span className="text-blue-700 dark:text-blue-500">No problem</span></h2>
+        <ul className="mt-8 space-y-7 text-sm text-slate-600 dark:text-slate-300">
+          {["Create or improve your resume with AI-powered assistance", "Enhance your resume with smart, personalized suggestions", "Optimize your resume to match job requirements instantly"].map((item) => (
+            <li key={item} className="flex items-center gap-3"><span className="h-3 w-3 rounded-full border-2 border-blue-700" />{item}</li>
           ))}
         </ul>
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={onOpenResumeBuilder}
-            className="h-11 rounded-xl bg-white px-6 text-xs sm:text-sm font-bold !text-[#172a78] transition hover:bg-blue-50 shadow-md"
-          >
-            Create Resume Now
-          </button>
-          <button
-            type="button"
-            onClick={onOpenChat}
-            className="h-11 rounded-xl border border-white/30 bg-white/10 backdrop-blur-sm px-5 text-xs sm:text-sm font-semibold text-white transition hover:bg-white/20"
-          >
-            Ask AI Assistant
-          </button>
+        <div className="mt-9 flex flex-wrap items-center gap-3">
+          <button onClick={onOpenResumeBuilder} className="h-12 rounded-lg bg-blue-700 px-6 text-sm font-bold text-white transition hover:bg-blue-800 shadow-md">Create Resume</button>
+          <button onClick={onOpenChat} className="h-12 rounded-lg border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 px-6 text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-white dark:hover:bg-slate-800">AI Assistant</button>
         </div>
       </div>
     </section>
@@ -761,42 +788,26 @@ function ResumeBanner({
 
 function ActiveUsers() {
   return (
-    <section className="rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-[#1a1a1a]">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+    <section className="py-14">
+      <h2 className="text-lg font-extrabold text-[#101828] dark:text-white">Active users</h2>
+      <div className="mt-6 flex items-center gap-16">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-[#2f54eb] dark:text-blue-400">
-            Trusted Platform
-          </span>
-          <h2 className="mt-1 text-2xl font-black text-[#101828] dark:text-white">
-            Connecting Talent Globally
-          </h2>
-          <p className="mt-2 text-sm text-[#667085] dark:text-slate-400 max-w-md">
-            Join thousands of active professionals getting hired at leading technology and enterprise organizations.
-          </p>
-
-          <div className="mt-6 flex items-baseline gap-3">
-            <span className="text-5xl font-black tracking-tight text-[#172a78] dark:text-blue-400">
-              20k+
-            </span>
-            <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-              Active candidates hired
-            </span>
+          <p className="text-8xl font-black leading-none text-[#172a78] dark:text-blue-500">20k+</p>
+        </div>
+        <Image src="/userdash/3d204399488638237ac87e5ffd3c504d59af71a7.png" alt="Active users" width={280} height={160} className="h-auto w-72 object-contain" />
+      </div>
+      <div className="mt-10 grid grid-cols-4 gap-8">
+        {[
+          ["Opportunities", "140K+"],
+          ["Organisations", "42K+"],
+          ["Brands Trust Us", "800+"],
+          ["Countries", "78+"],
+        ].map(([label, value]) => (
+          <div key={label}>
+            <p className="text-sm text-[#98a2b3] dark:text-slate-400">{label}</p>
+            <p className="mt-2 text-3xl font-black text-[#172a78] dark:text-blue-500">{value}</p>
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 md:gap-8 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800 pt-6 md:pt-0 md:pl-8">
-          {[
-            ["Opportunities", "140K+"],
-            ["Companies", "42K+"],
-            ["Partner Brands", "800+"],
-            ["Countries", "78+"],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <p className="text-xs font-medium text-[#667085] dark:text-slate-400">{label}</p>
-              <p className="mt-1.5 text-2xl font-black text-[#172a78] dark:text-white">{value}</p>
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
     </section>
   );
@@ -804,64 +815,24 @@ function ActiveUsers() {
 
 function AppDownload() {
   return (
-    <section className="mb-10 grid items-center gap-10 rounded-2xl bg-[#fafbfc] dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 px-7 py-10 md:grid-cols-[1.1fr_0.9fr] md:px-14">
+    <section className="mb-16 grid items-center gap-10 rounded-xl bg-slate-50 dark:bg-slate-900 px-7 py-10 md:grid-cols-[1.1fr_0.9fr] md:px-16 dark:bg-slate-900/50">
       <div>
-        <h2 className="max-w-xl text-2xl font-black leading-tight text-[#101828] md:text-3xl dark:text-white">
-          Take your job hunt everywhere with the{" "}
-          <span className="text-[#2f54eb] dark:text-blue-400">Voctrum App</span>
-        </h2>
-        <p className="mt-3 text-sm text-[#667085] dark:text-slate-400 max-w-lg">
-          Receive real-time interview invitations, direct recruiter messages, and apply on the go.
-        </p>
-
-        <div className="mt-6 flex max-w-[500px] items-center rounded-2xl bg-white p-2 shadow-xs border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-          <Phone className="ml-3 h-5 w-5 shrink-0 text-[#2f54eb] dark:text-blue-400" />
-          <input
-            aria-label="Mobile number"
-            placeholder="Enter your phone number..."
-            className="min-w-0 flex-1 bg-transparent px-3 text-xs sm:text-sm outline-none placeholder:text-[#98a2b3] dark:text-white"
-          />
-          <button
-            type="button"
-            className="h-9 shrink-0 rounded-xl bg-[#2f54eb] px-4 text-xs font-bold !text-white transition hover:bg-[#2447d8]"
-          >
-            Send Link
-          </button>
+        <h2 className="max-w-xl text-2xl font-black leading-tight text-slate-950 md:text-3xl dark:text-white">Join thousands of users already using our <span className="text-blue-700 dark:text-blue-500">Voctrum app</span></h2>
+        <p className="mt-7 text-sm text-slate-400">Access real-time job updates and apply seamlessly from your mobile device</p>
+        <div className="mt-8 flex max-w-[520px] items-center rounded-full bg-[#eaf0ff] p-2 shadow-inner dark:bg-slate-800">
+          <Phone className="ml-4 h-5 w-5 shrink-0 text-blue-700 dark:text-blue-500" />
+          <input aria-label="Mobile number" placeholder="Enter your mobile number" className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-500 dark:text-slate-400 dark:text-white" />
+          <button className="h-9 shrink-0 rounded-full bg-blue-700 px-5 text-xs font-bold text-white transition hover:bg-blue-800">Get App Link</button>
         </div>
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Link
-            href="/dashboard/download"
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-950 px-5 text-xs font-semibold !text-white transition hover:bg-slate-800 dark:bg-white dark:!text-slate-950"
-          >
-            <FaGooglePlay className="h-4 w-4" />
-            Google Play
-          </Link>
-          <Link
-            href="/dashboard/download"
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-950 px-5 text-xs font-semibold !text-white transition hover:bg-slate-800 dark:bg-white dark:!text-slate-950"
-          >
-            <FaApple className="h-5 w-5" />
-            App Store
-          </Link>
+        <div className="mt-8 flex flex-wrap items-center gap-4">
+          <Link href="/dashboard/download" className="inline-flex h-12 items-center gap-2 rounded-lg bg-slate-950 px-5 text-sm font-semibold !text-white transition hover:bg-slate-800 dark:bg-white dark:bg-[#1a1a1a] dark:text-slate-950"><FaGooglePlay className="h-5 w-5" />Google Play</Link>
+          <Link href="/dashboard/download" className="inline-flex h-12 items-center gap-2 rounded-lg bg-slate-950 px-5 text-sm font-semibold !text-white transition hover:bg-slate-800 dark:bg-white dark:bg-[#1a1a1a] dark:text-slate-950"><FaApple className="h-6 w-6" />App Store</Link>
+          <Link href="/dashboard/download" className="grid h-24 w-24 place-items-center rounded border border-slate-300 bg-white dark:bg-[#1a1a1a] text-center text-xs font-medium text-slate-500 dark:text-slate-400 dark:border-slate-700 dark:bg-slate-800 hover:border-[#2f54eb] transition">QR<br />Scan to download</Link>
         </div>
       </div>
-
-      <div className="flex justify-center gap-4">
-        <Image
-          src="/homepage/m2.png"
-          alt="Voctrum recommended jobs app screen"
-          width={210}
-          height={430}
-          className="h-auto w-32 sm:w-40 drop-shadow-md"
-        />
-        <Image
-          src="/homepage/m1.png"
-          alt="Voctrum saved jobs app screen"
-          width={210}
-          height={430}
-          className="h-auto w-32 sm:w-40 drop-shadow-md"
-        />
+      <div className="flex justify-center gap-5">
+        <Image src="/homepage/m2.png" alt="Voctrum recommended jobs app screen" width={210} height={430} className="h-auto w-36 md:w-44" />
+        <Image src="/homepage/m1.png" alt="Voctrum saved jobs app screen" width={210} height={430} className="h-auto w-36 md:w-44" />
       </div>
     </section>
   );

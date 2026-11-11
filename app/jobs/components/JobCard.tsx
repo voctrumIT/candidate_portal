@@ -1,9 +1,55 @@
+"use client";
+
 import { Bookmark, Clock, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { JobListing } from '../data';
+import { jobsService } from '../../../services/jobs';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function JobCard({ job, isDashboard = false }: { job: JobListing; isDashboard?: boolean }) {
+  const router = useRouter();
+  const { user } = useAuth();
   const jobUrl = isDashboard ? `/dashboard/jobs/${job.id}` : `/jobs/${job.id}`;
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    setIsSaved(jobsService.isJobSaved(job.id));
+
+    const handleSavedUpdated = (e: any) => {
+      if (!e?.detail?.jobId || String(e.detail.jobId) === String(job.id)) {
+        setIsSaved(jobsService.isJobSaved(job.id));
+      }
+    };
+
+    window.addEventListener('saved_jobs_updated', handleSavedUpdated);
+    window.addEventListener('storage', handleSavedUpdated);
+
+    return () => {
+      window.removeEventListener('saved_jobs_updated', handleSavedUpdated);
+      window.removeEventListener('storage', handleSavedUpdated);
+    };
+  }, [job.id]);
+
+  const handleToggleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('candidate_token') : null;
+    if (!token && !user) {
+      router.push(`/register?redirect=${encodeURIComponent(jobUrl)}`);
+      return;
+    }
+
+    if (isSaved) {
+      setIsSaved(false);
+      await jobsService.unsaveJob(job.id);
+    } else {
+      setIsSaved(true);
+      await jobsService.saveJob(job.id, job);
+    }
+  };
   
   return (
     <div className="flex flex-col justify-between rounded-[16px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-6 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-[#1a1a1a]">
@@ -15,14 +61,26 @@ export default function JobCard({ job, isDashboard = false }: { job: JobListing;
               {job.company} - {job.location}
             </p>
           </div>
-          <button className="flex-shrink-0 text-slate-400 transition hover:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-slate-300">
-            <Bookmark className="h-5 w-5" />
+          <button
+            type="button"
+            onClick={handleToggleSave}
+            aria-label={isSaved ? `Remove ${job.title} from saved jobs` : `Save ${job.title}`}
+            title={isSaved ? "Saved" : "Save job"}
+            className="flex-shrink-0 p-1.5 rounded-lg transition hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-110"
+          >
+            <Bookmark
+              className={`h-5 w-5 transition ${
+                isSaved
+                  ? "fill-[#2f54eb] text-[#2f54eb]"
+                  : "text-slate-400 hover:text-[#2f54eb] dark:text-slate-500 dark:hover:text-[#2f54eb]"
+              }`}
+            />
           </button>
         </div>
 
         {/* Tags */}
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          {job.tags.map((tag) => (
+          {job.tags && job.tags.map((tag) => (
             <span
               key={tag}
               className="inline-flex h-7 items-center rounded-full bg-[#F3F6FF] px-4 text-[12px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-200"
