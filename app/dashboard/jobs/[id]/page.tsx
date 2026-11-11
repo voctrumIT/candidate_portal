@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { MapPin, Clock, Calendar, Wallet, Bookmark, Share2, Network } from "lucide-react";
+import { MapPin, Clock, Calendar, Wallet, Bookmark, Share2 } from "lucide-react";
 import Link from "next/link";
-import { dummyJobs } from "../../../jobs/data";
+import { useRouter } from "next/navigation";
 import JobCard from "../../../jobs/components/JobCard";
 import ApplyButton from "./components/ApplyButton";
+import { JobDetailSkeleton } from "../../../components/Skeleton";
+import { toast } from "../../../components/Toast";
 import { jobsService } from "../../../../services/jobs";
+import { useAuth } from "../../../../context/AuthContext";
 
 function mapApiJobToJobListing(apiJob: any) {
   if (!apiJob) return null;
@@ -30,7 +33,7 @@ function mapApiJobToJobListing(apiJob: any) {
 
   return {
     id: String(apiJob.jobId || apiJob.id),
-    title: apiJob.jobTitle || apiJob.title || "Software Opportunity",
+    title: apiJob.jobTitle || apiJob.title || "Job Opportunity",
     company: apiJob.companyName || apiJob.company || "Voctrum",
     location: loc || "Remote",
     tags: tagsList.length > 0 ? tagsList : ["Remote", "Full-time"],
@@ -54,68 +57,131 @@ function mapApiJobToJobListing(apiJob: any) {
 }
 
 export default function JobDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
+  const { user } = useAuth();
   const resolvedParams = use(params);
   const rawId = resolvedParams?.id || "";
   const id = decodeURIComponent(rawId).trim();
 
-  // Try synchronous match from dummyJobs first to prevent any flash or 404
-  const initialJob = dummyJobs.find((j) => String(j.id) === id) || null;
-  const [job, setJob] = useState<any>(initialJob);
-  const [similarJobs, setSimilarJobs] = useState<any[]>(
-    dummyJobs.filter((j) => String(j.id) !== id).slice(0, 3)
-  );
-  const [loading, setLoading] = useState(!initialJob);
+  const [job, setJob] = useState<any>(null);
+  const [similarJobs, setSimilarJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    setIsSaved(jobsService.isJobSaved(id));
+
+    const handleSavedUpdated = (e: any) => {
+      if (!e?.detail?.jobId || String(e.detail.jobId) === id) {
+        setIsSaved(jobsService.isJobSaved(id));
+      }
+    };
+
+    window.addEventListener("saved_jobs_updated", handleSavedUpdated);
+    window.addEventListener("storage", handleSavedUpdated);
+
+    return () => {
+      window.removeEventListener("saved_jobs_updated", handleSavedUpdated);
+      window.removeEventListener("storage", handleSavedUpdated);
+    };
+  }, [id]);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadJob = async () => {
-      // 1. If ID matches dummy job, we already have it
-      const localMatch = dummyJobs.find((j) => String(j.id) === id);
-      if (localMatch) {
-        if (isMounted) {
-          setJob(localMatch);
-          setSimilarJobs(dummyJobs.filter((j) => String(j.id) !== id).slice(0, 3));
-          setLoading(false);
-        }
-        return;
-      }
-
-      // 2. Fetch specific single job via getJobById (efficient, avoids fetching all jobs)
       try {
-        const res = await jobsService.getJobById(id);
-        const apiPayload = res?.payload || res;
-        const mapped = mapApiJobToJobListing(apiPayload);
-        if (mapped && isMounted) {
-          setJob(mapped);
-          setSimilarJobs(dummyJobs.slice(0, 3));
-          setLoading(false);
-          return;
+        setLoading(true);
+
+        const [jobRes, listRes] = await Promise.allSettled([
+          jobsService.getJobById(id),
+          jobsService.getJobs(),
+        ]);
+
+        let foundJob: any = null;
+
+        if (jobRes.status === "fulfilled" && jobRes.value) {
+          const apiPayload = jobRes.value?.payload || jobRes.value;
+          foundJob = mapApiJobToJobListing(apiPayload);
+        }
+
+        let allMapped: any[] = [];
+        if (listRes.status === "fulfilled" && listRes.value) {
+          const data = listRes.value;
+          const apiJobs = data?.payload?.jobs || (Array.isArray(data) ? data : []);
+          if (Array.isArray(apiJobs)) {
+            allMapped = apiJobs.map(mapApiJobToJobListing).filter(Boolean);
+          }
+        }
+
+        if (!foundJob && allMapped.length > 0) {
+          foundJob = allMapped.find((j) => String(j.id) === id) || null;
+        }
+
+        if (isMounted) {
+          setJob(foundJob);
+          const others = allMapped.filter((j) => String(j.id) !== id);
+          setSimilarJobs(others.slice(0, 3));
         }
       } catch (err) {
-        console.warn("Could not fetch job by ID from API, falling back to dummy list:", err);
-      }
-
-      // 3. Fallback: if not found, use first dummy job gracefully so page NEVER 404s
-      if (isMounted) {
-        const fallbackJob = dummyJobs[0];
-        setJob(fallbackJob);
-        setSimilarJobs(dummyJobs.slice(1, 4));
-        setLoading(false);
+        console.error("Could not fetch job by ID from API:", err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    loadJob();
+    if (id) {
+      loadJob();
+    }
 
     return () => {
       isMounted = false;
     };
   }, [id]);
 
-  if (loading || !job) {
+  const handleToggleSave = async () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("candidate_token") : null;
+    if (!token && !user) {
+      router.push(`/register?redirect=/dashboard/jobs/${id}`);
+      return;
+    }
+
+    if (isSaved) {
+      setIsSaved(false);
+      await jobsService.unsaveJob(id);
+      toast.info("Job Removed", `"${job.title}" removed from your saved list.`);
+    } else {
+      setIsSaved(true);
+      await jobsService.saveJob(id, job);
+      toast.success("Job Saved", `"${job.title}" has been saved to your jobs.`);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="px-10 py-10 min-h-screen flex items-center justify-center">
-        <p className="text-sm font-medium text-slate-500">Loading job details...</p>
+      <div className="px-10 py-10 min-h-screen">
+        <JobDetailSkeleton />
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="px-10 py-24 text-center max-w-xl mx-auto">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Job Not Found</h2>
+        <p className="mt-2 text-slate-500 dark:text-slate-400">
+          The job you are looking for does not exist or may have been closed.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/dashboard/jobs"
+            className="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-blue-700 text-sm font-semibold text-white hover:bg-blue-800 transition"
+          >
+            Explore Jobs
+          </Link>
+        </div>
       </div>
     );
   }
@@ -138,40 +204,38 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
       {/* Header Section */}
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          {/* Company Logo Placeholder */}
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-[#2f54eb]">
-            <Network className="h-6 w-6" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 p-2 dark:bg-slate-800">
+            <div className="h-full w-full rounded-full bg-gradient-to-br from-[#2f54eb] to-cyan-400" />
           </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{job.company}</p>
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white">{job.title}</h1>
-          </div>
+          <span className="text-[15px] font-medium text-slate-600 dark:text-slate-400">{job.company}</span>
         </div>
+
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white md:text-4xl">{job.title}</h1>
 
         {/* Tags */}
         <div className="flex flex-wrap items-center gap-2">
           {tags.map((tag: string) => (
             <span
               key={tag}
-              className="inline-flex h-8 items-center rounded-full bg-[#f4f7ff] dark:bg-slate-800 px-5 text-[13px] font-medium text-slate-600 dark:text-slate-300"
+              className="inline-flex h-8 items-center rounded-full bg-[#f3f6ff] px-5 text-[13px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
             >
               {tag}
             </span>
           ))}
         </div>
 
-        {/* Meta Info Row */}
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-[14px] text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-[#2f54eb]" />
+        {/* Details Grid */}
+        <div className="flex flex-wrap items-center gap-6 text-[14px] text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <MapPin className="h-4 w-4 text-[#2f54eb]" />
             <span className="font-semibold text-slate-700 dark:text-slate-300">Location :</span> {job.location}
           </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-[#2f54eb]" />
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-4 w-4 text-[#2f54eb]" />
             {job.postedDate}
           </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-[#2f54eb]" />
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-4 w-4 text-[#2f54eb]" />
             {job.applyByDate}
           </div>
         </div>
@@ -185,11 +249,22 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
         {/* Action Buttons */}
         <div className="mt-2 flex items-center gap-4">
           <ApplyButton jobId={job.id} jobCompany={job.company} jobTitle={job.title} />
-          <button className="flex h-11 items-center gap-2 rounded-lg border border-[#2f54eb] bg-white dark:bg-[#1a1a1a] px-6 text-sm font-semibold text-[#2f54eb] transition hover:bg-[#f4f7ff]">
-            Save for Later
-            <Bookmark className="h-4 w-4" />
+          <button
+            type="button"
+            onClick={handleToggleSave}
+            className={`flex h-11 items-center gap-2 rounded-lg border px-6 text-sm font-semibold transition ${
+              isSaved
+                ? "border-[#2f54eb] bg-[#2f54eb] text-white hover:bg-[#2447d8]"
+                : "border-[#2f54eb] bg-white dark:bg-[#1a1a1a] text-[#2f54eb] hover:bg-[#f4f7ff] dark:hover:bg-slate-800"
+            }`}
+          >
+            {isSaved ? "Saved" : "Save for Later"}
+            <Bookmark className={`h-4 w-4 ${isSaved ? "fill-white text-white" : ""}`} />
           </button>
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200">
+          <button
+            type="button"
+            className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
             <Share2 className="h-5 w-5" />
           </button>
         </div>
@@ -223,59 +298,41 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
         </ul>
 
         <SectionHeading title="Key Skills" />
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {keySkills.map((skill: string) => (
             <span
               key={skill}
-              className="inline-flex h-9 items-center rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 text-[13px] font-medium text-slate-600 dark:text-slate-300"
+              className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:bg-[#1a1a1a] dark:text-slate-300"
             >
               {skill}
             </span>
           ))}
         </div>
 
-        <SectionHeading title="About the Company" />
-        <div className="space-y-4 text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">
-          {aboutText.split("\n\n").map((para: string, idx: number) => {
-            if (idx === 0) {
-              return (
-                <p key={idx} className="font-bold text-slate-700 dark:text-slate-300">
-                  {para}
-                </p>
-              );
-            }
-            return <p key={idx}>{para}</p>;
-          })}
-        </div>
+        <SectionHeading title="About Company" />
+        <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">
+          {aboutText}
+        </p>
       </div>
 
-      <hr className="my-12 border-slate-200 dark:border-slate-700" />
+      <hr className="my-14 border-slate-200 dark:border-slate-700" />
 
-      {/* Similar Jobs Section */}
-      <div>
-        <div className="flex items-end justify-between">
-          <div>
+      {/* Similar Jobs */}
+      {similarJobs.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white">Similar Jobs</h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Explore more opportunities that match your profile and interests.</p>
+            <Link href="/dashboard/jobs" className="text-sm font-semibold text-[#2f54eb] underline">
+              View all
+            </Link>
           </div>
-          <Link href="/dashboard/jobs" className="text-sm font-bold text-slate-900 dark:text-white underline underline-offset-4 hover:text-[#2f54eb]">
-            View all
-          </Link>
+          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {similarJobs.map((simJob) => (
+              <JobCard key={simJob.id} job={simJob} isDashboard />
+            ))}
+          </div>
         </div>
-
-        <div className="mt-8 grid gap-6 xl:grid-cols-3">
-          {similarJobs.slice(0, 3).map((similarJob: any) => (
-            <JobCard key={similarJob.id} job={similarJob} isDashboard />
-          ))}
-        </div>
-
-        {/* Pagination Dots */}
-        <div className="mt-10 flex justify-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-[#2f54eb]"></div>
-          <div className="h-2 w-2 rounded-full bg-slate-300"></div>
-          <div className="h-2 w-2 rounded-full bg-slate-300"></div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

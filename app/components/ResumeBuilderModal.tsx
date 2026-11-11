@@ -38,6 +38,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { documentsService } from "../../services/documents";
+import { toast } from "./Toast";
 import TemplateGalleryModal, {
   RESUME_TEMPLATES,
   TemplateId,
@@ -541,20 +542,20 @@ export default function ResumeBuilderModal({
             <ShieldAlert className="h-3.5 w-3.5" /> Candidate Authentication Required
           </span>
           <h3 className="mt-3 text-xl font-black text-slate-900 dark:text-white">
-            Log In to Build Your Resume
+            Register to Build Your Resume
           </h3>
           <p className="mt-2.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-            Only logged-in users can open the Resume Builder. Please sign in to your account to automatically load your candidate details and build, customize, and download ATS-ready resumes.
+            Only logged-in users can open the Resume Builder. Please sign in to your account to automatically load your candidate details, customize ATS-ready resumes, and save directly to your profile.
           </p>
           <div className="mt-6 flex flex-col gap-2.5">
             <button
               onClick={() => {
                 onClose();
-                router.push("/login?redirect=/dashboard/resume-builder");
+                router.push("/register?redirect=/dashboard/resume-builder");
               }}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-md hover:bg-blue-700 transition"
             >
-              <LogIn className="h-4 w-4" /> Log In to Continue
+              <LogIn className="h-4 w-4" /> Register to Continue
             </button>
             <button
               onClick={() => {
@@ -802,34 +803,294 @@ export default function ResumeBuilderModal({
     printWindow.document.close();
   };
 
-  // Save to Profile & Document Store
+  // Generate a valid high-quality PDF Blob from ATS Template with direct fallback
+  const generateResumePdfBlob = async (resumeData: ResumeData, printElement: HTMLElement | null): Promise<Blob> => {
+    if (typeof window === "undefined") {
+      return new Blob([], { type: "application/pdf" });
+    }
+
+    // 1. Primary: Capture pixel-perfect rendered ATS template using html2canvas & jsPDF
+    if (printElement) {
+      try {
+        const html2canvasModule = await import("html2canvas");
+        const html2canvas = html2canvasModule.default || html2canvasModule;
+        // @ts-ignore
+        const jspdfModule = await import("jspdf/dist/jspdf.umd.min.js");
+        const jsPDF = jspdfModule.jsPDF || jspdfModule.default?.jsPDF || jspdfModule.default;
+
+        const canvas = await html2canvas(printElement, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          onclone: (clonedDoc: Document) => {
+            const el = clonedDoc.getElementById("resume-printable-area");
+            if (el) {
+              el.style.transform = "none";
+              el.style.boxShadow = "none";
+              el.style.margin = "0";
+              let parent = el.parentElement;
+              while (parent) {
+                parent.style.transform = "none";
+                parent.style.overflow = "visible";
+                parent = parent.parentElement;
+              }
+            }
+          },
+        });
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.95);
+        const pdf = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4",
+        });
+
+        const imgWidth = 210; // A4 width mm
+        const pageHeight = 297; // A4 height mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft > 5) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        const blob = pdf.output("blob");
+        if (blob && blob.size > 1000) {
+          return blob;
+        }
+      } catch (err) {
+        console.warn("Template canvas capture fallback to vector jsPDF:", err);
+      }
+    }
+
+    // 2. Fallback: Direct vector jsPDF generator (guarantees valid PDF output under any conditions)
+    // @ts-ignore
+    const jspdfModule = await import("jspdf/dist/jspdf.umd.min.js");
+    const jsPDF = jspdfModule.jsPDF || jspdfModule.default?.jsPDF || jspdfModule.default;
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    let y = 20;
+
+    // Name & Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(47, 84, 235);
+    doc.text(resumeData.personalInfo.fullName || "Candidate Resume", 20, y);
+
+    y += 7;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.setTextColor(102, 112, 133);
+    doc.text(resumeData.personalInfo.jobTitle || "Professional", 20, y);
+
+    y += 6;
+    doc.setFontSize(9);
+    const contacts = [
+      resumeData.personalInfo.email,
+      resumeData.personalInfo.phone,
+      resumeData.personalInfo.location,
+      resumeData.personalInfo.website,
+    ].filter(Boolean).join("  •  ");
+    doc.text(contacts, 20, y);
+
+    y += 4;
+    doc.setDrawColor(220, 225, 235);
+    doc.setLineWidth(0.5);
+    doc.line(20, y, 190, y);
+
+    // Summary
+    if (resumeData.summary) {
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(47, 84, 235);
+      doc.text("PROFESSIONAL SUMMARY", 20, y);
+
+      y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(16, 24, 40);
+      const summaryLines = doc.splitTextToSize(resumeData.summary, 170);
+      doc.text(summaryLines, 20, y);
+      y += summaryLines.length * 4.5 + 4;
+    }
+
+    // Experience
+    if (resumeData.experience && resumeData.experience.length > 0) {
+      y += 4;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(47, 84, 235);
+      doc.text("WORK EXPERIENCE", 20, y);
+
+      for (const exp of resumeData.experience) {
+        y += 6;
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(16, 24, 40);
+        doc.text(exp.title || "Position", 20, y);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(102, 112, 133);
+        const dates = `${exp.startDate || ""} - ${exp.endDate || ""}`;
+        doc.text(`${exp.company || ""}${exp.location ? ` • ${exp.location}` : ""} (${dates})`, 20, y + 4.5);
+
+        y += 8;
+        if (exp.description) {
+          doc.setFontSize(9);
+          doc.setTextColor(16, 24, 40);
+          const descLines = doc.splitTextToSize(exp.description, 170);
+          doc.text(descLines, 20, y);
+          y += descLines.length * 4.2 + 2;
+        }
+      }
+    }
+
+    // Education
+    if (resumeData.education && resumeData.education.length > 0) {
+      y += 5;
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(47, 84, 235);
+      doc.text("EDUCATION", 20, y);
+
+      for (const edu of resumeData.education) {
+        y += 6;
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(16, 24, 40);
+        doc.text(edu.degree || "Degree", 20, y);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(102, 112, 133);
+        doc.text(`${edu.institution || ""}${edu.endDate ? ` (${edu.endDate})` : ""}`, 20, y + 4.5);
+        y += 8;
+      }
+    }
+
+    // Skills
+    if (resumeData.skills && resumeData.skills.length > 0) {
+      y += 5;
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(47, 84, 235);
+      doc.text("KEY SKILLS", 20, y);
+
+      y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(16, 24, 40);
+      const skillsStr = resumeData.skills.join("  •  ");
+      const skillLines = doc.splitTextToSize(skillsStr, 170);
+      doc.text(skillLines, 20, y);
+    }
+
+    return doc.output("blob");
+  };
+
+  // Save to Profile & Document Store and set as Candidate Active Resume
   const handleSaveToProfile = async () => {
     setIsSaving(true);
     try {
-      const fileName = `${(resume.personalInfo.fullName || "Candidate").replace(
-        /\s+/g,
-        "_"
-      )}_Resume.json`;
-      const blob = new Blob([JSON.stringify(resume, null, 2)], {
-        type: "application/json",
-      });
-      const file = new File([blob], fileName, { type: "application/json" });
+      const candidateName = (resume.personalInfo.fullName || "Candidate").trim();
+      const safeCandidateName = candidateName.replace(/[^a-zA-Z0-9_-]/g, "_") || "Candidate";
+      const fileName = `${safeCandidateName}_Resume.pdf`;
 
+      // 1. Generate real PDF Blob
+      const pdfBlob = await generateResumePdfBlob(resume, printRef.current);
+      const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+      // 2. Prepare FormData with real PDF file for candidate document endpoint
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", pdfFile);
       formData.append("type", "Resume");
 
+      let uploadedDoc: any = null;
+      let uploadedDocId = `resume-${Date.now()}`;
+      let uploadedDocUrl: string | null = null;
+
       try {
-        await documentsService.uploadDocument(formData);
-      } catch (err) {
-        console.log("Saved locally", err);
+        const uploadRes = await documentsService.uploadDocument(formData);
+        uploadedDoc = uploadRes?.payload || uploadRes;
+        if (uploadedDoc) {
+          uploadedDocId = uploadedDoc.id || uploadedDoc.documentId || uploadedDocId;
+          uploadedDocUrl = uploadedDoc.fileUrl || uploadedDoc.url || null;
+        }
+      } catch (err: any) {
+        console.warn("Backend document upload warning:", err);
+      }
+
+      // Generate local object URL if backend didn't return a remote URL
+      if (!uploadedDocUrl && typeof window !== "undefined") {
+        try {
+          uploadedDocUrl = URL.createObjectURL(pdfBlob);
+        } catch {}
+      }
+
+      // 3. Mark this newly completed/saved resume as Candidate's ACTIVE resume
+      if (typeof window !== "undefined") {
+        localStorage.setItem("candidate_active_resume", JSON.stringify(resume));
+        localStorage.setItem("candidate_active_resume_name", fileName);
+        localStorage.setItem("candidate_active_resume_template", template);
+        localStorage.setItem("candidate_active_resume_id", uploadedDocId);
+        if (uploadedDocUrl) {
+          localStorage.setItem("candidate_active_resume_url", uploadedDocUrl);
+        }
+        localStorage.setItem("candidate_active_resume_updated_at", new Date().toISOString());
+
+        // Dispatch events so profile resume tab and job application modals sync instantly
+        window.dispatchEvent(
+          new CustomEvent("active_resume_updated", {
+            detail: {
+              resume,
+              fileName,
+              template,
+              id: uploadedDocId,
+              fileUrl: uploadedDocUrl,
+            },
+          })
+        );
+        window.dispatchEvent(new Event("storage"));
       }
 
       setSaveSuccess(true);
       if (onSavedResume) onSavedResume();
+      toast.success("Resume Saved & Activated!", `"${fileName}" has been generated as a PDF and set as your active profile resume.`);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Error saving resume as PDF:", e);
+      toast.error("Resume Save Notice", e?.message || "Could not generate or save resume PDF. Please check required fields.");
     } finally {
       setIsSaving(false);
     }
@@ -881,6 +1142,7 @@ ${resume.certifications.map((c) => `${c.name} - ${c.issuer} (${c.date})`).join("
 
     navigator.clipboard.writeText(textResume);
     setCopied(true);
+    toast.info("Copied to Clipboard", "Resume content copied as plain text for quick applications.");
     setTimeout(() => setCopied(false), 2500);
   };
 
@@ -1108,34 +1370,28 @@ ${resume.certifications.map((c) => `${c.name} - ${c.issuer} (${c.date})`).join("
               )}
             </button>
 
-            {/* Save to Profile */}
+            {/* Save Resume Button - Primary Action */}
             <button
               onClick={handleSaveToProfile}
               disabled={isSaving}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 active:scale-95 disabled:opacity-75"
             >
               {saveSuccess ? (
                 <>
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  <span className="text-emerald-600 font-bold">Saved!</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                  <span className="font-bold">Resume Saved &amp; Active!</span>
+                </>
+              ) : isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Saving...</span>
                 </>
               ) : (
                 <>
-                  <Save className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span className="hidden sm:inline">
-                    {isSaving ? "Saving..." : "Save to Profile"}
-                  </span>
+                  <Save className="h-4 w-4" />
+                  <span>Save Resume</span>
                 </>
               )}
-            </button>
-
-            {/* Download PDF button */}
-            <button
-              onClick={handlePrint}
-              className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 active:scale-95"
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span>Download PDF</span>
             </button>
 
             {/* Fullscreen Toggle */}

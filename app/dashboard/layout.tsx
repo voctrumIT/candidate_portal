@@ -7,7 +7,6 @@ import { useState } from "react";
 import {
   Bell,
   Bookmark,
-  BriefcaseBusiness,
   Crown,
   Download,
   Home,
@@ -23,7 +22,6 @@ import { useAuth } from "../../context/AuthContext";
 
 const navItems = [
   { label: "Home", href: "/dashboard", icon: Home },
-  { label: "Jobs", href: "/dashboard/jobs", icon: BriefcaseBusiness },
   { label: "My Jobs", href: "/dashboard/my-jobs", icon: Bookmark },
   // { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { label: "Profile Settings", href: "/dashboard/profile", icon: User },
@@ -36,11 +34,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const pathname = usePathname();
   const showFooter =
+    pathname !== "/dashboard" &&
     pathname !== "/dashboard/my-jobs" &&
     pathname !== "/dashboard/notifications" &&
     pathname !== "/dashboard/profile" &&
     pathname !== "/dashboard/settings" &&
-    !pathname.startsWith("/dashboard/jobs/");
+    pathname !== "/dashboard/download" &&
+    pathname !== "/dashboard/resume-builder" &&
+    !pathname.startsWith("/dashboard/jobs");
 
   return (
     <main className="min-h-screen bg-[#fafbfc] dark:bg-[#0a0a0a] text-sm text-[#101828] dark:text-slate-100 transition-colors">

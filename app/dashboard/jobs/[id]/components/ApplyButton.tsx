@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../../../../context/AuthContext";
 import { jobsService } from "../../../../../services/jobs";
 import { documentsService } from "../../../../../services/documents";
+import { toast } from "../../../../components/Toast";
 
 interface ApplyButtonProps {
   jobId: string;
@@ -62,7 +63,12 @@ export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButton
           if (docs && Array.isArray(docs)) {
             setResumes(docs);
             if (docs.length > 0) {
-              setSelectedResumeId(docs[0].id);
+              const activeId = typeof window !== "undefined" ? localStorage.getItem("candidate_active_resume_id") : null;
+              const activeName = typeof window !== "undefined" ? localStorage.getItem("candidate_active_resume_name") : null;
+              const matchingResume = docs.find(
+                (d: any) => d.id === activeId || d.name === activeName || d.fileName === activeName
+              );
+              setSelectedResumeId(matchingResume ? matchingResume.id : docs[0].id);
             }
           }
         } catch(e) {
@@ -106,8 +112,10 @@ export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButton
             setSelectedResumeId(docs[0].id);
           }
         }
-      } catch (err) {
+        toast.success("Resume Uploaded", `"${file.name}" has been uploaded.`);
+      } catch (err: any) {
         console.error("Upload failed", err);
+        toast.error("Upload Failed", err?.message || "Could not upload resume file.");
       } finally {
         setUploading(false);
         if (fileInputRef.current) {
@@ -123,15 +131,26 @@ export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButton
       await documentsService.deleteDocument(id);
       setResumes(resumes.filter((r) => r.id !== id));
       if (selectedResumeId === id) setSelectedResumeId(null);
-    } catch(err) {
+      toast.info("Resume Removed", "Resume was removed from your selection.");
+    } catch(err: any) {
       console.error("Delete failed", err);
+      toast.error("Remove Failed", err?.message || "Could not delete resume.");
     }
+  };
+
+  const handleOpenModal = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('candidate_token') : null;
+    if (!token && !user) {
+      router.push(`/register?redirect=/dashboard/jobs/${jobId}`);
+      return;
+    }
+    setIsOpen(true);
   };
 
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpenModal}
         className="flex h-11 items-center gap-2 rounded-lg bg-[#2f54eb] px-8 text-sm font-semibold text-white transition hover:bg-[#2447d8]"
       >
         Apply
@@ -544,12 +563,16 @@ export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButton
                           note: `Education: ${education}. Location: ${location}. CTC: ${ctc}. Notice: ${noticePeriod}`
                         });
                         setStep(5);
+                        toast.success("Application Submitted!", `Your application for ${jobTitle || "the position"} was submitted successfully.`);
                       } catch(err: any) {
                         const isDemo = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(String(jobId));
                         if (isDemo || err?.message?.includes('404') || err?.message?.includes('Not Found')) {
                           setStep(5);
+                          toast.success("Application Submitted!", `Your application for ${jobTitle || "the position"} was submitted successfully.`);
                         } else {
-                          setSubmitError(err.message || 'Failed to submit application. Please try again.');
+                          const errorMsg = err.message || 'Failed to submit application. Please try again.';
+                          setSubmitError(errorMsg);
+                          toast.error("Application Notice", errorMsg);
                         }
                       } finally {
                         setSubmitting(false);

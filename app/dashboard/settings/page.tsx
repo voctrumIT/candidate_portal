@@ -4,14 +4,8 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
+import { toast } from "../../components/Toast";
 import {
-  Briefcase,
-  FileText,
-  MessageSquare,
-  Calendar,
-  Eye,
-  UserCheck,
-  FileSearch,
   Lock,
   Key,
   Moon,
@@ -34,14 +28,14 @@ function ToggleSwitch({ active, onChange }: { active: boolean; onChange: () => v
       className={`relative flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 ease-in-out focus:outline-none ${
         active
           ? "border-transparent bg-[#a5b4fc] dark:bg-[#4f46e5]"
-          : "border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] dark:border-slate-700 dark:bg-slate-800"
+          : "border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a]"
       }`}
     >
       <span
         className={`pointer-events-none inline-block h-4 w-4 transform rounded-full shadow transition duration-200 ease-in-out ${
           active
             ? "translate-x-5 bg-white dark:bg-[#1a1a1a]"
-            : "translate-x-1 bg-slate-400 dark:bg-slate-50 dark:bg-slate-9000"
+            : "translate-x-1 bg-slate-400 dark:bg-slate-50"
         }`}
       />
     </button>
@@ -52,7 +46,7 @@ function SettingsCard({ title, children }: { title: string; children: React.Reac
   return (
     <div className="mb-8">
       <h3 className="mb-4 text-[13px] font-semibold text-slate-500 dark:text-slate-400">{title}</h3>
-      <div className="flex flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] dark:border-slate-800 dark:bg-[#1a1a1a]">
+      <div className="flex flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a]">
         {children}
       </div>
     </div>
@@ -78,14 +72,13 @@ function SettingItem({ icon, iconBg, iconColor, title, subtitle, action, borderB
         </div>
         <div>
           <h4 className="text-[14px] font-bold text-slate-900 dark:text-white">{title}</h4>
-          {subtitle && <p className="mt-0.5 text-[12px] text-slate-400 dark:text-slate-500 dark:text-slate-400">{subtitle}</p>}
+          {subtitle && <p className="mt-0.5 text-[12px] text-slate-400 dark:text-slate-400">{subtitle}</p>}
         </div>
       </div>
       <div>{action}</div>
     </div>
   );
 }
-
 
 // --- Main Page ---
 
@@ -95,31 +88,26 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
 
   const [toggles, setToggles] = useState({
-    jobAlerts: true,
-    appUpdates: false,
-    recruiterMessage: false,
-    interviewReminders: true,
-    openToWork: true,
     darkMode: false,
   });
 
   useEffect(() => {
     setMounted(true);
     if (resolvedTheme === "dark") {
-      setToggles((prev) => ({ ...prev, darkMode: true }));
+      setToggles({ darkMode: true });
     } else {
-      setToggles((prev) => ({ ...prev, darkMode: false }));
+      setToggles({ darkMode: false });
     }
   }, [resolvedTheme]);
 
-  const toggleState = (key: keyof typeof toggles) => {
-    if (key === "darkMode") {
-      const newDarkMode = !toggles.darkMode;
-      setTheme(newDarkMode ? "dark" : "light");
-      setToggles((prev) => ({ ...prev, darkMode: newDarkMode }));
-    } else {
-      setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
-    }
+  const toggleDarkMode = () => {
+    const newDarkMode = !toggles.darkMode;
+    setTheme(newDarkMode ? "dark" : "light");
+    setToggles({ darkMode: newDarkMode });
+    toast.info(
+      newDarkMode ? "Dark Mode Enabled" : "Light Mode Enabled",
+      `Switched display theme to ${newDarkMode ? "dark" : "light"} mode.`
+    );
   };
 
   const { logout } = useAuth();
@@ -134,94 +122,10 @@ export default function SettingsPage() {
     <div className="p-10 pb-20">
       <h1 className="text-[28px] font-bold text-[#101828] dark:text-white">Settings</h1>
       <p className="mt-1 text-[15px] text-[#667085] dark:text-slate-400">
-        Manage your account and preference
+        Manage your account and preferences
       </p>
 
       <div className="mt-10 w-full max-w-[800px]">
-        {/* Notifications */}
-        <SettingsCard title="Notifications">
-          <SettingItem
-            icon={<Briefcase className="h-5 w-5" />}
-            iconBg="bg-[#eff2fe]"
-            iconColor="text-[#2f54eb]"
-            title="Job alerts"
-            subtitle="Get notified about job matchings"
-            action={<ToggleSwitch active={toggles.jobAlerts} onChange={() => toggleState("jobAlerts")} />}
-          />
-          <SettingItem
-            icon={<FileText className="h-5 w-5" />}
-            iconBg="bg-[#fff9e6]"
-            iconColor="text-[#d4b106]"
-            title="Application updates"
-            subtitle="Status change on your application"
-            action={<ToggleSwitch active={toggles.appUpdates} onChange={() => toggleState("appUpdates")} />}
-          />
-          <SettingItem
-            icon={<MessageSquare className="h-5 w-5" />}
-            iconBg="bg-[#faebf6]"
-            iconColor="text-[#c41d7f]"
-            title="Recruiter message"
-            subtitle="Message from hiring managers"
-            action={<ToggleSwitch active={toggles.recruiterMessage} onChange={() => toggleState("recruiterMessage")} />}
-          />
-          <SettingItem
-            icon={<Calendar className="h-5 w-5" />}
-            iconBg="bg-[#fff1f0]"
-            iconColor="text-[#cf1322]"
-            title="Interview Reminders"
-            subtitle="Upcoming interview notification"
-            action={<ToggleSwitch active={toggles.interviewReminders} onChange={() => toggleState("interviewReminders")} />}
-            borderBottom={false}
-          />
-        </SettingsCard>
-
-        {/* Privacy & Visibility */}
-        <SettingsCard title="Privacy & Visibility">
-          <SettingItem
-            icon={<Eye className="h-5 w-5" />}
-            iconBg="bg-[#eff2fe]"
-            iconColor="text-[#2f54eb]"
-            title="Open to work"
-            subtitle="Show recruiters your are available"
-            action={<ToggleSwitch active={toggles.openToWork} onChange={() => toggleState("openToWork")} />}
-          />
-          <SettingItem
-            icon={<UserCheck className="h-5 w-5" />}
-            iconBg="bg-[#fff9e6]"
-            iconColor="text-[#d4b106]"
-            title="Profile Visibility"
-            subtitle="Who can see your profile"
-            action={
-              <div className="relative">
-                <select className="h-9 appearance-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] pl-4 pr-10 text-[13px] font-medium text-slate-700 dark:text-slate-300 outline-none focus:border-[#2f54eb] dark:border-slate-700 dark:bg-[#222] dark:text-slate-200">
-                  <option>Everyone</option>
-                  <option>Recruiters only</option>
-                  <option>Private</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              </div>
-            }
-          />
-          <SettingItem
-            icon={<FileSearch className="h-5 w-5" />}
-            iconBg="bg-[#faebf6]"
-            iconColor="text-[#c41d7f]"
-            title="Resume Visibility"
-            subtitle="Control who can download your resume"
-            action={
-              <div className="relative">
-                <select className="h-9 appearance-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] pl-4 pr-10 text-[13px] font-medium text-slate-700 dark:text-slate-300 outline-none focus:border-[#2f54eb] dark:border-slate-700 dark:bg-[#222] dark:text-slate-200" defaultValue="Recruiters only">
-                  <option>Everyone</option>
-                  <option>Recruiters only</option>
-                  <option>Private</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              </div>
-            }
-            borderBottom={false}
-          />
-        </SettingsCard>
-
         {/* Security */}
         <SettingsCard title="Security">
           <SettingItem
@@ -229,7 +133,7 @@ export default function SettingsPage() {
             iconBg="bg-[#eff2fe]"
             iconColor="text-[#2f54eb]"
             title="Change password"
-            subtitle="Update your password"
+            subtitle="Update your password regularly to keep your account safe"
             action={<ChevronRight className="h-5 w-5 text-slate-300" />}
           />
           <SettingItem
@@ -237,7 +141,7 @@ export default function SettingsPage() {
             iconBg="bg-[#fff9e6]"
             iconColor="text-[#d4b106]"
             title="Two-factor authentication"
-            subtitle="Add an extra layer of security"
+            subtitle="Add an extra layer of security when signing in"
             action={<ChevronRight className="h-5 w-5 text-slate-300" />}
             borderBottom={false}
           />
@@ -250,18 +154,21 @@ export default function SettingsPage() {
             iconBg="bg-[#1e293b]"
             iconColor="text-white"
             title="Dark mode"
-            subtitle="Switch to a darker interface"
-            action={<ToggleSwitch active={toggles.darkMode} onChange={() => toggleState("darkMode")} />}
+            subtitle="Switch between light and dark themes"
+            action={<ToggleSwitch active={toggles.darkMode} onChange={toggleDarkMode} />}
           />
           <SettingItem
             icon={<Globe className="h-5 w-5" />}
             iconBg="bg-[#fff9e6]"
             iconColor="text-[#d4b106]"
             title="Language"
-            subtitle="Choose your display language"
+            subtitle="Choose your preferred display language"
             action={
               <div className="relative">
-                <select className="h-9 appearance-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] pl-4 pr-10 text-[13px] font-medium text-slate-700 dark:text-slate-300 outline-none focus:border-[#2f54eb] dark:border-slate-700 dark:bg-[#222] dark:text-slate-200">
+                <select
+                  onChange={(e) => toast.info("Language Updated", `Display language preference set to ${e.target.value}.`)}
+                  className="h-9 appearance-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] pl-4 pr-10 text-[13px] font-medium text-slate-700 dark:text-slate-300 outline-none focus:border-[#2f54eb]"
+                >
                   <option>English</option>
                   <option>Spanish</option>
                   <option>French</option>
@@ -273,14 +180,14 @@ export default function SettingsPage() {
           />
         </SettingsCard>
 
-        {/* Support & Help */}
-        <SettingsCard title="Support & Help">
+        {/* Help Centre / Support */}
+        <SettingsCard title="Help Centre">
           <SettingItem
             icon={<HelpCircle className="h-5 w-5" />}
             iconBg="bg-[#eff2fe]"
             iconColor="text-[#2f54eb]"
             title="Help center"
-            subtitle="Browse guides and FAQS"
+            subtitle="Browse candidate guides, FAQs, and application tips"
             action={<ChevronRight className="h-5 w-5 text-slate-300" />}
           />
           <SettingItem
@@ -288,7 +195,7 @@ export default function SettingsPage() {
             iconBg="bg-[#fff9e6]"
             iconColor="text-[#d4b106]"
             title="Contact support"
-            subtitle="Reach out to our team"
+            subtitle="Reach out to our 24/7 dedicated candidate support team"
             action={<ChevronRight className="h-5 w-5 text-slate-300" />}
           />
           <SettingItem
@@ -296,7 +203,7 @@ export default function SettingsPage() {
             iconBg="bg-[#faebf6]"
             iconColor="text-[#c41d7f]"
             title="Privacy policy"
-            subtitle="Read how we handle your data"
+            subtitle="Read how we safeguard and protect your personal data"
             action={<ChevronRight className="h-5 w-5 text-slate-300" />}
             borderBottom={false}
           />
@@ -305,7 +212,7 @@ export default function SettingsPage() {
         {/* Logout */}
         <div 
           onClick={handleLogout}
-          className="mt-10 rounded-xl border border-red-100 bg-white dark:bg-[#1a1a1a] hover:bg-red-50/50 transition cursor-pointer dark:border-red-900/30 dark:bg-[#1a1a1a] dark:hover:bg-red-950/20"
+          className="mt-10 rounded-xl border border-red-100 bg-white dark:bg-[#1a1a1a] hover:bg-red-50/50 transition cursor-pointer dark:border-red-900/30 dark:hover:bg-red-950/20"
         >
           <div className="flex items-center justify-between p-5">
             <div className="flex items-center gap-4">
@@ -314,7 +221,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h4 className="text-[14px] font-bold text-red-500">Logout</h4>
-                <p className="mt-0.5 text-[12px] text-slate-400">Sign out of your voctrum accout</p>
+                <p className="mt-0.5 text-[12px] text-slate-400">Sign out of your Voctrum account</p>
               </div>
             </div>
             <div>

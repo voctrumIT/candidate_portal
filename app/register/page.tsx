@@ -33,6 +33,7 @@ import { FcGoogle } from "react-icons/fc";
 import { authService } from "../../services/auth";
 import { profileService, validateProfileUpdate } from "../../services/profile";
 import { useRouter } from "next/navigation";
+import { toast } from "../components/Toast";
 
 type RegisterStep = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 type UploadFile = { id: string; name: string; size: number; type: string; url?: string };
@@ -166,10 +167,13 @@ export default function RegisterPage() {
         } catch (updateErr) {
           console.warn("Could not save initial contact number on register", updateErr);
         }
+        toast.success("Account Created!", "Welcome to Voctrum Candidate Portal.");
       }
       next();
     } catch (err: any) {
-      setError(err.message || "Failed to register. Please try again.");
+      const errorMsg = err.message || "Failed to register. Please try again.";
+      setError(errorMsg);
+      toast.error("Registration Notice", errorMsg);
     } finally {
       setLoading(false);
     }
@@ -862,6 +866,9 @@ function DoneStep({
   addressCity: string;
   onBack: () => void;
 }) {
+  const redirectUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('redirect') : null;
+  const targetDestination = redirectUrl || "/dashboard";
+
   return (
     <>
       <StepHeading title="All Done!" copy="Your candidate profile is fully configured and updated" percent={100} filled={5} completeOnly />
@@ -903,8 +910,8 @@ function DoneStep({
         <button type="button" onClick={onBack} className="h-11 w-32 rounded-lg border border-[#2f54eb] bg-white dark:bg-[#1a1a1a] text-sm font-bold text-[#2f54eb] transition hover:bg-[#eef3ff]">
           Back
         </button>
-        <Link href="/dashboard" className="inline-flex h-11 items-center justify-center rounded-lg bg-[#2f54eb] px-8 text-sm font-bold !text-white transition hover:bg-[#2447d8] hover:!text-white shadow-md">
-          Explore Dashboard &amp; Jobs
+        <Link href={targetDestination} className="inline-flex h-11 items-center justify-center rounded-lg bg-[#2f54eb] px-8 text-sm font-bold !text-white transition hover:bg-[#2447d8] hover:!text-white shadow-md">
+          {redirectUrl ? "Continue To Job / Resume" : "Explore Dashboard & Jobs"}
         </Link>
       </div>
     </>
