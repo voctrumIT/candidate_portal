@@ -2,9 +2,17 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { profileService } from "../services/profile";
+import { fetchApi } from "../lib/api";
 import { useRouter } from "next/navigation";
 
 import { EducationDto } from "../services/profile";
+
+export interface TenantInfo {
+  companyName?: string;
+  logoUrl?: string;
+  websiteUrl?: string;
+  [key: string]: any;
+}
 
 export interface UserProfile {
   candidateId?: string;
@@ -37,6 +45,8 @@ export interface UserProfile {
 
 interface AuthContextType {
   user: UserProfile | null;
+  tenant: TenantInfo | null;
+  tenantLoading: boolean;
   loading: boolean;
   refreshProfile: () => Promise<void>;
   logout: () => void;
@@ -44,6 +54,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  tenant: null,
+  tenantLoading: true,
   loading: true,
   refreshProfile: async () => {},
   logout: () => {},
@@ -51,8 +63,44 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [tenant, setTenant] = useState<TenantInfo | null>(null);
+  const [tenantLoading, setTenantLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const fetchTenant = async () => {
+    if (typeof window === "undefined") return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlTenant = params.get("tenant");
+
+      if (urlTenant) {
+        const normalizedTenantId = urlTenant.replace(/^["']|["']$/g, "").trim();
+        if (normalizedTenantId) {
+          localStorage.setItem("tenant_id", normalizedTenantId);
+          document.cookie = `erp_tenant_id=${normalizedTenantId}; path=/; max-age=31536000; SameSite=Lax`;
+
+          params.delete("tenant");
+          const remainingQuery = params.toString() ? `?${params.toString()}` : "";
+          window.history.replaceState({}, document.title, `${window.location.pathname}${remainingQuery}`);
+        }
+      }
+
+      const activeTenant = localStorage.getItem("tenant_id") || "dotnetapi";
+
+      const res = await fetchApi("/api/Candidate/tenant", {
+        headers: { "X-Tenant-ID": activeTenant },
+      });
+      const data = res?.payload || res;
+      if (data) {
+        setTenant(data);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch tenant info:", err);
+    } finally {
+      setTenantLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -119,11 +167,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    fetchTenant();
     fetchProfile();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, refreshProfile: fetchProfile, logout }}>
+    <AuthContext.Provider value={{ user, tenant, tenantLoading, loading, refreshProfile: fetchProfile, logout }}>
       {children}
     </AuthContext.Provider>
   );

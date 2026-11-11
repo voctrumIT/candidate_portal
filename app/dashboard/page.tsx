@@ -221,10 +221,10 @@ export default function DashboardPage() {
       />
 
       {/* Platform & Community Stats */}
-      <ActiveUsers />
+      {/* <ActiveUsers /> */}
 
       {/* App Download Promo */}
-      <AppDownload />
+      {/* <AppDownload /> */}
 
       {/* Modals */}
       <VoctrumAIChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />

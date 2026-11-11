@@ -20,6 +20,11 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
+
+    const tenantId = localStorage.getItem('tenant_id');
+    if (tenantId && !headers.has('X-Tenant-ID')) {
+      headers.set('X-Tenant-ID', tenantId);
+    }
   }
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
