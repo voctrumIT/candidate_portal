@@ -273,6 +273,18 @@ export default function ResumeTab() {
               </div>
             );
           })
+              <div className="flex items-center gap-4">
+                {resume.fileUrl && (
+                  <a href={resume.fileUrl} target="_blank" rel="noreferrer" className="text-[#2f54eb] hover:opacity-80 transition">
+                    <Eye className="h-4 w-4" />
+                  </a>
+                )}
+                <button onClick={() => handleDelete(resume.fileUrl)} className="text-red-500 hover:opacity-80 transition">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))
         )}
       </div>
 

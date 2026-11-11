@@ -209,6 +209,34 @@ export default function DashboardPage() {
 
       {/* Overview Cards: Active Jobs, Applications, Saved, Interviews */}
       <OverviewCards applicationCount={appCount} savedCount={savedJobsCount} />
+    <div className="px-6 py-6 md:px-10 md:py-8 space-y-10">
+      {/* Welcome & Overview Header */}
+      <section className="flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#101828] dark:text-white">
+              Welcome back, {candidateFirstName} 👋
+            </h1>
+            <p className="mt-1 text-sm font-medium text-[#667085] dark:text-slate-400">
+              Here is what is happening with your job applications and search activity today.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Profile Active
+            </span>
+          </div>
+        </div>
+
+        {/* Global Search Bar */}
+        {/* <div className="mt-3">
+          <SearchBar />
+        </div> */}
+      </section>
+
+      {/* Overview Cards: Active Jobs, Applications, Saved, Interviews */}
+      {/* <OverviewCards applicationCount={appCount} /> */}
 
       {/* Application Status Tracker Section */}
       <ApplicationStatusSection applications={applications} />
