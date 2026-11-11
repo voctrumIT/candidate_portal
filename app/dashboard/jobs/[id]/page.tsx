@@ -70,21 +70,9 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    setIsSaved(jobsService.isJobSaved(id));
-
-    const handleSavedUpdated = (e: any) => {
-      if (!e?.detail?.jobId || String(e.detail.jobId) === id) {
-        setIsSaved(jobsService.isJobSaved(id));
-      }
-    };
-
-    window.addEventListener("saved_jobs_updated", handleSavedUpdated);
-    window.addEventListener("storage", handleSavedUpdated);
-
-    return () => {
-      window.removeEventListener("saved_jobs_updated", handleSavedUpdated);
-      window.removeEventListener("storage", handleSavedUpdated);
-    };
+    jobsService.getSavedJobs().then((savedList) => {
+      setIsSaved(savedList.some((s: any) => String(s.jobId || s.id) === id));
+    });
   }, [id]);
 
   useEffect(() => {

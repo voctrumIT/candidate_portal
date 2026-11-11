@@ -415,7 +415,11 @@ function RecommendedJobs() {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const apiJobs = await jobsService.getPreferredJobs();
+        const [data, savedList] = await Promise.all([
+          jobsService.getPreferredJobs(),
+          jobsService.getSavedJobs(),
+        ]);
+        const apiJobs = data?.payload?.jobs || data?.jobs || data;
         if (isMounted && apiJobs && Array.isArray(apiJobs)) {
           const mapped = apiJobs.map((apiJob: any, index: number) => {
             const loc = Array.isArray(apiJob.locations)
@@ -454,8 +458,15 @@ function RecommendedJobs() {
                 : "Apply by 30 April",
               salary,
             };
+          }).slice(0, 8);
+          setJobs(mapped);
+
+          const savedIds = new Set(savedList.map((s: any) => String(s.jobId || s.id)));
+          const map: Record<string, boolean> = {};
+          mapped.forEach((j: any) => {
+            if (savedIds.has(j.id)) map[j.id] = true;
           });
-          setJobs(mapped.slice(0, 8));
+          setSavedMap(map);
         }
       } catch (err) {
         console.warn("Could not fetch live recommended jobs:", err);
@@ -465,24 +476,7 @@ function RecommendedJobs() {
     };
 
     fetchJobs();
-
-    const refreshSaved = () => {
-      const map: Record<string, boolean> = {};
-      jobs.forEach((j) => {
-        map[j.id] = jobsService.isJobSaved(j.id);
-      });
-      setSavedMap(map);
-    };
-
-    refreshSaved();
-    window.addEventListener("saved_jobs_updated", refreshSaved);
-    window.addEventListener("storage", refreshSaved);
-
-    return () => {
-      isMounted = false;
-      window.removeEventListener("saved_jobs_updated", refreshSaved);
-      window.removeEventListener("storage", refreshSaved);
-    };
+    return () => { isMounted = false; };
   }, []);
 
   const handleToggleSave = async (e: React.MouseEvent, job: any) => {
@@ -498,21 +492,17 @@ function RecommendedJobs() {
     const currentlySaved = Boolean(savedMap[job.id]);
     setSavedMap((prev) => ({ ...prev, [job.id]: !currentlySaved }));
 
-    if (currentlySaved) {
-      await jobsService.unsaveJob(job.id);
-      toast.info("Job Removed", `"${job.title}" removed from your saved list.`);
-    } else {
-      await jobsService.saveJob(job.id, {
-        id: job.id,
-        title: job.title,
-        company: job.company,
-        location: job.tags?.[2] || "Remote",
-        tags: job.tags,
-        postedDate: job.posted,
-        applyByDate: job.apply,
-        salaryRange: job.salary,
-      });
-      toast.success("Job Saved", `"${job.title}" has been saved to your jobs.`);
+    try {
+      if (currentlySaved) {
+        await jobsService.unsaveJob(job.id);
+        toast.info("Job Removed", `"${job.title}" removed from your saved list.`);
+      } else {
+        await jobsService.saveJob(job.id);
+        toast.success("Job Saved", `"${job.title}" has been saved to your jobs.`);
+      }
+    } catch {
+      setSavedMap((prev) => ({ ...prev, [job.id]: currentlySaved }));
+      toast.error("Action Failed", "Could not update saved job.");
     }
   };
 

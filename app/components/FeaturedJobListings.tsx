@@ -87,22 +87,15 @@ export default function FeaturedJobListings() {
   }, []);
 
   useEffect(() => {
-    const refreshSaved = () => {
+    if (jobs.length === 0) return;
+    jobsService.getSavedJobs().then((savedList) => {
+      const savedIds = new Set(savedList.map((s: any) => String(s.jobId || s.id)));
       const map: Record<string, boolean> = {};
       jobs.forEach((j) => {
-        map[j.id] = jobsService.isJobSaved(j.id);
+        if (savedIds.has(j.id)) map[j.id] = true;
       });
       setSavedMap(map);
-    };
-
-    refreshSaved();
-    window.addEventListener('saved_jobs_updated', refreshSaved);
-    window.addEventListener('storage', refreshSaved);
-
-    return () => {
-      window.removeEventListener('saved_jobs_updated', refreshSaved);
-      window.removeEventListener('storage', refreshSaved);
-    };
+    });
   }, [jobs]);
 
   const handleToggleSave = async (e: React.MouseEvent, job: any) => {
@@ -118,21 +111,17 @@ export default function FeaturedJobListings() {
     const currentlySaved = Boolean(savedMap[job.id]);
     setSavedMap((prev) => ({ ...prev, [job.id]: !currentlySaved }));
 
-    if (currentlySaved) {
-      await jobsService.unsaveJob(job.id);
-      toast.info("Job Removed", `"${job.title}" removed from your saved list.`);
-    } else {
-      await jobsService.saveJob(job.id, {
-        id: job.id,
-        title: job.title,
-        company: job.company,
-        location: job.city,
-        tags: job.tags,
-        postedDate: `Posted ${job.posted}`,
-        applyByDate: `Apply by ${job.deadline}`,
-        salaryRange: job.salary,
-      });
-      toast.success("Job Saved", `"${job.title}" has been saved to your jobs.`);
+    try {
+      if (currentlySaved) {
+        await jobsService.unsaveJob(job.id);
+        toast.info("Job Removed", `"${job.title}" removed from your saved list.`);
+      } else {
+        await jobsService.saveJob(job.id);
+        toast.success("Job Saved", `"${job.title}" has been saved to your jobs.`);
+      }
+    } catch {
+      setSavedMap((prev) => ({ ...prev, [job.id]: currentlySaved }));
+      toast.error("Action Failed", "Could not update saved job.");
     }
   };
 

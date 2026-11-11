@@ -20,16 +20,12 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    setIsSaved(jobsService.isJobSaved(job.id));
+    jobsService.getSavedJobs().then((savedList) => {
+      setIsSaved(savedList.some((s: any) => String(s.jobId || s.id) === String(job.id)));
+    });
     if (jobsService.isJobApplied(job.id)) {
       setApplied(true);
     }
-
-    const handleSavedUpdated = (e: any) => {
-      if (!e?.detail?.jobId || String(e.detail.jobId) === String(job.id)) {
-        setIsSaved(jobsService.isJobSaved(job.id));
-      }
-    };
 
     const handleJobApplied = (e: any) => {
       if (String(e?.detail?.jobId) === String(job.id)) {
@@ -37,8 +33,6 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
       }
     };
 
-    window.addEventListener('saved_jobs_updated', handleSavedUpdated);
-    window.addEventListener('storage', handleSavedUpdated);
     window.addEventListener('job_applied', handleJobApplied);
 
     // Check if user already applied to this job
@@ -57,8 +51,6 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
     checkAppliedStatus();
 
     return () => {
-      window.removeEventListener('saved_jobs_updated', handleSavedUpdated);
-      window.removeEventListener('storage', handleSavedUpdated);
       window.removeEventListener('job_applied', handleJobApplied);
     };
   }, [user, job.id]);
