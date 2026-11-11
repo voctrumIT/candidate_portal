@@ -33,6 +33,7 @@ import { FcGoogle } from "react-icons/fc";
 import { authService } from "../../services/auth";
 import { profileService, validateProfileUpdate } from "../../services/profile";
 import { useRouter } from "next/navigation";
+import { toast } from "../components/Toast";
 
 type RegisterStep = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 type UploadFile = { id: string; name: string; size: number; type: string; url?: string };
@@ -166,10 +167,13 @@ export default function RegisterPage() {
         } catch (updateErr) {
           console.warn("Could not save initial contact number on register", updateErr);
         }
+        toast.success("Account Created!", "Welcome to Voctrum Candidate Portal.");
       }
       next();
     } catch (err: any) {
-      setError(err.message || "Failed to register. Please try again.");
+      const errorMsg = err.message || "Failed to register. Please try again.";
+      setError(errorMsg);
+      toast.error("Registration Notice", errorMsg);
     } finally {
       setLoading(false);
     }

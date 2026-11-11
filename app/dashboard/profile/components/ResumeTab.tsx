@@ -5,6 +5,8 @@ import { Plus, Eye, Trash2, FileText, Loader2, Sparkles, CheckCircle2, Star } fr
 import { useRouter } from "next/navigation";
 import { documentsService } from "../../../../services/documents";
 import ResumeBuilderModal from "../../../components/ResumeBuilderModal";
+import { DocumentRowSkeleton } from "../../../components/Skeleton";
+import { toast } from "../../../components/Toast";
 
 export default function ResumeTab() {
   const router = useRouter();
@@ -70,7 +72,7 @@ export default function ResumeTab() {
         }
         setActiveResumeId(defaultId);
       }
-    } catch(e) {
+    } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
@@ -95,17 +97,19 @@ export default function ResumeTab() {
 
   const handleSetActive = (resume: any) => {
     const id = resume.id || resume.name || resume.fileName || resume.fileUrl;
+    const displayName = resume.name || resume.fileName || "Resume";
     if (typeof window !== "undefined") {
       localStorage.setItem("candidate_active_resume_id", id);
       if (resume.name || resume.fileName) {
-        localStorage.setItem("candidate_active_resume_name", resume.name || resume.fileName);
+        localStorage.setItem("candidate_active_resume_name", displayName);
       }
       setActiveResumeId(id);
       window.dispatchEvent(
         new CustomEvent("active_resume_updated", {
-          detail: { id, name: resume.name || resume.fileName },
+          detail: { id, name: displayName },
         })
       );
+      toast.success("Active Resume Set", `"${displayName}" is now set as your active profile resume.`);
     }
   };
 
@@ -137,10 +141,13 @@ export default function ResumeTab() {
       }
 
       await fetchDocs();
-    } catch (err) {
+      toast.success("Resume Uploaded", `"${file.name}" has been uploaded and set as active.`);
+    } catch (err: any) {
       console.error("Upload failed", err);
+      toast.error("Upload Failed", err?.message || "Could not upload document. Please try again.");
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -153,8 +160,10 @@ export default function ResumeTab() {
         setActiveResumeId(null);
       }
       await fetchDocs();
-    } catch(err) {
+      toast.info("Resume Removed", "The document has been removed from your profile.");
+    } catch (err: any) {
       console.error("Delete failed", err);
+      toast.error("Delete Failed", err?.message || "Could not remove document. Please try again.");
     }
   };
 
@@ -175,7 +184,7 @@ export default function ResumeTab() {
             htmlFor="resume-upload"
             className={`flex cursor-pointer items-center gap-2 rounded-lg bg-[#2f54eb] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#2447d8] ${uploading ? 'opacity-70 pointer-events-none' : ''}`}
           >
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} 
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             Upload New
           </label>
           <input
@@ -190,7 +199,10 @@ export default function ResumeTab() {
 
       <div className="mt-6 flex flex-col gap-4">
         {loading ? (
-          <p className="text-sm text-slate-500">Loading documents...</p>
+          <div className="flex flex-col gap-4">
+            <DocumentRowSkeleton />
+            <DocumentRowSkeleton />
+          </div>
         ) : resumes.length === 0 ? (
           <p className="text-sm text-slate-500">No resumes uploaded yet.</p>
         ) : (
@@ -208,16 +220,14 @@ export default function ResumeTab() {
             return (
               <div
                 key={resume.id || resume.fileUrl || resume.name || index}
-                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[12px] p-5 transition-colors ${
-                  isResumeActive
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[12px] p-5 transition-colors ${isResumeActive
                     ? "bg-blue-50/60 dark:bg-blue-950/20 border-2 border-blue-500/40"
                     : "bg-[#f8f9fa] dark:bg-[#1a1a1a] border border-slate-200/80 dark:border-slate-800 hover:bg-[#f1f3f5] dark:hover:bg-slate-800"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-bold text-white shadow-xs ${
-                    isResumeActive ? "bg-blue-600" : "bg-red-600"
-                  }`}>
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-bold text-white shadow-xs ${isResumeActive ? "bg-blue-600" : "bg-red-600"
+                    }`}>
                     <span className="text-[11px] font-bold tracking-wider">
                       {resume.name?.toLowerCase().endsWith(".docx") || resume.name?.toLowerCase().endsWith(".doc") ? "DOC" : "PDF"}
                     </span>
@@ -273,18 +283,6 @@ export default function ResumeTab() {
               </div>
             );
           })
-              <div className="flex items-center gap-4">
-                {resume.fileUrl && (
-                  <a href={resume.fileUrl} target="_blank" rel="noreferrer" className="text-[#2f54eb] hover:opacity-80 transition">
-                    <Eye className="h-4 w-4" />
-                  </a>
-                )}
-                <button onClick={() => handleDelete(resume.fileUrl)} className="text-red-500 hover:opacity-80 transition">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          ))
         )}
       </div>
 

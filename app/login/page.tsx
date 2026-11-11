@@ -203,6 +203,7 @@ function IllustrationPanel({ title, copy, image, alt }: { title: string; copy: s
 
 import { useRouter } from "next/navigation";
 import { authService } from "../../services/auth";
+import { toast } from "../components/Toast";
 
 function LoginForm({ onForgot }: { onForgot: () => void }) {
   const router = useRouter();
@@ -223,12 +224,15 @@ function LoginForm({ onForgot }: { onForgot: () => void }) {
         if (res.payload.candidateId) {
           localStorage.setItem("candidate_id", res.payload.candidateId);
         }
+        toast.success("Welcome Back!", "You have successfully signed in to your portal.");
         router.push("/dashboard");
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to log in");
+      const errorMsg = err.message || "Failed to log in";
+      setError(errorMsg);
+      toast.error("Sign In Failed", errorMsg);
     } finally {
       setLoading(false);
     }
@@ -297,11 +301,14 @@ function ForgotForm({ onSendOtp }: { onSendOtp: (email: string) => void }) {
     try {
       await authService.forgotPassword({ email });
       setMessage("Verification code sent to your email!");
+      toast.info("Verification Code Sent", `A verification code was sent to ${email}`);
       setTimeout(() => {
         onSendOtp(email);
       }, 1500);
     } catch (err: any) {
-      setError(err.message || "Failed to send reset code.");
+      const errorMsg = err.message || "Failed to send reset code.";
+      setError(errorMsg);
+      toast.error("Notice", errorMsg);
     } finally {
       setLoading(false);
     }

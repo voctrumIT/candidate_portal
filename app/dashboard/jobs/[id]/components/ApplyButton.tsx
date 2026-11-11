@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../../../../context/AuthContext";
 import { jobsService } from "../../../../../services/jobs";
 import { documentsService } from "../../../../../services/documents";
+import { toast } from "../../../../components/Toast";
 
 interface ApplyButtonProps {
   jobId: string;
@@ -111,8 +112,10 @@ export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButton
             setSelectedResumeId(docs[0].id);
           }
         }
-      } catch (err) {
+        toast.success("Resume Uploaded", `"${file.name}" has been uploaded.`);
+      } catch (err: any) {
         console.error("Upload failed", err);
+        toast.error("Upload Failed", err?.message || "Could not upload resume file.");
       } finally {
         setUploading(false);
         if (fileInputRef.current) {
@@ -128,8 +131,10 @@ export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButton
       await documentsService.deleteDocument(id);
       setResumes(resumes.filter((r) => r.id !== id));
       if (selectedResumeId === id) setSelectedResumeId(null);
-    } catch(err) {
+      toast.info("Resume Removed", "Resume was removed from your selection.");
+    } catch(err: any) {
       console.error("Delete failed", err);
+      toast.error("Remove Failed", err?.message || "Could not delete resume.");
     }
   };
 
@@ -558,12 +563,16 @@ export default function ApplyButton({ jobId, jobCompany, jobTitle }: ApplyButton
                           note: `Education: ${education}. Location: ${location}. CTC: ${ctc}. Notice: ${noticePeriod}`
                         });
                         setStep(5);
+                        toast.success("Application Submitted!", `Your application for ${jobTitle || "the position"} was submitted successfully.`);
                       } catch(err: any) {
                         const isDemo = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(String(jobId));
                         if (isDemo || err?.message?.includes('404') || err?.message?.includes('Not Found')) {
                           setStep(5);
+                          toast.success("Application Submitted!", `Your application for ${jobTitle || "the position"} was submitted successfully.`);
                         } else {
-                          setSubmitError(err.message || 'Failed to submit application. Please try again.');
+                          const errorMsg = err.message || 'Failed to submit application. Please try again.';
+                          setSubmitError(errorMsg);
+                          toast.error("Application Notice", errorMsg);
                         }
                       } finally {
                         setSubmitting(false);
