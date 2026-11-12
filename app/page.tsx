@@ -4,7 +4,6 @@ import HighDemandJobCategories from './components/HighDemandJobCategories';
 import FeaturedJobListings from './components/FeaturedJobListings';
 import ResumeBuilderSection from './components/ResumeBuilderSection';
 import EasyStepsSection from './components/EasyStepsSection';
-import TestimonialsAppSection from './components/TestimonialsAppSection';
 import Footer from './components/Footer';
 
 export default function Home() {
@@ -16,7 +15,6 @@ export default function Home() {
       <FeaturedJobListings />
       <ResumeBuilderSection />
       <EasyStepsSection />
-      <TestimonialsAppSection />
       <Footer />
     </main>
   );

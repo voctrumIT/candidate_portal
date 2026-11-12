@@ -1,10 +1,11 @@
 "use client";
 
 import { MapPin, Phone, Clock, Mail } from "lucide-react";
-import { FaFacebookF, FaXTwitter, FaLinkedinIn } from "react-icons/fa6";
-import { MdCall } from "react-icons/md";
+import { useAuth } from "../../../context/AuthContext";
+import TenantSocialLinks from "../../../app/components/TenantSocialLinks";
 
 export default function ContactHeroAndForm() {
+  const { tenant } = useAuth();
   return (
     <section className="relative w-full">
 
@@ -161,11 +162,12 @@ export default function ContactHeroAndForm() {
               <div className="flex items-center gap-4 rounded-[16px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a1a1a] p-4 shadow-sm">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f0fdf4] dark:bg-green-900/20 text-[#10b981]">
                   <Mail className="h-[22px] w-[22px] fill-current" />
-                  {/* Actually standard icon works fine */}
                 </div>
                 <div>
                   <h4 className="text-[14px] font-bold text-slate-900 dark:text-white mb-0.5">Email</h4>
-                  <p className="text-[12px] text-slate-500 dark:text-slate-400 truncate">hr.conatct@voctrum.com</p>
+                  <p className="text-[12px] text-slate-500 dark:text-slate-400 truncate">
+                    {tenant?.contactEmail || "support@voctrum.com"}
+                  </p>
                 </div>
               </div>
 
@@ -175,20 +177,7 @@ export default function ContactHeroAndForm() {
 
             <div className="flex items-center justify-between">
               <span className="text-[14px] font-bold text-slate-900 dark:text-white">Social Media :</span>
-              <div className="flex gap-3">
-                <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2f54eb] text-white transition hover:bg-blue-700">
-                  <FaFacebookF className="h-[14px] w-[14px]" />
-                </a>
-                <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2f54eb] text-white transition hover:bg-blue-700">
-                  <FaXTwitter className="h-[14px] w-[14px]" />
-                </a>
-                <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2f54eb] text-white transition hover:bg-blue-700">
-                  <FaLinkedinIn className="h-[14px] w-[14px]" />
-                </a>
-                <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2f54eb] text-white transition hover:bg-blue-700">
-                  <MdCall className="h-[16px] w-[16px]" />
-                </a>
-              </div>
+              <TenantSocialLinks />
             </div>
 
           </div>

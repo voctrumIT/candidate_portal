@@ -370,10 +370,10 @@ function ApplicationStatusSection() {
 
                   <div className="flex items-center gap-2">
                     <Link
-                      href={`/dashboard/jobs/${app.jobId}`}
+                      href={`/dashboard/applications/${app.jobApplicationId || app.id || app.jobId}`}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-[#2f54eb] hover:bg-[#2447d8] px-4 py-2 text-xs font-semibold !text-white transition shadow-xs"
                     >
-                      <span>View Details</span>
+                      <span>View Application</span>
                       <ChevronRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>

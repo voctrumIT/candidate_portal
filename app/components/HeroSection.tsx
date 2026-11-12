@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, MapPin, Search, Star } from 'lucide-react';
+import { MapPin, Search, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -230,48 +230,6 @@ export default function HeroSection() {
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 660px"
                 className="object-contain select-none"
               />
-
-              {/* Prominent Floating Tenant Logo & Info Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.35 }}
-                className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-20 flex items-center gap-3.5 rounded-2xl border border-slate-200/90 bg-white/95 p-3.5 shadow-2xl backdrop-blur-md dark:border-slate-800 dark:bg-[#18181b]/95"
-              >
-                {/* Logo Box with ample horizontal dimensions */}
-                <div className="flex h-14 w-32 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-white px-3 py-1.5 shadow-xs dark:border-slate-800 dark:bg-slate-900 shrink-0">
-                  <Image
-                    src={logoSrc}
-                    alt={`${companyName} official logo`}
-                    width={120}
-                    height={44}
-                    unoptimized
-                    priority
-                    className="h-full w-auto max-w-full object-contain"
-                    onError={() => setLogoSrc('/common/logo.png')}
-                  />
-                </div>
-
-                <div className="pr-3 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
-                      {companyName}
-                    </h4>
-                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 max-w-[190px] truncate">
-                    {location}
-                  </p>
-                  <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-[#2f54eb] dark:text-blue-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>
-                      {activeJobsCount > 0
-                        ? `${activeJobsCount} Active Openings`
-                        : 'Actively Hiring Talent'}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
             </div>
           </motion.div>
         </div>

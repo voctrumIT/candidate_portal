@@ -66,10 +66,10 @@ export default function InterviewJobCard({ job, status = 'Pending', time = '11:0
           {type}
         </span>
         <Link
-          href={`/dashboard/jobs/${targetId}`}
+          href={`/dashboard/applications/${job.jobApplicationId || targetId}`}
           className="rounded-md bg-[#2f54eb] px-6 py-2.5 text-[13px] font-semibold !text-white transition hover:bg-[#2447d8]"
         >
-          View Details
+          View Application
         </Link>
       </div>
     </div>

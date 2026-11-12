@@ -35,6 +35,8 @@ import { profileService, validateProfileUpdate } from "../../services/profile";
 import { documentsService } from "../../services/documents";
 import { useRouter } from "next/navigation";
 import { toast } from "../components/Toast";
+import { useAuth } from "../../context/AuthContext";
+import { getUserFriendlyErrorMessage } from "../../lib/errorUtils";
 
 type RegisterStep = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 type UploadFile = { id: string; name: string; size: number; type: string; url?: string };
@@ -56,6 +58,7 @@ const employmentOptions = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { tenant } = useAuth();
   const [step, setStep] = useState<RegisterStep>(0);
 
   // Step 0: Initial Register
@@ -180,11 +183,11 @@ export default function RegisterPage() {
         } catch (updateErr) {
           console.warn("Could not save initial contact number on register", updateErr);
         }
-        toast.success("Account Created!", "Welcome to Voctrum Candidate Portal.");
+        toast.success("Account Created!", `Welcome to ${tenant?.companyName || "Voctrum"} Candidate Portal.`);
       }
       next();
     } catch (err: any) {
-      const errorMsg = err.message || "Failed to register. Please try again.";
+      const errorMsg = getUserFriendlyErrorMessage(err, "register");
       setError(errorMsg);
       toast.error("Registration Notice", errorMsg);
     } finally {
@@ -202,7 +205,7 @@ export default function RegisterPage() {
       }
       next();
     } catch (err: any) {
-      setError(err.message || "Failed to save skills. Please try again.");
+      setError(getUserFriendlyErrorMessage(err, "register"));
     } finally {
       setStepLoading(false);
     }
@@ -236,7 +239,7 @@ export default function RegisterPage() {
         await profileService.updateProfile({ educations: [educationItem] });
         next();
       } catch (err: any) {
-        setError(err.message || "Failed to save education details.");
+        setError(getUserFriendlyErrorMessage(err, "register"));
       } finally {
         setStepLoading(false);
       }
@@ -277,7 +280,7 @@ export default function RegisterPage() {
       });
       next();
     } catch (err: any) {
-      setError(err.message || "Failed to save address details.");
+      setError(getUserFriendlyErrorMessage(err, "register"));
     } finally {
       setStepLoading(false);
     }
@@ -506,10 +509,19 @@ export default function RegisterPage() {
 }
 
 function AuthHeader() {
+  const { tenant } = useAuth();
   return (
     <header className="flex h-[70px] items-center justify-between border-b border-[#eef0f4] dark:border-slate-800 bg-white dark:bg-[#1a1a1a] px-8 shadow-xs sm:px-14">
-      <Link href="/" aria-label="Voctrum home" className="flex items-center">
-        <Image src="/common/logo.png" alt="Voctrum" width={118} height={38} className="h-auto w-[118px] object-contain" priority />
+      <Link href="/" aria-label="Home" className="flex items-center">
+        {tenant?.logoUrl ? (
+          <img
+            src={tenant.logoUrl}
+            alt={tenant.companyName || "Logo"}
+            className="h-8 w-auto object-contain max-w-[140px]"
+          />
+        ) : (
+          <Image src="/common/logo.png" alt={tenant?.companyName || "Logo"} width={118} height={38} className="h-auto w-[118px] object-contain" priority />
+        )}
       </Link>
       <div className="flex items-center gap-3 text-sm text-[#667085] dark:text-slate-400 sm:text-base">
         <span className="hidden sm:inline">Already have an account?</span>
