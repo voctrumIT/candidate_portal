@@ -9,29 +9,25 @@ import { jobsService } from '../../../services/jobs';
 import { useAuth } from '../../../context/AuthContext';
 import { toast } from '../../components/Toast';
 
-export default function JobCard({ job, isDashboard = false }: { job: JobListing; isDashboard?: boolean }) {
+export default function JobCard({
+  job,
+  isDashboard = false,
+  initialSaved = false,
+  onUnsave,
+}: {
+  job: JobListing;
+  isDashboard?: boolean;
+  initialSaved?: boolean;
+  onUnsave?: (jobId: string) => void;
+}) {
   const router = useRouter();
   const { user } = useAuth();
   const jobUrl = isDashboard ? `/dashboard/jobs/${job.id}` : `/jobs/${job.id}`;
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(initialSaved);
 
   useEffect(() => {
-    setIsSaved(jobsService.isJobSaved(job.id));
-
-    const handleSavedUpdated = (e: any) => {
-      if (!e?.detail?.jobId || String(e.detail.jobId) === String(job.id)) {
-        setIsSaved(jobsService.isJobSaved(job.id));
-      }
-    };
-
-    window.addEventListener('saved_jobs_updated', handleSavedUpdated);
-    window.addEventListener('storage', handleSavedUpdated);
-
-    return () => {
-      window.removeEventListener('saved_jobs_updated', handleSavedUpdated);
-      window.removeEventListener('storage', handleSavedUpdated);
-    };
-  }, [job.id]);
+    setIsSaved(initialSaved);
+  }, [initialSaved]);
 
   const handleToggleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -43,14 +39,21 @@ export default function JobCard({ job, isDashboard = false }: { job: JobListing;
       return;
     }
 
-    if (isSaved) {
-      setIsSaved(false);
-      await jobsService.unsaveJob(job.id);
-      toast.info("Job Removed", `"${job.title}" removed from your saved list.`);
-    } else {
-      setIsSaved(true);
-      await jobsService.saveJob(job.id, job);
-      toast.success("Job Saved", `"${job.title}" has been saved to your jobs.`);
+    const currentlySaved = isSaved;
+    setIsSaved(!currentlySaved);
+
+    try {
+      if (currentlySaved) {
+        await jobsService.unsaveJob(job.id);
+        onUnsave?.(job.id);
+        toast.info("Job Removed", `"${job.title}" removed from your saved list.`);
+      } else {
+        await jobsService.saveJob(job.id);
+        toast.success("Job Saved", `"${job.title}" has been saved to your jobs.`);
+      }
+    } catch {
+      setIsSaved(currentlySaved);
+      toast.error("Action Failed", "Could not update saved job.");
     }
   };
   

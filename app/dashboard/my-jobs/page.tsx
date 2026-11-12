@@ -26,15 +26,6 @@ export default function MyJobsPage() {
   const [interviewJobs, setInterviewJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadSavedJobs = async () => {
-    try {
-      const saved = await jobsService.getSavedJobs();
-      setSavedJobs(saved || []);
-    } catch (e) {
-      console.warn("Failed to load saved jobs", e);
-    }
-  };
-
   useEffect(() => {
     const fetchAll = async () => {
       try {
@@ -63,22 +54,14 @@ export default function MyJobsPage() {
 
     fetchAll();
 
-    const handleSavedUpdated = () => {
-      loadSavedJobs();
-    };
-
     const handleJobApplied = () => {
       fetchAll();
     };
 
-    window.addEventListener("saved_jobs_updated", handleSavedUpdated);
     window.addEventListener("job_applied", handleJobApplied);
-    window.addEventListener("storage", handleSavedUpdated);
 
     return () => {
-      window.removeEventListener("saved_jobs_updated", handleSavedUpdated);
       window.removeEventListener("job_applied", handleJobApplied);
-      window.removeEventListener("storage", handleSavedUpdated);
     };
   }, []);
 
@@ -192,7 +175,16 @@ export default function MyJobsPage() {
                   return (
                     <SwiperSlide key={job.id || job.jobId || index} className="h-auto">
                       <div className="h-full">
-                        {activeTab === "saved" && <JobCard job={job} isDashboard />}
+                        {activeTab === "saved" && (
+                          <JobCard
+                            job={job}
+                            isDashboard
+                            initialSaved
+                            onUnsave={(id) =>
+                              setSavedJobs((prev) => prev.filter((j) => String(j.id || j.jobId) !== id))
+                            }
+                          />
+                        )}
                         {activeTab === "applied" && <AppliedJobCard job={job} />}
                         {activeTab === "interviews" && (
                           <InterviewJobCard

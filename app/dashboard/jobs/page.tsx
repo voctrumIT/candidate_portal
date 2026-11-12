@@ -9,6 +9,7 @@ import { jobsService } from "../../../services/jobs";
 
 export default function DashboardJobsPage() {
   const [jobs, setJobs] = useState<any[]>([]);
+  const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter states
@@ -27,7 +28,13 @@ export default function DashboardJobsPage() {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const data = await jobsService.getJobs();
+        const [data, savedList] = await Promise.all([
+          jobsService.getJobs(),
+          jobsService.getSavedJobs(),
+        ]);
+        if (isMounted) {
+          setSavedIds(savedList.map((s: any) => String(s.jobId || s.id)));
+        }
         const apiJobs = data?.payload?.jobs || (Array.isArray(data) ? data : []);
         if (apiJobs && Array.isArray(apiJobs) && isMounted) {
           const mappedJobs = apiJobs.map((apiJob: any) => {
@@ -411,7 +418,7 @@ export default function DashboardJobsPage() {
           ))
         ) : paginatedJobs.length > 0 ? (
           paginatedJobs.map((job) => (
-            <JobCard key={job.id} job={job} isDashboard />
+            <JobCard key={job.id} job={job} isDashboard initialSaved={savedIds.includes(job.id)} />
           ))
         ) : (
           <div className="col-span-full py-16 text-center">

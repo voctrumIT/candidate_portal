@@ -12,6 +12,7 @@ import { Briefcase } from 'lucide-react';
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<any[]>([]);
+  const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter states
@@ -30,7 +31,13 @@ export default function JobsPage() {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const data = await jobsService.getJobs();
+        const [data, savedList] = await Promise.all([
+          jobsService.getJobs(),
+          jobsService.getSavedJobs(),
+        ]);
+        if (isMounted) {
+          setSavedIds(savedList.map((s: any) => String(s.jobId || s.id)));
+        }
         const apiJobs = data?.payload?.jobs || (Array.isArray(data) ? data : []);
         if (apiJobs && Array.isArray(apiJobs) && isMounted) {
           const mappedJobs = apiJobs.map((apiJob: any) => {
@@ -278,7 +285,7 @@ export default function JobsPage() {
             ))
           ) : paginatedJobs.length > 0 ? (
             paginatedJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
+              <JobCard key={job.id} job={job} initialSaved={savedIds.includes(job.id)} />
             ))
           ) : (
             <div className="col-span-full py-16 text-center">
