@@ -1,3 +1,5 @@
+import { getUserFriendlyErrorMessage } from './errorUtils';
+
 const BASE_URL = '';
 
 /**
@@ -39,8 +41,86 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
 
   const data = await response.json().catch(() => null);
 
+  // Context deduction from endpoint
+  let endpointContext: 'login' | 'register' | 'profile' | 'general' | undefined;
+  if (endpoint.includes('/login')) endpointContext = 'login';
+  else if (endpoint.includes('/register')) endpointContext = 'register';
+  else if (endpoint.includes('/profile')) endpointContext = 'profile';
+
   if (!response.ok) {
-    throw new Error(data?.message || data?.error || `API Error: ${response.status} ${response.statusText}`);
+    const rawMsg =
+      data?.Message ||
+      data?.message ||
+      data?.Error ||
+      data?.error ||
+      data?.Title ||
+      data?.title;
+    const errorsObj = data?.Errors || data?.errors;
+    let errorMsg = rawMsg;
+    if (errorsObj) {
+      if (Array.isArray(errorsObj)) {
+        errorMsg = errorsObj.filter(Boolean).join(", ");
+      } else if (typeof errorsObj === "object") {
+        const flat = Object.entries(errorsObj)
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+          .join("; ");
+        if (flat) errorMsg = flat;
+      }
+    }
+    const statusCode = response.status || data?.StatusCode || data?.statusCode || 400;
+    const friendlyMessage = getUserFriendlyErrorMessage(
+      {
+        message: errorMsg,
+        rawMessage: errorMsg,
+        status: statusCode,
+        data,
+      },
+      endpointContext
+    );
+
+    const err = new Error(friendlyMessage);
+    (err as any).status = statusCode;
+    (err as any).data = data;
+    (err as any).rawMessage = errorMsg;
+    throw err;
+  }
+
+  if (data && (data.success === false || data.Success === false)) {
+    const rawMsg =
+      data.Message ||
+      data.message ||
+      data.Error ||
+      data.error ||
+      data.Title ||
+      data.title;
+    const errorsObj = data.Errors || data.errors;
+    let errorMsg = rawMsg;
+    if (errorsObj) {
+      if (Array.isArray(errorsObj)) {
+        errorMsg = errorsObj.filter(Boolean).join(", ");
+      } else if (typeof errorsObj === "object") {
+        const flat = Object.entries(errorsObj)
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+          .join("; ");
+        if (flat) errorMsg = flat;
+      }
+    }
+    const statusCode = data.StatusCode || data.statusCode || 400;
+    const friendlyMessage = getUserFriendlyErrorMessage(
+      {
+        message: errorMsg,
+        rawMessage: errorMsg,
+        status: statusCode,
+        data,
+      },
+      endpointContext
+    );
+
+    const err = new Error(friendlyMessage);
+    (err as any).status = statusCode;
+    (err as any).data = data;
+    (err as any).rawMessage = errorMsg;
+    throw err;
   }
 
   return data;

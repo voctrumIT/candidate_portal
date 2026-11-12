@@ -495,4 +495,63 @@ export const jobsService = {
       return false;
     }
   },
+
+  getApplicationById: async (id: string): Promise<any> => {
+    const safeId = String(id || '').trim();
+    if (!safeId) return null;
+
+    try {
+      // 1. Check all applications from candidate
+      const apps = await jobsService.getApplications();
+      const match = apps.find(
+        (a: any) =>
+          String(a.jobApplicationId) === safeId ||
+          String(a.jobId) === safeId ||
+          String(a.id) === safeId
+      );
+
+      // 2. Fetch full job details if we have a jobId
+      const targetJobId = match?.jobId || safeId;
+      let fullJob: any = null;
+      try {
+        const jobRes = await jobsService.getJobById(targetJobId);
+        fullJob = jobRes?.payload || jobRes;
+      } catch {}
+
+      if (match) {
+        return {
+          ...match,
+          fullJob: fullJob || match.job,
+        };
+      }
+
+      // If no direct application record found, synthesize from job
+      if (fullJob) {
+        const statusInfo = parseApplicationStatus('applied');
+        return {
+          jobApplicationId: `app-${safeId}`,
+          jobId: targetJobId,
+          id: targetJobId,
+          title: fullJob.jobTitle || fullJob.title || 'Job Opportunity',
+          company: fullJob.companyName || fullJob.company || 'Company',
+          location: Array.isArray(fullJob.locations) ? fullJob.locations.join(', ') : (fullJob.location || 'Remote'),
+          salaryRange: fullJob.salaryRange || 'Competitive',
+          applyDate: new Date().toISOString().split('T')[0],
+          postedDate: 'Applied recently',
+          status: statusInfo.status,
+          rawStatus: statusInfo.rawStatus,
+          statusLabel: statusInfo.statusLabel,
+          statusNote: statusInfo.statusNote,
+          currentStep: 1,
+          badgeClass: statusInfo.badgeClass,
+          dotColor: statusInfo.dotColor,
+          fullJob,
+          job: fullJob,
+        };
+      }
+    } catch (err) {
+      console.warn('getApplicationById error:', err);
+    }
+    return null;
+  },
 };

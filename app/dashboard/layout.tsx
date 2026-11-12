@@ -65,24 +65,26 @@ function DashboardSidebar() {
     <aside className="fixed bottom-0 left-0 top-0 w-[286px] flex flex-col overflow-y-auto bg-[#172a78] dark:bg-[#0f172a] text-white z-20 shadow-lg">
       <div className="flex h-[100px] shrink-0 items-center px-8">
         <Link href="/" className="flex items-center" title="Go to main homepage">
-          {tenantLoading ? (
-            <div className="h-10 w-32 animate-pulse rounded-md bg-slate-200/70 dark:bg-slate-800" />
-          ) : tenant?.logoUrl ? (
-            <img
-              src={tenant.logoUrl}
-              alt={tenant.companyName || "Logo"}
-              className="h-9 w-auto object-contain max-w-[150px]"
-            />
-          ) : (
-            <Image
-              src="/common/logo.png"
-              alt="Voctrum"
-              width={120}
-              height={42}
-              className="h-9 w-auto brightness-0 invert"
-              priority
-            />
-          )}
+          <div className="rounded-xl bg-white px-3.5 py-1.5 shadow-sm inline-flex items-center justify-center">
+            {tenantLoading ? (
+              <div className="h-8 w-28 animate-pulse rounded bg-slate-200" />
+            ) : tenant?.logoUrl ? (
+              <img
+                src={tenant.logoUrl}
+                alt={tenant.companyName || "Logo"}
+                className="h-8 w-auto object-contain max-w-[140px]"
+              />
+            ) : (
+              <Image
+                src="/common/logo.png"
+                alt={tenant?.companyName || "Logo"}
+                width={120}
+                height={36}
+                className="h-8 w-auto object-contain"
+                priority
+              />
+            )}
+          </div>
         </Link>
       </div>
 
@@ -277,30 +279,12 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
 
           {/* Action Links */}
           <div className="mt-5 flex flex-col gap-2">
-            <Link
-              href="/dashboard/profile"
-              onClick={onClose}
-              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2f54eb] text-xs font-bold text-white transition hover:bg-[#2447d8] shadow-xs"
-            >
-              <User className="h-4 w-4" />
-              Manage Profile & Resume
-            </Link>
-
-            <Link
-              href="/dashboard/my-jobs"
-              onClick={onClose}
-              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#18181b] text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-2xs"
-            >
-              <Bookmark className="h-4 w-4 text-[#2f54eb]" />
-              My Saved & Applied Jobs
-            </Link>
-
             <button
               type="button"
               onClick={handleSignOut}
-              className="mt-1 inline-flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-red-200/80 bg-red-50/80 text-xs font-semibold text-red-600 transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-900/40"
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-red-200/80 bg-red-50/80 text-xs font-semibold text-red-600 transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-900/40 cursor-pointer"
             >
-              <LogOut className="h-3.5 w-3.5" />
+              <LogOut className="h-4 w-4" />
               Sign Out
             </button>
           </div>
@@ -351,13 +335,23 @@ function DashboardFooter() {
       <div className="grid gap-12 lg:grid-cols-[1.15fr_1.5fr]">
         <div>
           <Link href="/" title="Go to main homepage" className="inline-block">
-            <Image
-              src="/common/logo.png"
-              alt={companyName}
-              width={130}
-              height={46}
-              className="h-10 w-auto brightness-0 invert"
-            />
+            <div className="rounded-xl bg-white px-3.5 py-1.5 shadow-sm inline-flex items-center justify-center">
+              {tenant?.logoUrl ? (
+                <img
+                  src={tenant.logoUrl}
+                  alt={companyName}
+                  className="h-8 w-auto object-contain max-w-[140px]"
+                />
+              ) : (
+                <Image
+                  src="/common/logo.png"
+                  alt={companyName}
+                  width={120}
+                  height={36}
+                  className="h-8 w-auto object-contain"
+                />
+              )}
+            </div>
           </Link>
           <p className="mt-2 text-sm text-white/85 dark:text-slate-300">
             Connecting talent with the right opportunities at {companyName}

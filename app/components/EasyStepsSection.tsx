@@ -1,29 +1,32 @@
 'use client';
 
 import { motion } from 'framer-motion';
-
-const steps = [
-  {
-    number: '1',
-    title: 'Create Account',
-    text: 'Create your Voctrum account',
-    align: 'items-start text-left',
-  },
-  {
-    number: '2',
-    title: 'Explore Opportunities',
-    text: 'Explore roles from companies that value inclusion and culture',
-    align: 'items-center text-center',
-  },
-  {
-    number: '3',
-    title: 'Apply With Ease',
-    text: 'Apply in a few clicks and get closer to your next role',
-    align: 'items-end text-right',
-  },
-];
+import { useAuth } from '../../context/AuthContext';
 
 export default function EasyStepsSection() {
+  const { tenant } = useAuth();
+  const companyName = tenant?.companyName || 'Voctrum';
+
+  const steps = [
+    {
+      number: '1',
+      title: 'Create Account',
+      text: `Create your ${companyName} account`,
+      align: 'items-start text-left',
+    },
+    {
+      number: '2',
+      title: 'Explore Opportunities',
+      text: 'Explore roles from companies that value inclusion and culture',
+      align: 'items-center text-center',
+    },
+    {
+      number: '3',
+      title: 'Apply With Ease',
+      text: 'Apply in a few clicks and get closer to your next role',
+      align: 'items-end text-right',
+    },
+  ];
   return (
     <section className="bg-white dark:bg-[#1a1a1a] px-5 py-16 md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1220px]">

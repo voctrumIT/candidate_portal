@@ -18,6 +18,8 @@ import {
 import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { useRef, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { getUserFriendlyErrorMessage } from "../../lib/errorUtils";
 
 type AuthStep = "login" | "forgot" | "otp" | "reset" | "success";
 
@@ -57,6 +59,7 @@ const stepContent = {
 };
 
 export default function LoginPage() {
+  const { tenant } = useAuth();
   const [step, setStep] = useState<AuthStep>("login");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
@@ -90,12 +93,20 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-white dark:bg-[#1a1a1a] text-[#101828] dark:text-white">
       <header className="flex h-[70px] items-center justify-between border-b border-[#eef0f4] bg-white dark:bg-[#1a1a1a] px-8 shadow-[0_2px_10px_rgba(16,24,40,0.08)] sm:px-12">
-        <Link href="/" aria-label="Voctrum home" className="flex items-center">
-          <Image src="/common/logo.png" alt="Voctrum" width={96} height={30} className="h-auto w-24 object-contain" priority />
+        <Link href="/" aria-label="Home" className="flex items-center">
+          {tenant?.logoUrl ? (
+            <img
+              src={tenant.logoUrl}
+              alt={tenant.companyName || "Logo"}
+              className="h-8 w-auto object-contain max-w-[140px]"
+            />
+          ) : (
+            <Image src="/common/logo.png" alt={tenant?.companyName || "Logo"} width={96} height={30} className="h-auto w-24 object-contain" priority />
+          )}
         </Link>
 
         {step === "success" ? (
-          <a href="mailto:support@voctrum.com" className="flex items-center gap-2 text-sm text-[#667085] dark:text-slate-400">
+          <a href={`mailto:${tenant?.contactEmail || "support@voctrum.com"}`} className="flex items-center gap-2 text-sm text-[#667085] dark:text-slate-400">
             <MessageCircle className="h-4 w-4 text-[#2f54eb]" />
             Need help? Contact support
           </a>
@@ -120,11 +131,11 @@ export default function LoginPage() {
       ) : (
         <section className="grid min-h-[calc(100vh-70px)] grid-cols-1 lg:grid-cols-2">
           <aside className="flex items-center justify-center bg-[#f8f8f9] dark:bg-slate-900 px-8 py-12 lg:px-12">
-            {isLogin ? <LoginIntro /> : side ? <IllustrationPanel {...side} /> : null}
+            {isLogin ? <LoginIntro companyName={tenant?.companyName || "Voctrum"} /> : side ? <IllustrationPanel {...side} /> : null}
           </aside>
 
           <section className="flex items-center justify-center px-8 py-12 lg:px-12">
-            {step === "login" && <LoginForm onForgot={() => setStep("forgot")} />}
+            {step === "login" && <LoginForm onForgot={() => setStep("forgot")} companyName={tenant?.companyName || "Voctrum"} />}
             {step === "forgot" && <ForgotForm onSendOtp={(enteredEmail) => {
               setEmail(enteredEmail);
               setStep("otp");
@@ -147,13 +158,13 @@ export default function LoginPage() {
   );
 }
 
-function LoginIntro() {
+function LoginIntro({ companyName }: { companyName: string }) {
   return (
     <div className="w-full max-w-[440px] text-center">
       <h1 className="text-3xl font-extrabold tracking-normal text-[#101828] dark:text-white">
-        V<span className="text-[#2f54eb]">octrum</span>
+        {companyName}
       </h1>
-      <p className="mt-3 text-sm text-[#98a2b3]">Continue explore opportunities and managing your journey with us</p>
+      <p className="mt-3 text-sm text-[#98a2b3]">Continue exploring opportunities and managing your career journey with us</p>
 
       <div className="mx-auto mt-8 grid max-w-[330px] grid-cols-2 gap-6">
         {loginStats.map((stat) => {
@@ -205,7 +216,7 @@ import { useRouter } from "next/navigation";
 import { authService } from "../../services/auth";
 import { toast } from "../components/Toast";
 
-function LoginForm({ onForgot }: { onForgot: () => void }) {
+function LoginForm({ onForgot, companyName }: { onForgot: () => void; companyName: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -224,13 +235,13 @@ function LoginForm({ onForgot }: { onForgot: () => void }) {
         if (res.payload.candidateId) {
           localStorage.setItem("candidate_id", res.payload.candidateId);
         }
-        toast.success("Welcome Back!", "You have successfully signed in to your portal.");
+        toast.success("Welcome Back!", `You have successfully signed in to ${companyName}.`);
         router.push("/dashboard");
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (err: any) {
-      const errorMsg = err.message || "Failed to log in";
+      const errorMsg = getUserFriendlyErrorMessage(err, "login");
       setError(errorMsg);
       toast.error("Sign In Failed", errorMsg);
     } finally {
@@ -240,7 +251,7 @@ function LoginForm({ onForgot }: { onForgot: () => void }) {
 
   return (
     <form className="w-full max-w-[430px]" onSubmit={handleSubmit}>
-      <FormHeading title="Welcome back!" copy="Log in to continue your journey with Voctrum" />
+      <FormHeading title="Welcome back!" copy={`Log in to continue your journey with ${companyName}`} />
       
       {error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{error}</div>}
 

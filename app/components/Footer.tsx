@@ -52,14 +52,26 @@ export default function Footer() {
           
           {/* Left Side: Logo & Subscribe */}
           <div className="max-w-[420px]">
-            <Image
-              src="/footer/footerLogo.png"
-              alt={companyName}
-              width={240}
-              height={80}
-              className="w-[160px] md:w-[190px] h-auto object-contain"
-            />
-            <p className="mt-3 text-[14px] font-medium text-[#b4c4e5]">
+            <Link href="/" title="Home" className="inline-block">
+              <div className="rounded-xl bg-white px-4 py-2 inline-flex items-center justify-center shadow-xs">
+                {tenant?.logoUrl ? (
+                  <img
+                    src={tenant.logoUrl}
+                    alt={companyName}
+                    className="h-9 w-auto object-contain max-w-[170px]"
+                  />
+                ) : (
+                  <Image
+                    src="/common/logo.png"
+                    alt={companyName}
+                    width={150}
+                    height={44}
+                    className="h-9 w-auto object-contain"
+                  />
+                )}
+              </div>
+            </Link>
+            <p className="mt-4 text-[14px] font-medium text-[#b4c4e5]">
               Connecting talent with the right opportunities at {companyName}
             </p>
             

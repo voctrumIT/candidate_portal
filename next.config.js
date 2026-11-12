@@ -51,6 +51,10 @@ const nextConfig = {
         source: '/dashboard/view-job/:id',
         destination: '/dashboard/jobs/:id',
       },
+      {
+        source: '/applications/:id',
+        destination: '/dashboard/applications/:id',
+      },
     ];
   },
 };

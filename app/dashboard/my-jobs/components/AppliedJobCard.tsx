@@ -54,10 +54,10 @@ export default function AppliedJobCard({ job }: { job: any }) {
       <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-5 dark:border-slate-800">
         <span className="text-[14px] font-medium text-slate-500 dark:text-slate-400">{job.salaryRange || "Competitive"}</span>
         <Link
-          href={`/dashboard/jobs/${targetId}`}
+          href={`/dashboard/applications/${job.jobApplicationId || targetId}`}
           className="rounded-md bg-[#2f54eb] px-6 py-2.5 text-[13px] font-semibold !text-white transition hover:bg-[#2447d8]"
         >
-          View Details
+          View Application
         </Link>
       </div>
     </div>

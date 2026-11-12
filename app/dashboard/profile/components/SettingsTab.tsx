@@ -5,16 +5,14 @@ import { useTheme } from "next-themes";
 import {
   ChevronRight,
   HeadphonesIcon,
-  HelpCircle,
-  Shield,
   Moon,
   Sun,
   Lock,
-  Key,
   Globe,
   ChevronDown,
 } from "lucide-react";
 import { toast } from "../../../components/Toast";
+import SupportTicketModal from "./SupportTicketModal";
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -24,6 +22,7 @@ interface SettingItemProps {
   subtitle?: string;
   action: React.ReactNode;
   borderBottom?: boolean;
+  onClick?: () => void;
 }
 
 const supportedLanguages = [
@@ -81,12 +80,26 @@ function SettingItem({
   subtitle,
   action,
   borderBottom = true,
+  onClick,
 }: SettingItemProps) {
   return (
     <div
-      className={`flex items-center justify-between p-5 ${
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      className={`flex items-center justify-between p-5 transition ${
         borderBottom ? "border-b border-slate-100 dark:border-slate-800/60" : ""
-      }`}
+      } ${onClick ? "cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/40" : ""}`}
     >
       <div className="flex items-center gap-4">
         <div
@@ -125,6 +138,7 @@ export default function SettingsTab() {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [currentLang, setCurrentLang] = useState("en");
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -241,14 +255,6 @@ export default function SettingsTab() {
           title="Change password"
           subtitle="Update your password regularly to keep your account safe"
           action={<ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />}
-        />
-        <SettingItem
-          icon={<Key className="h-5 w-5" />}
-          iconBg="bg-[#fff9e6]"
-          iconColor="text-[#d4b106]"
-          title="Two-factor authentication"
-          subtitle="Add an extra layer of security when signing in"
-          action={<ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />}
           borderBottom={false}
         />
       </SettingsCard>
@@ -256,31 +262,21 @@ export default function SettingsTab() {
       {/* Support & Help */}
       <SettingsCard title="Support & Help">
         <SettingItem
-          icon={<HelpCircle className="h-5 w-5" />}
-          iconBg="bg-[#eff2fe]"
-          iconColor="text-[#2f54eb]"
-          title="Help & FAQ"
-          subtitle="Find answers to common questions and guides"
-          action={<ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />}
-        />
-        <SettingItem
           icon={<HeadphonesIcon className="h-5 w-5" />}
           iconBg="bg-[#e6fbf9]"
           iconColor="text-[#0fa596]"
           title="Contact support"
           subtitle="Need assistance? Our support team is ready to help"
           action={<ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />}
-        />
-        <SettingItem
-          icon={<Shield className="h-5 w-5" />}
-          iconBg="bg-[#f3e8ff]"
-          iconColor="text-[#9333ea]"
-          title="Privacy policy"
-          subtitle="Read how we handle your personal data and privacy"
-          action={<ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />}
+          onClick={() => setShowSupportModal(true)}
           borderBottom={false}
         />
       </SettingsCard>
+
+      {/* Support Ticket Modal */}
+      {showSupportModal && (
+        <SupportTicketModal onClose={() => setShowSupportModal(false)} />
+      )}
     </div>
   );
 }
