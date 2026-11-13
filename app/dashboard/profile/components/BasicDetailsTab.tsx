@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Pencil, CheckCircle2, AlertCircle, Loader2, MapPin } from "lucide-react";
 import { useAuth } from "../../../../context/AuthContext";
 import { profileService, validateProfileUpdate } from "../../../../services/profile";
 import { toast } from "../../../components/Toast";
+import { getUserFriendlyErrorMessage } from "../../../../lib/errorUtils";
 
 export default function BasicDetailsTab() {
   const { user, refreshProfile } = useAuth();
@@ -14,24 +15,94 @@ export default function BasicDetailsTab() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState("");
 
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    contactNumber: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    country: "",
+    postalCode: "",
+  });
+
+  // Always keep formData in sync with latest user profile
+  useEffect(() => {
+    if (user) {
+      const address = user.address || {};
+      setFormData({
+        firstName: user.firstName || (user.name ? user.name.split(" ")[0] : "") || "",
+        lastName: user.lastName || (user.name ? user.name.split(" ").slice(1).join(" ") : "") || "",
+        contactNumber: user.contactNumber || user.mobile || "",
+        addressLine1: user.addressLine1 || address.addressLine1 || "",
+        addressLine2: user.addressLine2 || address.addressLine2 || "",
+        city: user.city || address.city || user.currentLocation || "",
+        state: user.state || address.state || "",
+        country: user.country || address.country || "",
+        postalCode: user.postalCode || address.postalCode || "",
+      });
+    }
+  }, [user]);
+
+
+  const handleStartEditing = () => {
+    if (user) {
+      const address = user.address || {};
+      setFormData({
+        firstName: user.firstName || (user.name ? user.name.split(" ")[0] : "") || "",
+        lastName: user.lastName || (user.name ? user.name.split(" ").slice(1).join(" ") : "") || "",
+        contactNumber: user.contactNumber || user.mobile || "",
+        addressLine1: user.addressLine1 || address.addressLine1 || "",
+        addressLine2: user.addressLine2 || address.addressLine2 || "",
+        city: user.city || address.city || user.currentLocation || "",
+        state: user.state || address.state || "",
+        country: user.country || address.country || "",
+        postalCode: user.postalCode || address.postalCode || "",
+      });
+    }
+    setApiError("");
+    setFormErrors({});
+    setIsEditing(true);
+  };
+
+  const handleCancelEditing = () => {
+    if (user) {
+      const address = user.address || {};
+      setFormData({
+        firstName: user.firstName || (user.name ? user.name.split(" ")[0] : "") || "",
+        lastName: user.lastName || (user.name ? user.name.split(" ").slice(1).join(" ") : "") || "",
+        contactNumber: user.contactNumber || user.mobile || "",
+        addressLine1: user.addressLine1 || address.addressLine1 || "",
+        addressLine2: user.addressLine2 || address.addressLine2 || "",
+        city: user.city || address.city || user.currentLocation || "",
+        state: user.state || address.state || "",
+        country: user.country || address.country || "",
+        postalCode: user.postalCode || address.postalCode || "",
+      });
+    }
+    setFormErrors({});
+    setApiError("");
+    setIsEditing(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setApiError("");
     setSuccessMessage("");
     setFormErrors({});
 
-    const formData = new FormData(e.currentTarget);
-    const firstName = (formData.get("firstName") as string || "").trim();
-    const lastName = (formData.get("lastName") as string || "").trim();
-    const contactNumber = (formData.get("contactNumber") as string || "").trim();
-    const addressLine1 = (formData.get("addressLine1") as string || "").trim();
-    const addressLine2 = (formData.get("addressLine2") as string || "").trim();
-    const city = (formData.get("city") as string || "").trim();
-    const state = (formData.get("state") as string || "").trim();
-    const country = (formData.get("country") as string || "").trim();
-    const postalCode = (formData.get("postalCode") as string || "").trim();
+    const firstName = formData.firstName.trim();
+    const lastName = formData.lastName.trim();
+    const contactNumber = formData.contactNumber.trim();
+    const addressLine1 = formData.addressLine1.trim();
+    const addressLine2 = formData.addressLine2.trim();
+    const city = formData.city.trim();
+    const state = formData.state.trim();
+    const country = formData.country.trim();
+    const postalCode = formData.postalCode.trim();
 
-    const fullName = `${firstName} ${lastName}`.trim();
+    const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
 
     const validation = validateProfileUpdate({
       name: fullName,
@@ -48,13 +119,12 @@ export default function BasicDetailsTab() {
       validation.errors.firstName = "First name is required.";
       validation.isValid = false;
     }
-    if (!lastName) {
-      validation.errors.lastName = "Last name is required.";
-      validation.isValid = false;
-    }
     if (!contactNumber) {
       validation.errors.contactNumber = "Contact number is required.";
       validation.isValid = false;
+    }
+    if (validation.errors.name && !validation.errors.firstName) {
+      validation.errors.firstName = validation.errors.name;
     }
 
     if (!validation.isValid) {
@@ -76,26 +146,31 @@ export default function BasicDetailsTab() {
       });
 
       await refreshProfile();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+        window.dispatchEvent(new Event("storage"));
+      }
       setSuccessMessage("Profile details updated successfully!");
       toast.success("Profile Updated", "Your personal details and address have been saved successfully.");
       setIsEditing(false);
       setTimeout(() => setSuccessMessage(""), 5000);
     } catch (err: any) {
       console.error("Failed to update profile", err);
-      setApiError(err.message || "Failed to update profile. Please try again.");
-      toast.error("Update Failed", err.message || "Failed to update profile details. Please try again.");
+      const friendlyMsg = getUserFriendlyErrorMessage(err, "profile");
+      setApiError(friendlyMsg);
+      toast.error("Update Failed", friendlyMsg);
     } finally {
       setLoading(false);
     }
   };
 
   const address = user?.address || {};
-  const displayAddressLine1 = user?.addressLine1 || address.addressLine1 || "";
-  const displayAddressLine2 = user?.addressLine2 || address.addressLine2 || "";
-  const displayCity = user?.city || address.city || user?.currentLocation || "";
-  const displayState = user?.state || address.state || "";
-  const displayCountry = user?.country || address.country || "";
-  const displayPostalCode = user?.postalCode || address.postalCode || "";
+  const displayAddressLine1 = user?.addressLine1 || address.addressLine1 || formData.addressLine1 || "";
+  const displayAddressLine2 = user?.addressLine2 || address.addressLine2 || formData.addressLine2 || "";
+  const displayCity = user?.city || address.city || user?.currentLocation || formData.city || "";
+  const displayState = user?.state || address.state || formData.state || "";
+  const displayCountry = user?.country || address.country || formData.country || "";
+  const displayPostalCode = user?.postalCode || address.postalCode || formData.postalCode || "";
 
   const initials = (user?.firstName && user?.lastName)
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
@@ -114,11 +189,7 @@ export default function BasicDetailsTab() {
         </div>
         {!isEditing && (
           <button
-            onClick={() => {
-              setIsEditing(true);
-              setApiError("");
-              setFormErrors({});
-            }}
+            onClick={handleStartEditing}
             className="flex items-center gap-2 rounded-lg bg-[#2f54eb] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#2447d8]"
           >
             <Pencil className="h-3.5 w-3.5" /> Edit Profile
@@ -141,7 +212,7 @@ export default function BasicDetailsTab() {
       )}
 
       <div className="mt-8 flex flex-col md:flex-row items-start gap-8">
-        {/* Candidate Avatar Initials - NO profile picture */}
+        {/* Candidate Avatar Initials */}
         <div className="relative shrink-0">
           <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-slate-100 dark:border-slate-800 bg-gradient-to-br from-[#2f54eb] to-indigo-600 text-2xl font-black text-white shadow-sm ring-2 ring-slate-200/50 dark:ring-slate-700/50">
             {initials}
@@ -159,7 +230,8 @@ export default function BasicDetailsTab() {
                 <input
                   name="firstName"
                   type="text"
-                  defaultValue={user?.firstName || ""}
+                  value={formData.firstName}
+                  onChange={(e) => setFormData((p) => ({ ...p, firstName: e.target.value }))}
                   className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
                     formErrors.firstName ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
                   }`}
@@ -170,12 +242,13 @@ export default function BasicDetailsTab() {
 
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  Last Name <span className="text-red-500">*</span>
+                  Last Name <span className="text-xs text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <input
                   name="lastName"
                   type="text"
-                  defaultValue={user?.lastName || ""}
+                  value={formData.lastName}
+                  onChange={(e) => setFormData((p) => ({ ...p, lastName: e.target.value }))}
                   className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
                     formErrors.lastName ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
                   }`}
@@ -204,7 +277,8 @@ export default function BasicDetailsTab() {
                 <input
                   name="contactNumber"
                   type="tel"
-                  defaultValue={user?.contactNumber || user?.mobile || ""}
+                  value={formData.contactNumber}
+                  onChange={(e) => setFormData((p) => ({ ...p, contactNumber: e.target.value }))}
                   className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
                     formErrors.contactNumber ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
                   }`}
@@ -227,8 +301,11 @@ export default function BasicDetailsTab() {
                 <input
                   name="addressLine1"
                   type="text"
-                  defaultValue={displayAddressLine1}
-                  className="h-11 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none focus:border-[#2f54eb]"
+                  value={formData.addressLine1}
+                  onChange={(e) => setFormData((p) => ({ ...p, addressLine1: e.target.value }))}
+                  className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
+                    formErrors.addressLine1 ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                   placeholder="Street address, P.O. box, company name"
                 />
                 {formErrors.addressLine1 && <p className="mt-1 text-xs text-rose-500">{formErrors.addressLine1}</p>}
@@ -241,8 +318,11 @@ export default function BasicDetailsTab() {
                 <input
                   name="addressLine2"
                   type="text"
-                  defaultValue={displayAddressLine2}
-                  className="h-11 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none focus:border-[#2f54eb]"
+                  value={formData.addressLine2}
+                  onChange={(e) => setFormData((p) => ({ ...p, addressLine2: e.target.value }))}
+                  className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
+                    formErrors.addressLine2 ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                   placeholder="Apartment, suite, unit, building, floor, etc."
                 />
                 {formErrors.addressLine2 && <p className="mt-1 text-xs text-rose-500">{formErrors.addressLine2}</p>}
@@ -255,8 +335,11 @@ export default function BasicDetailsTab() {
                 <input
                   name="city"
                   type="text"
-                  defaultValue={displayCity}
-                  className="h-11 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none focus:border-[#2f54eb]"
+                  value={formData.city}
+                  onChange={(e) => setFormData((p) => ({ ...p, city: e.target.value }))}
+                  className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
+                    formErrors.city ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                   placeholder="City"
                 />
                 {formErrors.city && <p className="mt-1 text-xs text-rose-500">{formErrors.city}</p>}
@@ -269,8 +352,11 @@ export default function BasicDetailsTab() {
                 <input
                   name="state"
                   type="text"
-                  defaultValue={displayState}
-                  className="h-11 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none focus:border-[#2f54eb]"
+                  value={formData.state}
+                  onChange={(e) => setFormData((p) => ({ ...p, state: e.target.value }))}
+                  className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
+                    formErrors.state ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                   placeholder="State / Province"
                 />
                 {formErrors.state && <p className="mt-1 text-xs text-rose-500">{formErrors.state}</p>}
@@ -283,8 +369,11 @@ export default function BasicDetailsTab() {
                 <input
                   name="country"
                   type="text"
-                  defaultValue={displayCountry}
-                  className="h-11 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none focus:border-[#2f54eb]"
+                  value={formData.country}
+                  onChange={(e) => setFormData((p) => ({ ...p, country: e.target.value }))}
+                  className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
+                    formErrors.country ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                   placeholder="Country"
                 />
                 {formErrors.country && <p className="mt-1 text-xs text-rose-500">{formErrors.country}</p>}
@@ -297,8 +386,11 @@ export default function BasicDetailsTab() {
                 <input
                   name="postalCode"
                   type="text"
-                  defaultValue={displayPostalCode}
-                  className="h-11 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none focus:border-[#2f54eb]"
+                  value={formData.postalCode}
+                  onChange={(e) => setFormData((p) => ({ ...p, postalCode: e.target.value }))}
+                  className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
+                    formErrors.postalCode ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                   placeholder="Postal Code"
                 />
                 {formErrors.postalCode && <p className="mt-1 text-xs text-rose-500">{formErrors.postalCode}</p>}
@@ -307,10 +399,7 @@ export default function BasicDetailsTab() {
               <div className="sm:col-span-2 mt-4 flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setFormErrors({});
-                  }}
+                  onClick={handleCancelEditing}
                   className="h-10 rounded-lg border border-slate-200 dark:border-slate-700 px-6 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   Cancel
@@ -335,7 +424,7 @@ export default function BasicDetailsTab() {
               <div>
                 <p className="text-[12px] font-semibold text-slate-400">Full Name</p>
                 <p className="mt-1 text-[15px] font-semibold text-slate-900 dark:text-white">
-                  {user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Not provided")}
+                  {user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : formData.firstName ? `${formData.firstName} ${formData.lastName}`.trim() : "Not provided")}
                 </p>
               </div>
               <div>
@@ -345,7 +434,7 @@ export default function BasicDetailsTab() {
               <div>
                 <p className="text-[12px] font-semibold text-slate-400">Contact Number</p>
                 <p className="mt-1 text-[15px] font-semibold text-slate-900 dark:text-white">
-                  {user?.contactNumber || user?.mobile || "Not provided"}
+                  {user?.contactNumber || user?.mobile || formData.contactNumber || "Not provided"}
                 </p>
               </div>
               <div>

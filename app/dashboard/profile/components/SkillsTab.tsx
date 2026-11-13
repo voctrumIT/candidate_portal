@@ -5,6 +5,7 @@ import { Plus, X, Search, CheckCircle2, AlertCircle, Loader2, Sparkles } from "l
 import { useAuth } from "../../../../context/AuthContext";
 import { profileService } from "../../../../services/profile";
 import { toast } from "../../../components/Toast";
+import { getUserFriendlyErrorMessage } from "../../../../lib/errorUtils";
 
 const DEFAULT_SUGGESTIONS = [
   "React",
@@ -83,13 +84,18 @@ export default function SkillsTab() {
     try {
       await profileService.updateProfile({ skills });
       await refreshProfile();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+        window.dispatchEvent(new Event("storage"));
+      }
       setSuccessMessage("Skills updated successfully!");
       toast.success("Skills Updated", "Your profile skills have been saved successfully.");
       setTimeout(() => setSuccessMessage(""), 5000);
     } catch (err: any) {
       console.error("Failed to update skills", err);
-      setApiError(err.message || "Failed to update skills. Please try again.");
-      toast.error("Skills Update Failed", err.message || "Failed to save skills. Please try again.");
+      const friendlyMsg = getUserFriendlyErrorMessage(err, "profile");
+      setApiError(friendlyMsg);
+      toast.error("Skills Update Failed", friendlyMsg);
     } finally {
       setLoading(false);
     }

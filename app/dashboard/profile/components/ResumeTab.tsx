@@ -18,6 +18,17 @@ export default function ResumeTab() {
 
   const syncActiveResume = useCallback(() => {
     if (typeof window !== "undefined") {
+      const currentCid = localStorage.getItem("candidate_id");
+      const ownerId = localStorage.getItem("candidate_active_resume_owner_id");
+      if (ownerId && currentCid && ownerId !== currentCid) {
+        localStorage.removeItem("candidate_active_resume_id");
+        localStorage.removeItem("candidate_active_resume_name");
+        localStorage.removeItem("candidate_active_resume_url");
+        localStorage.removeItem("candidate_active_resume");
+        localStorage.removeItem("candidate_active_resume_owner_id");
+        setActiveResumeId(null);
+        return;
+      }
       const activeId = localStorage.getItem("candidate_active_resume_id");
       const activeName = localStorage.getItem("candidate_active_resume_name");
       setActiveResumeId(activeId || activeName || null);
@@ -30,50 +41,87 @@ export default function ResumeTab() {
       const data = await documentsService.getDocuments();
       let list = Array.isArray(data) ? [...data] : [];
 
-      // Ensure active resume from builder is seamlessly visible
       if (typeof window !== "undefined") {
-        const localActiveName = localStorage.getItem("candidate_active_resume_name");
-        const localActiveUrl = localStorage.getItem("candidate_active_resume_url");
-        const localActiveId = localStorage.getItem("candidate_active_resume_id");
-        if (
-          localActiveName &&
-          !list.some(
-            (r: any) =>
-              r.name === localActiveName ||
-              r.fileName === localActiveName ||
-              (localActiveId && r.id === localActiveId)
-          )
-        ) {
-          list = [
-            {
-              id: localActiveId || "active-builder-resume",
-              name: localActiveName,
-              fileName: localActiveName,
-              fileUrl: localActiveUrl || undefined,
-              uploadedAt: localStorage.getItem("candidate_active_resume_updated_at") || new Date().toISOString(),
-              isFromBuilder: true,
-            },
-            ...list,
-          ];
+        const currentCid = localStorage.getItem("candidate_id");
+        const ownerId = localStorage.getItem("candidate_active_resume_owner_id");
+
+        // Clean up cross-user resume leakage
+        if (ownerId && currentCid && ownerId !== currentCid) {
+          localStorage.removeItem("candidate_active_resume_id");
+          localStorage.removeItem("candidate_active_resume_name");
+          localStorage.removeItem("candidate_active_resume_url");
+          localStorage.removeItem("candidate_active_resume");
+          localStorage.removeItem("candidate_active_resume_owner_id");
+        } else {
+          const localActiveName = localStorage.getItem("candidate_active_resume_name");
+          const localActiveUrl = localStorage.getItem("candidate_active_resume_url");
+          const localActiveId = localStorage.getItem("candidate_active_resume_id");
+
+          // Only include builder-generated resume if it explicitly belongs to this user and has a real URL
+          if (
+            localActiveName &&
+            localActiveUrl &&
+            ownerId === currentCid &&
+            !list.some(
+              (r: any) =>
+                r.name === localActiveName ||
+                r.fileName === localActiveName ||
+                (localActiveId && (r.id === localActiveId || r.fileUrl === localActiveUrl))
+            )
+          ) {
+            list = [
+              {
+                id: localActiveId || "active-builder-resume",
+                name: localActiveName,
+                fileName: localActiveName,
+                fileUrl: localActiveUrl,
+                uploadedAt:
+                  localStorage.getItem("candidate_active_resume_updated_at") ||
+                  new Date().toISOString(),
+                isFromBuilder: true,
+              },
+              ...list,
+            ];
+          }
         }
       }
 
       setResumes(list);
 
-      // Check active resume
-      syncActiveResume();
-      if (typeof window !== "undefined" && !localStorage.getItem("candidate_active_resume_id") && list.length > 0) {
-        // Default first resume to active if none explicitly set
-        const first = list[0];
-        const defaultId = first.id || first.name || first.fileName;
-        localStorage.setItem("candidate_active_resume_id", defaultId);
-        if (first.name || first.fileName) {
-          localStorage.setItem("candidate_active_resume_name", first.name || first.fileName);
+      // Check and sync active resume from real documents
+      if (typeof window !== "undefined") {
+        const currentActive = localStorage.getItem("candidate_active_resume_id");
+        if (list.length > 0) {
+          const exists = list.some(
+            (r: any) =>
+              r.id === currentActive ||
+              r.fileUrl === currentActive ||
+              r.name === currentActive ||
+              r.fileName === currentActive
+          );
+          if (!exists) {
+            const first = list[0];
+            const defaultId = first.fileUrl || first.id || first.name || first.fileName;
+            const currentCid = localStorage.getItem("candidate_id") || "";
+            localStorage.setItem("candidate_active_resume_owner_id", currentCid);
+            localStorage.setItem("candidate_active_resume_id", defaultId);
+            if (first.name || first.fileName) {
+              localStorage.setItem("candidate_active_resume_name", first.name || first.fileName);
+            }
+            if (first.fileUrl) {
+              localStorage.setItem("candidate_active_resume_url", first.fileUrl);
+            }
+            setActiveResumeId(defaultId);
+          } else {
+            setActiveResumeId(currentActive);
+          }
+        } else {
+          setActiveResumeId(null);
         }
-        setActiveResumeId(defaultId);
       }
     } catch (e) {
-      console.error(e);
+      console.error("Failed to fetch candidate documents:", e);
+      setResumes([]);
     } finally {
       setLoading(false);
     }
@@ -88,10 +136,8 @@ export default function ResumeTab() {
     };
 
     window.addEventListener("active_resume_updated", handleActiveUpdated);
-    window.addEventListener("storage", handleActiveUpdated);
     return () => {
       window.removeEventListener("active_resume_updated", handleActiveUpdated);
-      window.removeEventListener("storage", handleActiveUpdated);
     };
   }, [syncActiveResume]);
 
@@ -99,8 +145,12 @@ export default function ResumeTab() {
     const id = resume.fileUrl || resume.id || resume.name || resume.fileName;
     const displayName = resume.name || resume.fileName || "Resume";
     if (typeof window !== "undefined") {
+      const cid = localStorage.getItem("candidate_id");
       localStorage.setItem("candidate_active_resume_id", id);
       localStorage.setItem("candidate_active_resume_name", displayName);
+      if (cid) {
+        localStorage.setItem("candidate_active_resume_owner_id", cid);
+      }
       if (resume.fileUrl) {
         localStorage.setItem("candidate_active_resume_url", resume.fileUrl);
       }
@@ -149,6 +199,9 @@ export default function ResumeTab() {
       if (typeof window !== "undefined") {
         localStorage.setItem("candidate_active_resume_id", newId);
         localStorage.setItem("candidate_active_resume_name", file.name);
+        if (cid) {
+          localStorage.setItem("candidate_active_resume_owner_id", cid);
+        }
         if (newUrl) {
           localStorage.setItem("candidate_active_resume_url", newUrl);
         }

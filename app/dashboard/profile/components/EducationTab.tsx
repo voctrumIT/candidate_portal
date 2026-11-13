@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Plus, GraduationCap, CalendarDays, Trash2, Pencil, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../../../../context/AuthContext";
 import { profileService, EducationDto, validateProfileUpdate } from "../../../../services/profile";
+import { toast } from "../../../components/Toast";
+import { getUserFriendlyErrorMessage } from "../../../../lib/errorUtils";
 
 export default function EducationTab() {
   const { user, refreshProfile } = useAuth();
@@ -80,10 +82,30 @@ export default function EducationTab() {
     if (!itemToSave.institution) {
       validation.errors.institution = "Institution or university is required.";
       validation.isValid = false;
+    } else if (itemToSave.institution.length < 2) {
+      validation.errors.institution = "Institution name must be at least 2 characters.";
+      validation.isValid = false;
     }
+
     if (!itemToSave.degree) {
       validation.errors.degree = "Degree or qualification is required.";
       validation.isValid = false;
+    } else if (itemToSave.degree.length < 2) {
+      validation.errors.degree = "Degree must be at least 2 characters.";
+      validation.isValid = false;
+    }
+
+    if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+      validation.errors.endDate = "End date cannot be earlier than start date.";
+      validation.isValid = false;
+    }
+
+    if (yearOfPassing.trim()) {
+      const year = parseInt(yearOfPassing.trim(), 10);
+      if (isNaN(year) || year < 1950 || year > 2100) {
+        validation.errors.yearOfPassing = "Please enter a valid year between 1950 and 2100.";
+        validation.isValid = false;
+      }
     }
 
     if (!validation.isValid) {
@@ -102,12 +124,22 @@ export default function EducationTab() {
 
       await profileService.updateProfile({ educations: updatedList });
       await refreshProfile();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+        window.dispatchEvent(new Event("storage"));
+      }
       setSuccessMessage(editingIndex !== null ? "Education updated successfully!" : "Education added successfully!");
+      toast.success(
+        editingIndex !== null ? "Education Updated" : "Education Added",
+        `"${itemToSave.degree}" at ${itemToSave.institution} has been saved.`
+      );
       closeForm();
       setTimeout(() => setSuccessMessage(""), 5000);
     } catch (err: any) {
       console.error("Failed to save education", err);
-      setApiError(err.message || "Failed to save education. Please try again.");
+      const friendlyMsg = getUserFriendlyErrorMessage(err, "profile");
+      setApiError(friendlyMsg);
+      toast.error("Save Failed", friendlyMsg);
     } finally {
       setLoading(false);
     }
@@ -119,14 +151,21 @@ export default function EducationTab() {
     setLoading(true);
     setApiError("");
     try {
+      const itemToDelete = currentEducations[index];
       const updatedList = currentEducations.filter((_, idx) => idx !== index);
       await profileService.updateProfile({ educations: updatedList });
       await refreshProfile();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+        window.dispatchEvent(new Event("storage"));
+      }
       setSuccessMessage("Education record removed successfully.");
+      toast.info("Education Removed", `Removed "${itemToDelete?.degree || "Record"}" from your profile.`);
       setTimeout(() => setSuccessMessage(""), 5000);
     } catch (err: any) {
       console.error("Failed to delete education", err);
       setApiError(err.message || "Failed to remove education.");
+      toast.error("Remove Failed", err.message || "Failed to remove education record.");
     } finally {
       setLoading(false);
     }
@@ -239,9 +278,15 @@ export default function EducationTab() {
                   value={yearOfPassing}
                   onChange={(e) => setYearOfPassing(e.target.value)}
                   placeholder="e.g. 2024"
-                  className="h-11 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none focus:border-[#2f54eb]"
+                  className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition ${
+                    formErrors.yearOfPassing || formErrors.education_0_year
+                      ? "border-rose-400 focus:border-rose-500"
+                      : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                 />
-                {formErrors.education_0_year && <p className="mt-1 text-xs text-rose-500">{formErrors.education_0_year}</p>}
+                {(formErrors.yearOfPassing || formErrors.education_0_year) && (
+                  <p className="mt-1 text-xs text-rose-500">{formErrors.yearOfPassing || formErrors.education_0_year}</p>
+                )}
               </div>
 
               <div>
@@ -252,8 +297,13 @@ export default function EducationTab() {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none focus:border-[#2f54eb]"
+                  className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition [color-scheme:light] dark:[color-scheme:dark] ${
+                    formErrors.startDate
+                      ? "border-rose-400 focus:border-rose-500"
+                      : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                 />
+                {formErrors.startDate && <p className="mt-1 text-xs text-rose-500">{formErrors.startDate}</p>}
               </div>
 
               <div>
@@ -263,9 +313,15 @@ export default function EducationTab() {
                 <input
                   type="date"
                   value={endDate}
+                  min={startDate || undefined}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none focus:border-[#2f54eb]"
+                  className={`h-11 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-4 text-sm text-slate-900 dark:text-white outline-none transition [color-scheme:light] dark:[color-scheme:dark] ${
+                    formErrors.endDate
+                      ? "border-rose-400 focus:border-rose-500"
+                      : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                 />
+                {formErrors.endDate && <p className="mt-1 text-xs text-rose-500">{formErrors.endDate}</p>}
               </div>
             </div>
 

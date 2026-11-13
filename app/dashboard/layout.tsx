@@ -60,30 +60,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 function DashboardSidebar() {
   const pathname = usePathname();
   const { tenant, tenantLoading, logout } = useAuth();
+  const companyName = tenant?.companyName || "Voctrum";
 
   return (
     <aside className="fixed bottom-0 left-0 top-0 w-[286px] flex flex-col overflow-y-auto bg-[#172a78] dark:bg-[#0f172a] text-white z-20 shadow-lg">
-      <div className="flex h-[100px] shrink-0 items-center px-8">
-        <Link href="/" className="flex items-center" title="Go to main homepage">
-          <div className="rounded-xl bg-white px-3.5 py-1.5 shadow-sm inline-flex items-center justify-center">
+      <div className="flex h-[100px] shrink-0 items-center px-5">
+        <Link href="/" className="flex items-center w-full" title="Go to main homepage">
+          <div className="rounded-2xl bg-white px-3.5 py-2 shadow-sm inline-flex items-center justify-start gap-2.5 w-full max-w-[246px]">
             {tenantLoading ? (
-              <div className="h-8 w-28 animate-pulse rounded bg-slate-200" />
+              <div className="h-8 w-20 animate-pulse rounded bg-slate-200" />
             ) : tenant?.logoUrl ? (
               <img
                 src={tenant.logoUrl}
-                alt={tenant.companyName || "Logo"}
-                className="h-8 w-auto object-contain max-w-[140px]"
+                alt={companyName}
+                className="h-8 w-auto object-contain max-w-[95px] shrink-0"
               />
             ) : (
               <Image
                 src="/common/logo.png"
-                alt={tenant?.companyName || "Logo"}
-                width={120}
-                height={36}
-                className="h-8 w-auto object-contain"
+                alt={companyName}
+                width={95}
+                height={28}
+                className="h-8 w-auto object-contain shrink-0"
                 priority
               />
             )}
+            <span className="text-[15px] font-extrabold text-slate-900 tracking-tight truncate" title={companyName}>
+              {companyName}
+            </span>
           </div>
         </Link>
       </div>
@@ -335,22 +339,25 @@ function DashboardFooter() {
       <div className="grid gap-12 lg:grid-cols-[1.15fr_1.5fr]">
         <div>
           <Link href="/" title="Go to main homepage" className="inline-block">
-            <div className="rounded-xl bg-white px-3.5 py-1.5 shadow-sm inline-flex items-center justify-center">
+            <div className="rounded-2xl bg-white px-4 py-2.5 shadow-sm inline-flex items-center justify-center gap-3">
               {tenant?.logoUrl ? (
                 <img
                   src={tenant.logoUrl}
                   alt={companyName}
-                  className="h-8 w-auto object-contain max-w-[140px]"
+                  className="h-9 w-auto object-contain max-w-[130px] shrink-0"
                 />
               ) : (
                 <Image
                   src="/common/logo.png"
                   alt={companyName}
-                  width={120}
-                  height={36}
-                  className="h-8 w-auto object-contain"
+                  width={110}
+                  height={34}
+                  className="h-9 w-auto object-contain shrink-0"
                 />
               )}
+              <span className="text-[17px] font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
+                {companyName}
+              </span>
             </div>
           </Link>
           <p className="mt-2 text-sm text-white/85 dark:text-slate-300">
