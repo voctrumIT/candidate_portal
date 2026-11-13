@@ -33,34 +33,41 @@ interface PendingItem {
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>("Basic Details");
-  const { user, logout } = useAuth();
+  const { user, logout, refreshProfile } = useAuth();
   const [hasResume, setHasResume] = useState(false);
   const [hasAbout, setHasAbout] = useState(false);
   const [hasExperience, setHasExperience] = useState(false);
 
+  // Automatically refresh profile once on page mount to ensure up-to-date data without manual reload
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
+
   useEffect(() => {
     const checkLocalProfileData = () => {
       if (typeof window !== "undefined") {
+        const currentCid = user?.candidateId || user?.id || localStorage.getItem("candidate_id") || "";
+        const resumeOwner = localStorage.getItem("candidate_active_resume_owner_id");
         const resumeId = localStorage.getItem("candidate_active_resume_id");
         const resumeName = localStorage.getItem("candidate_active_resume_name");
-        setHasResume(Boolean(resumeId || resumeName));
+        const hasValidLocalResume = Boolean(resumeOwner && currentCid && resumeOwner === currentCid && (resumeId || resumeName));
+        const hasBackendResume = Boolean(Array.isArray(user?.documents) && user.documents.length > 0);
+        setHasResume(hasValidLocalResume || hasBackendResume);
 
-        const about = localStorage.getItem("candidate_about_me");
-        setHasAbout(Boolean(about && about.trim().length > 0));
+        const hasBackendAbout = Boolean(
+          user?.aboutMe?.trim() ||
+          user?.bio?.trim() ||
+          user?.about?.trim() ||
+          user?.summary?.trim()
+        );
+        setHasAbout(hasBackendAbout);
 
-        try {
-          const expRaw = localStorage.getItem("candidate_work_experience");
-          if (expRaw) {
-            const parsed = JSON.parse(expRaw);
-            setHasExperience(Array.isArray(parsed) && parsed.length > 0);
-          } else if (Array.isArray(user?.workExperiences) && user.workExperiences.length > 0) {
-            setHasExperience(true);
-          } else {
-            setHasExperience(false);
-          }
-        } catch {
-          setHasExperience(Boolean(Array.isArray(user?.workExperiences) && user.workExperiences.length > 0));
-        }
+        const expList = Array.isArray(user?.workExperiences) && user.workExperiences.length > 0
+          ? user.workExperiences
+          : Array.isArray(user?.experiences) && user.experiences.length > 0
+          ? user.experiences
+          : [];
+        setHasExperience(expList.length > 0);
       }
     };
 
@@ -177,7 +184,13 @@ export default function ProfilePage() {
     }
 
     // 7. About Me Summary (10 points)
-    const hasAboutSummary = Boolean(hasAbout || user?.bio || user?.about || user?.summary);
+    const hasAboutSummary = Boolean(
+      user?.aboutMe?.trim() ||
+      user?.bio?.trim() ||
+      user?.about?.trim() ||
+      user?.summary?.trim() ||
+      hasAbout
+    );
     if (hasAboutSummary) {
       score += 10;
     } else {

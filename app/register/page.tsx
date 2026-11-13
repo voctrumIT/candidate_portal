@@ -168,9 +168,19 @@ export default function RegisterPage() {
       });
 
       if (res && res.payload && res.payload.token) {
-        localStorage.setItem("candidate_token", res.payload.token);
-        if (res.payload.candidateId) {
-          localStorage.setItem("candidate_id", res.payload.candidateId);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("candidate_active_resume_id");
+          localStorage.removeItem("candidate_active_resume_name");
+          localStorage.removeItem("candidate_active_resume_url");
+          localStorage.removeItem("candidate_active_resume");
+          localStorage.removeItem("candidate_active_resume_owner_id");
+          localStorage.removeItem("candidate_about_me");
+          localStorage.removeItem("candidate_work_experience");
+          localStorage.removeItem("candidate_address");
+          localStorage.setItem("candidate_token", res.payload.token);
+          if (res.payload.candidateId) {
+            localStorage.setItem("candidate_id", res.payload.candidateId);
+          }
         }
 
         // Save contact number immediately using PUT /api/Candidate/profile/update
@@ -184,6 +194,10 @@ export default function RegisterPage() {
           console.warn("Could not save initial contact number on register", updateErr);
         }
         toast.success("Account Created!", `Welcome to ${tenant?.companyName || "Voctrum"} Candidate Portal.`);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+          window.dispatchEvent(new Event("storage"));
+        }
       }
       next();
     } catch (err: any) {
@@ -202,6 +216,10 @@ export default function RegisterPage() {
     try {
       if (skills.length > 0) {
         await profileService.updateProfile({ skills });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+          window.dispatchEvent(new Event("storage"));
+        }
       }
       next();
     } catch (err: any) {
@@ -237,6 +255,10 @@ export default function RegisterPage() {
       setStepLoading(true);
       try {
         await profileService.updateProfile({ educations: [educationItem] });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+          window.dispatchEvent(new Event("storage"));
+        }
         next();
       } catch (err: any) {
         setError(getUserFriendlyErrorMessage(err, "register"));
@@ -278,6 +300,10 @@ export default function RegisterPage() {
         country: country.trim() || null,
         postalCode: postalCode.trim() || null,
       });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+        window.dispatchEvent(new Event("storage"));
+      }
       next();
     } catch (err: any) {
       setError(getUserFriendlyErrorMessage(err, "register"));
@@ -305,43 +331,54 @@ export default function RegisterPage() {
 
   const handleSaveResume = async () => {
     setError("");
-    if (resumeFiles.length > 0) {
-      setStepLoading(true);
-      try {
-        const fileObj = resumeFiles[0] as any;
-        if (fileObj && fileObj.rawFile) {
-          const formData = new FormData();
-          formData.append("file", fileObj.rawFile);
-          formData.append("File", fileObj.rawFile);
-          formData.append("DocumentType", "Resume");
-          formData.append("type", "Resume");
-          const cid = typeof window !== "undefined" ? localStorage.getItem("candidate_id") : null;
-          if (cid) {
-            formData.append("CandidateId", cid);
-          }
-          const uploadRes = await documentsService.uploadDocument(formData);
-          const doc = uploadRes?.payload || uploadRes;
-          const docId = doc?.fileUrl || doc?.id || fileObj.name;
-          if (typeof window !== "undefined") {
-            localStorage.setItem("candidate_active_resume_id", docId);
-            localStorage.setItem("candidate_active_resume_name", fileObj.name);
-            if (doc?.fileUrl) {
-              localStorage.setItem("candidate_active_resume_url", doc.fileUrl);
-            }
-            window.dispatchEvent(
-              new CustomEvent("active_resume_updated", {
-                detail: { id: docId, name: fileObj.name, fileUrl: doc?.fileUrl },
-              })
-            );
-          }
-        }
-      } catch (err: any) {
-        console.warn("Resume upload during registration notice:", err);
-      } finally {
-        setStepLoading(false);
-      }
+    if (resumeFiles.length === 0) {
+      const msg = "Resume is compulsory. Please upload your resume in PDF, DOC, or DOCX format to proceed.";
+      setError(msg);
+      toast.warning("Resume Required", "Please upload your resume before proceeding.");
+      return;
     }
-    next();
+
+    setStepLoading(true);
+    try {
+      const fileObj = resumeFiles[0] as any;
+      if (fileObj && fileObj.rawFile) {
+        const formData = new FormData();
+        formData.append("file", fileObj.rawFile);
+        formData.append("File", fileObj.rawFile);
+        formData.append("DocumentType", "Resume");
+        formData.append("type", "Resume");
+        const cid = typeof window !== "undefined" ? localStorage.getItem("candidate_id") : null;
+        if (cid) {
+          formData.append("CandidateId", cid);
+        }
+        const uploadRes = await documentsService.uploadDocument(formData);
+        const doc = uploadRes?.payload || uploadRes;
+        const docId = doc?.fileUrl || doc?.id || fileObj.name;
+        if (typeof window !== "undefined") {
+          localStorage.setItem("candidate_active_resume_id", docId);
+          localStorage.setItem("candidate_active_resume_name", fileObj.name);
+          if (cid) {
+            localStorage.setItem("candidate_active_resume_owner_id", cid);
+          }
+          if (doc?.fileUrl) {
+            localStorage.setItem("candidate_active_resume_url", doc.fileUrl);
+          }
+          window.dispatchEvent(
+            new CustomEvent("active_resume_updated", {
+              detail: { id: docId, name: fileObj.name, fileUrl: doc?.fileUrl },
+            })
+          );
+          window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+          window.dispatchEvent(new Event("storage"));
+        }
+      }
+      next();
+    } catch (err: any) {
+      console.warn("Resume upload during registration notice:", err);
+      setError(getUserFriendlyErrorMessage(err, "register"));
+    } finally {
+      setStepLoading(false);
+    }
   };
 
   const addFiles = (files: FileList | null, setter: (files: UploadFile[]) => void, current: UploadFile[]) => {
@@ -414,7 +451,7 @@ export default function RegisterPage() {
                 selected={employment}
                 onToggle={toggleEmployment}
                 onBack={back}
-                onNext={handleSaveResume}
+                onNext={next}
                 loading={stepLoading}
               />
             )}
@@ -1045,23 +1082,26 @@ function AddressStep({
   );
 }
 
-function ResumeStep({ files, portfolioLink, onPortfolioLink, onAddFiles, onRemoveFile, onBack, onNext }: StepProps & { files: UploadFile[]; portfolioLink: string; onPortfolioLink: (value: string) => void; onAddFiles: (files: FileList | null) => void; onRemoveFile: (id: string) => void }) {
+function ResumeStep({ files, portfolioLink, onPortfolioLink, onAddFiles, onRemoveFile, onBack, onNext, loading }: StepProps & { files: UploadFile[]; portfolioLink: string; onPortfolioLink: (value: string) => void; onAddFiles: (files: FileList | null) => void; onRemoveFile: (id: string) => void }) {
   return (
     <>
-      <StepHeading title="Resume & Portfolio" copy="Let recruiters discover your work" step={5} percent={95} filled={5} />
+      <StepHeading title="Resume & Portfolio" copy="Upload your resume to complete your candidate registration" step={5} percent={95} filled={5} />
       <div className="mx-auto mt-8 w-full max-w-[470px] rounded-xl bg-white dark:bg-[#1a1a1a] px-5 py-8 text-center shadow-md border border-slate-200 dark:border-slate-800">
+        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 px-3 py-1 text-xs font-bold text-red-600 dark:text-red-400">
+          <span>* Resume is Compulsory</span>
+        </div>
         <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[#e9edff] dark:bg-slate-800 text-[#2f54eb]">
           <Upload className="h-5 w-5" />
         </span>
-        <h3 className="mt-4 text-base font-bold text-[#101828] dark:text-white">Click to Upload Resume</h3>
-        <p className="mt-1 text-xs text-[#98a2b3]">PDF, DOC, DOCX up to 10 MB</p>
+        <h3 className="mt-4 text-base font-bold text-[#101828] dark:text-white">Click to Upload Resume <span className="text-red-500">*</span></h3>
+        <p className="mt-1 text-xs text-[#98a2b3]">PDF, DOC, DOCX up to 10 MB (Required to complete registration)</p>
         <FilePicker id="resume-file" label="Browse Files" onChange={onAddFiles} />
         <FileList files={files} onRemove={onRemoveFile} />
       </div>
       <div className="mt-8">
-        <Field label="Portfolio / LinkedIn URL" placeholder="https://linkedin.com/in/username" value={portfolioLink} onChange={onPortfolioLink} icon={<LinkIcon className="h-5 w-5 text-[#2f54eb]" />} />
+        <Field label="Portfolio / LinkedIn URL (Optional)" placeholder="https://linkedin.com/in/username" value={portfolioLink} onChange={onPortfolioLink} icon={<LinkIcon className="h-5 w-5 text-[#2f54eb]" />} />
       </div>
-      <StepActions onBack={onBack} onNext={onNext} />
+      <StepActions onBack={onBack} onNext={onNext} loading={loading} />
     </>
   );
 }

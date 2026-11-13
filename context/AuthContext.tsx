@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef, ReactNode } from "react";
 import { profileService } from "../services/profile";
 import { fetchApi } from "../lib/api";
 import { useRouter } from "next/navigation";
@@ -32,6 +32,10 @@ export interface UserProfile {
   email?: string;
   contactNumber?: string;
   mobile?: string;
+  aboutMe?: string;
+  summary?: string;
+  about?: string;
+  bio?: string;
   addressLine1?: string;
   addressLine2?: string;
   city?: string;
@@ -74,7 +78,15 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("candidate_profile_cache");
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return null;
+  });
   const [tenant, setTenant] = useState<TenantInfo | null>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -202,101 +214,197 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const fetchProfile = async () => {
-    try {
-      const token = localStorage.getItem("candidate_token");
-      if (!token) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      const data = await profileService.getProfile();
-      const payload = data?.payload || data;
-      if (payload) {
-        const [firstName, ...lastNames] = (payload.name || "").split(" ");
-        const lastName = lastNames.join(" ") || "";
-        let addr = payload.address || {};
-        if (typeof window !== "undefined" && !addr.addressLine1 && !addr.city) {
-          try {
-            const cached = localStorage.getItem("candidate_address");
-            if (cached) {
-              addr = { ...JSON.parse(cached), ...addr };
-            }
-          } catch {}
-        }
+  const inFlightProfilePromise = useRef<Promise<void> | null>(null);
+  const lastProfileFetchTime = useRef<number>(0);
 
-        const candidateId = payload.candidateId || localStorage.getItem("candidate_id") || undefined;
-        if (candidateId && typeof window !== "undefined") {
-          try {
-            localStorage.setItem("candidate_id", candidateId);
-          } catch {}
-        }
-
-        const rawExp = payload.workExperiences || payload.experiences || payload.experience;
-        let candidateExperiences: any[] = [];
-        if (Array.isArray(rawExp) && rawExp.length > 0) {
-          candidateExperiences = rawExp;
-          try {
-            localStorage.setItem("candidate_work_experience", JSON.stringify(rawExp));
-          } catch {}
-        } else if (typeof window !== "undefined") {
-          try {
-            const cached = localStorage.getItem("candidate_work_experience");
-            if (cached) candidateExperiences = JSON.parse(cached);
-          } catch {}
-        }
-
-        setUser({
-          ...payload,
-          candidateId,
-          firstName,
-          lastName,
-          contactNumber: payload.contactNumber || "",
-          mobile: payload.contactNumber || "",
-          addressLine1: addr.addressLine1 || "",
-          addressLine2: addr.addressLine2 || "",
-          city: addr.city || "",
-          state: addr.state || "",
-          country: addr.country || "",
-          postalCode: addr.postalCode || "",
-          preferredWorkLocation: addr.city || "",
-          currentLocation: addr.city || "",
-          skills: Array.isArray(payload.skills) ? payload.skills : [],
-          educations: Array.isArray(payload.educations) ? payload.educations : [],
-          workExperiences: candidateExperiences,
-          experiences: candidateExperiences,
-          address: addr,
-        });
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      console.error("Failed to fetch profile", err);
-      setUser(null);
-    } finally {
-      setLoading(false);
+  const fetchProfile = useCallback(async (force = false) => {
+    // If a request is already in-flight, reuse it to avoid duplicate parallel calls
+    if (inFlightProfilePromise.current) {
+      return inFlightProfilePromise.current;
     }
-  };
 
-  const logout = () => {
+    // Anti-spam throttling: if fetched within last 2.5s and not forced, reuse current state
+    const now = Date.now();
+    if (!force && now - lastProfileFetchTime.current < 2500) {
+      return;
+    }
+
+    const task = (async () => {
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("candidate_token") : null;
+        if (!token) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        const data = await profileService.getProfile();
+        lastProfileFetchTime.current = Date.now();
+        const payload = data?.payload || data;
+        if (payload) {
+          const [firstName, ...lastNames] = (payload.name || "").split(" ");
+          const lastName = lastNames.join(" ") || "";
+          let addr = payload.address || {};
+          if (typeof window !== "undefined" && !addr.addressLine1 && !addr.city) {
+            try {
+              const cached = localStorage.getItem("candidate_address");
+              if (cached) {
+                addr = { ...JSON.parse(cached), ...addr };
+              }
+            } catch {}
+          }
+
+          const candidateId = payload.candidateId || localStorage.getItem("candidate_id") || undefined;
+          if (typeof window !== "undefined") {
+            try {
+              if (candidateId) localStorage.setItem("candidate_id", candidateId);
+              if (payload.name) localStorage.setItem("candidate_name", payload.name);
+              if (payload.contactNumber) localStorage.setItem("candidate_contact", payload.contactNumber);
+            } catch {}
+          }
+
+          const candidateAbout = payload.aboutMe || payload.about || payload.summary || payload.bio || "";
+
+          const rawExp = payload.workExperiences || payload.experiences || payload.experience || [];
+          const candidateExperiences: any[] = Array.isArray(rawExp)
+            ? rawExp.map((we: any, i: number) => {
+                const isCurrent = Boolean(
+                  we.current ||
+                  we.currentRole ||
+                  we.isCurrent ||
+                  String(we.endDate || "").toLowerCase() === "present" ||
+                  !we.endDate
+                );
+                const roleTitle = (we.designation || we.role || we.title || we.position || we.jobTitle || "").trim();
+                const compName = (we.organization || we.company || we.companyName || "").trim();
+                return {
+                  id: we.id || `we-${i}`,
+                  role: roleTitle || "Professional",
+                  designation: roleTitle || "Professional",
+                  title: roleTitle || "Professional",
+                  company: compName || "",
+                  organization: compName || "",
+                  companyName: compName || "",
+                  location: we.location || "",
+                  employmentType: we.employmentType || "Full-time",
+                  startDate: we.startDate || "",
+                  endDate: isCurrent ? null : (we.endDate || null),
+                  currentRole: isCurrent,
+                  current: isCurrent,
+                  isCurrent: isCurrent,
+                  skills: Array.isArray(we.skills) ? we.skills : [],
+                  description: we.description || we.responsibilities || "",
+                };
+              })
+            : [];
+
+          const fullProfile: UserProfile = {
+            ...payload,
+            candidateId,
+            firstName,
+            lastName,
+            aboutMe: candidateAbout,
+            summary: candidateAbout,
+            about: candidateAbout,
+            bio: candidateAbout,
+            contactNumber: payload.contactNumber || "",
+            mobile: payload.contactNumber || "",
+            addressLine1: addr.addressLine1 || "",
+            addressLine2: addr.addressLine2 || "",
+            city: addr.city || "",
+            state: addr.state || "",
+            country: addr.country || "",
+            postalCode: addr.postalCode || "",
+            preferredWorkLocation: addr.city || "",
+            currentLocation: addr.city || "",
+            skills: Array.isArray(payload.skills) ? payload.skills : [],
+            educations: Array.isArray(payload.educations) ? payload.educations : [],
+            workExperiences: candidateExperiences,
+            experiences: candidateExperiences,
+            address: addr,
+          };
+
+          setUser(fullProfile);
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("candidate_profile_cache", JSON.stringify(fullProfile));
+            } catch {}
+          }
+        } else if (!token) {
+          setUser(null);
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("candidate_profile_cache");
+          }
+        }
+      } catch (err: any) {
+        console.error("Failed to fetch profile", err);
+        // Only clear user on explicit 401 Unauthorized so transient errors don't wipe active profile state
+        if (err?.status === 401) {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("candidate_token");
+            localStorage.removeItem("candidate_profile_cache");
+          }
+          setUser(null);
+        }
+      } finally {
+        setLoading(false);
+        inFlightProfilePromise.current = null;
+      }
+    })();
+
+    inFlightProfilePromise.current = task;
+    return task;
+  }, []);
+
+  const logout = useCallback(() => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("candidate_token");
       localStorage.removeItem("candidate_id");
+      localStorage.removeItem("candidate_profile_cache");
       localStorage.removeItem("candidate_address");
+      localStorage.removeItem("candidate_active_resume_id");
+      localStorage.removeItem("candidate_active_resume_name");
+      localStorage.removeItem("candidate_active_resume_url");
+      localStorage.removeItem("candidate_active_resume");
+      localStorage.removeItem("candidate_active_resume_owner_id");
+      localStorage.removeItem("candidate_active_resume_updated_at");
+      localStorage.removeItem("candidate_about_me");
+      localStorage.removeItem("candidate_work_experience");
+      localStorage.removeItem("candidate_applied_jobs");
+      localStorage.removeItem("candidate_local_applications");
       window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new CustomEvent("active_resume_updated"));
     }
     setUser(null);
     toast.info("Signed Out", "You have been safely signed out of your account.");
     router.push("/login");
-  };
+  }, [router]);
 
   useEffect(() => {
     fetchTenant();
     fetchProfile();
-  }, []);
+
+    const handleProfileUpdate = () => {
+      fetchProfile(true);
+    };
+
+    window.addEventListener("candidate_profile_updated", handleProfileUpdate);
+    return () => {
+      window.removeEventListener("candidate_profile_updated", handleProfileUpdate);
+    };
+  }, [fetchProfile]);
+
+  const authContextValue = useMemo(() => ({
+    user,
+    tenant,
+    tenantLoading,
+    loading,
+    refreshProfile: fetchProfile,
+    logout,
+  }), [user, tenant, tenantLoading, loading, fetchProfile, logout]);
 
   return (
-    <AuthContext.Provider value={{ user, tenant, tenantLoading, loading, refreshProfile: fetchProfile, logout }}>
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );

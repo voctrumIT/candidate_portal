@@ -53,22 +53,25 @@ export default function Footer() {
           {/* Left Side: Logo & Subscribe */}
           <div className="max-w-[420px]">
             <Link href="/" title="Home" className="inline-block">
-              <div className="rounded-xl bg-white px-4 py-2 inline-flex items-center justify-center shadow-xs">
+              <div className="rounded-2xl bg-white px-4 py-2.5 inline-flex items-center justify-center gap-3 shadow-sm">
                 {tenant?.logoUrl ? (
                   <img
                     src={tenant.logoUrl}
                     alt={companyName}
-                    className="h-9 w-auto object-contain max-w-[170px]"
+                    className="h-9 w-auto object-contain max-w-[130px] shrink-0"
                   />
                 ) : (
                   <Image
                     src="/common/logo.png"
                     alt={companyName}
-                    width={150}
-                    height={44}
-                    className="h-9 w-auto object-contain"
+                    width={110}
+                    height={34}
+                    className="h-9 w-auto object-contain shrink-0"
                   />
                 )}
+                <span className="text-[17px] font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
+                  {companyName}
+                </span>
               </div>
             </Link>
             <p className="mt-4 text-[14px] font-medium text-[#b4c4e5]">

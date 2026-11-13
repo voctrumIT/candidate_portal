@@ -113,3 +113,125 @@ body {
   border: none !important;
   box-shadow: none !important;
 }
+
+/* =========================================================================
+   Job Description & Overview Rich Text Styling
+   ========================================================================= */
+.job-rich-content {
+  font-size: 0.9375rem; /* 15px */
+  line-height: 1.75;
+  color: #475569; /* text-slate-600 */
+}
+
+.dark .job-rich-content {
+  color: #cbd5e1; /* text-slate-300 */
+}
+
+.job-rich-content > *:first-child {
+  margin-top: 0 !important;
+}
+
+.job-rich-content h1,
+.job-rich-content h2,
+.job-rich-content h3,
+.job-rich-content h4 {
+  color: #0f172a; /* text-slate-900 */
+  font-weight: 700;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.35;
+}
+
+.dark .job-rich-content h1,
+.dark .job-rich-content h2,
+.dark .job-rich-content h3,
+.dark .job-rich-content h4 {
+  color: #ffffff;
+}
+
+.job-rich-content h1 {
+  font-size: 1.25rem;
+}
+
+.job-rich-content h2 {
+  font-size: 1.125rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dark .job-rich-content h2 {
+  border-bottom-color: #1e293b;
+}
+
+.job-rich-content h3 {
+  font-size: 1rem;
+}
+
+.job-rich-content h4 {
+  font-size: 0.9375rem;
+}
+
+.job-rich-content p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.875rem;
+  line-height: 1.75;
+}
+
+.job-rich-content ul {
+  list-style-type: disc !important;
+  margin-top: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem !important;
+}
+
+.job-rich-content ol {
+  list-style-type: decimal !important;
+  margin-top: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem !important;
+}
+
+.job-rich-content li {
+  margin-bottom: 0.5rem;
+  padding-left: 0.25rem;
+  line-height: 1.65;
+}
+
+.job-rich-content li::marker {
+  color: #2f54eb;
+  font-weight: 600;
+}
+
+.dark .job-rich-content li::marker {
+  color: #60a5fa;
+}
+
+.job-rich-content strong,
+.job-rich-content b {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.dark .job-rich-content strong,
+.dark .job-rich-content b {
+  color: #ffffff;
+}
+
+.job-rich-content a {
+  color: #2f54eb;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.job-rich-content blockquote {
+  border-left: 4px solid #2f54eb;
+  padding-left: 1rem;
+  margin: 1.25rem 0;
+  font-style: italic;
+  color: #64748b;
+}
+
+.dark .job-rich-content blockquote {
+  border-left-color: #3b82f6;
+  color: #94a3b8;
+}

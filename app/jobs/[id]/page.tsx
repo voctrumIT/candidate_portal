@@ -9,6 +9,7 @@ import JobDetailContent from './components/JobDetailContent';
 import { JobDetailSkeleton, JobCardSkeleton } from '../../components/Skeleton';
 import Link from 'next/link';
 import { jobsService } from '../../../services/jobs';
+import { isHtml } from '../../components/JobOverviewRenderer';
 
 function mapApiJobToJobListing(apiJob: any) {
   if (!apiJob) return null;
@@ -30,6 +31,29 @@ function mapApiJobToJobListing(apiJob: any) {
     apiJob.education || "Graduate"
   ].filter(Boolean);
 
+  const overviewText = apiJob.jobDescription || apiJob.overview || "We are looking for a passionate and detail-oriented candidate to join our team.";
+  const hasHtml = isHtml(overviewText);
+
+  const responsibilitiesList = Array.isArray(apiJob.responsibilities) && apiJob.responsibilities.length > 0
+    ? apiJob.responsibilities
+    : hasHtml
+      ? []
+      : [
+          "Collaborate with product and engineering teams to design and build scalable features.",
+          "Write clean, testable, and maintainable code adhering to modern best practices.",
+          "Participate in code reviews, architectural planning, and continuous product improvement."
+        ];
+
+  const qualificationsList = Array.isArray(apiJob.qualifications) && apiJob.qualifications.length > 0
+    ? apiJob.qualifications
+    : hasHtml
+      ? []
+      : [
+          apiJob.education ? `Degree or relevant education in ${apiJob.education}` : "Bachelor's degree or equivalent practical experience",
+          apiJob.experience ? `${apiJob.experience}+ years of relevant industry experience` : "Solid understanding of software development principles",
+          "Strong communication and collaborative problem-solving skills"
+        ];
+
   return {
     id: String(apiJob.jobId || apiJob.id),
     tenantId: apiJob.tenant?.normalizedTenantId || apiJob.tenantId || apiJob.normalizedTenantId || 'dotnetapi',
@@ -40,17 +64,9 @@ function mapApiJobToJobListing(apiJob: any) {
     postedDate: apiJob.createdAt ? `Posted ${new Date(apiJob.createdAt).toLocaleDateString()}` : "Posted recently",
     applyByDate: apiJob.lastApplicationDate ? `Apply by ${new Date(apiJob.lastApplicationDate).toLocaleDateString()}` : "Apply by 30 April",
     salaryRange: apiJob.salaryRange ? (apiJob.salaryRange.includes("$") || apiJob.salaryRange.includes("₹") ? apiJob.salaryRange : `₹${apiJob.salaryRange}k/yr`) : "Negotiable",
-    overview: apiJob.jobDescription || apiJob.overview || "We are looking for a passionate and detail-oriented candidate to join our team.",
-    responsibilities: Array.isArray(apiJob.responsibilities) && apiJob.responsibilities.length > 0 ? apiJob.responsibilities : [
-      "Collaborate with product and engineering teams to design and build scalable features.",
-      "Write clean, testable, and maintainable code adhering to modern best practices.",
-      "Participate in code reviews, architectural planning, and continuous product improvement."
-    ],
-    qualifications: Array.isArray(apiJob.qualifications) && apiJob.qualifications.length > 0 ? apiJob.qualifications : [
-      apiJob.education ? `Degree or relevant education in ${apiJob.education}` : "Bachelor's degree or equivalent practical experience",
-      apiJob.experience ? `${apiJob.experience}+ years of relevant industry experience` : "Solid understanding of software development principles",
-      "Strong communication and collaborative problem-solving skills"
-    ],
+    overview: overviewText,
+    responsibilities: responsibilitiesList,
+    qualifications: qualificationsList,
     keySkills: skillsList.length > 0 ? skillsList : ["React", "TypeScript", "Node.js"],
     aboutCompany: apiJob.aboutCompany || "Software Development • 51-200 employees\n\nWe are a product-driven company focused on building impactful digital experiences. Our team values innovation, collaboration, and user-centric design to create solutions that make a real difference."
   };

@@ -20,6 +20,7 @@ import {
 import { jobsService, parseApplicationStatus } from "../../../../services/jobs";
 import { useAuth } from "../../../../context/AuthContext";
 import { toast } from "../../../components/Toast";
+import { stripHtml } from "../../../components/JobOverviewRenderer";
 
 export default function ApplicationDetailPage({
   params,
@@ -444,8 +445,7 @@ export default function ApplicationDetailPage({
                   About the Role
                 </h3>
                 <p className="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400 line-clamp-4">
-                  {job.overview ||
-                    job.jobDescription ||
+                  {stripHtml(job.overview || job.jobDescription) ||
                     "This position involves contributing to product engineering, collaborating with cross-functional teams, and building scalable software solutions."}
                 </p>
               </div>

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Pencil, Building2, MapPin, CalendarDays, Check, Briefcase, AlertCircle, Loader2, Sparkles, Clock } from "lucide-react";
+import { Plus, Trash2, Pencil, Building2, MapPin, CalendarDays, Check, Briefcase, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../../../../context/AuthContext";
-import { profileService, WorkExperienceDto } from "../../../../services/profile";
+import { profileService, WorkExperienceDto, isGuid, toDateOnlyString } from "../../../../services/profile";
 import { toast } from "../../../components/Toast";
+import { getUserFriendlyErrorMessage } from "../../../../lib/errorUtils";
 
 export interface WorkExperienceItem {
   id: string;
@@ -27,6 +28,43 @@ const EMPLOYMENT_TYPES = [
   "Freelance",
 ];
 
+export function toDateInputValue(str?: string | null): string {
+  if (!str || String(str).toLowerCase() === "present") return "";
+  const trimmed = String(str).trim();
+  const match = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return match[1];
+  if (/^\d{4}-\d{2}$/.test(trimmed)) return `${trimmed}-01`;
+  try {
+    const d = new Date(trimmed);
+    if (!isNaN(d.getTime())) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+  } catch {}
+  return "";
+}
+
+export function formatDateDisplay(str?: string | null): string {
+  if (!str) return "";
+  if (String(str).toLowerCase() === "present") return "Present";
+  try {
+    const match = String(str).trim().match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      const d = new Date(year, month, 1);
+      return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    }
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    }
+  } catch {}
+  return String(str);
+}
+
 export default function WorkExperienceTab() {
   const { user, refreshProfile } = useAuth();
   const [experiences, setExperiences] = useState<WorkExperienceItem[]>([]);
@@ -45,79 +83,40 @@ export default function WorkExperienceTab() {
   const [skillsInput, setSkillsInput] = useState("");
   const [description, setDescription] = useState("");
   const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Load experiences on mount and sync with user / storage
+  // Load experiences directly from user profile API data
   useEffect(() => {
-    const loadExperiences = () => {
-      // 1. Try loading from authenticated user profile
-      const userExp = user?.workExperiences || (user as any)?.experiences;
-      if (Array.isArray(userExp) && userExp.length > 0) {
-        const mapped: WorkExperienceItem[] = userExp.map((we: any, i: number) => ({
-          id: we.id || `we-${i}-${Date.now()}`,
-          role: we.role || we.title || we.position || we.jobTitle || "Professional",
-          company: we.company || we.organization || "",
+    const userExp = user?.workExperiences || (user as any)?.experiences;
+    if (Array.isArray(userExp)) {
+      const mapped: WorkExperienceItem[] = userExp.map((we: any, i: number) => {
+        const isCurrent = Boolean(
+          we.current ||
+          we.currentRole ||
+          we.isCurrent ||
+          String(we.endDate || "").toLowerCase() === "present" ||
+          !we.endDate
+        );
+        return {
+          id: we.id || `we-${i}`,
+          role: we.designation || we.role || we.title || we.position || we.jobTitle || "Professional",
+          company: we.organization || we.company || we.companyName || "",
           location: we.location || "",
           employmentType: we.employmentType || "Full-time",
-          startDate: we.startDate || "",
-          endDate: we.endDate || (we.current || we.currentRole ? "Present" : ""),
-          currentRole: Boolean(we.current || we.currentRole || we.endDate === "Present"),
-          skills: Array.isArray(we.skills) ? we.skills : (typeof we.skills === "string" ? we.skills.split(",").map((s: string) => s.trim()) : []),
-          description: we.description || "",
-        }));
-        setExperiences(mapped);
-        return;
-      }
-
-      // 2. Try loading from localStorage
-      if (typeof window !== "undefined") {
-        const stored = localStorage.getItem("candidate_work_experience");
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setExperiences(parsed);
-              return;
-            }
-          } catch {}
-        }
-
-        // 3. Try checking active resume
-        try {
-          const resumeRaw = localStorage.getItem("candidate_active_resume");
-          if (resumeRaw) {
-            const parsed = JSON.parse(resumeRaw);
-            if (Array.isArray(parsed?.workExperience) && parsed.workExperience.length > 0) {
-              const mapped: WorkExperienceItem[] = parsed.workExperience.map((we: any, i: number) => ({
-                id: we.id || `we-${i}-${Date.now()}`,
-                role: we.position || we.jobTitle || we.role || "Professional",
-                company: we.company || we.organization || "",
-                location: we.location || "",
-                employmentType: we.employmentType || "Full-time",
-                startDate: we.startDate || "",
-                endDate: we.endDate || (we.current ? "Present" : ""),
-                currentRole: Boolean(we.current),
-                skills: Array.isArray(we.skills) ? we.skills : (we.technologies || []),
-                description: we.description || "",
-              }));
-              setExperiences(mapped);
-              localStorage.setItem("candidate_work_experience", JSON.stringify(mapped));
-              return;
-            }
-          }
-        } catch {}
-      }
-    };
-
-    loadExperiences();
-
-    const handleSync = () => loadExperiences();
-    window.addEventListener("work_experience_updated", handleSync);
-    window.addEventListener("candidate_profile_updated", handleSync);
-    return () => {
-      window.removeEventListener("work_experience_updated", handleSync);
-      window.removeEventListener("candidate_profile_updated", handleSync);
-    };
-  }, [user]);
+          startDate: toDateInputValue(we.startDate),
+          endDate: isCurrent ? "Present" : toDateInputValue(we.endDate),
+          currentRole: isCurrent,
+          skills: Array.isArray(we.skills)
+            ? we.skills
+            : (typeof we.skills === "string" ? we.skills.split(",").map((s: string) => s.trim()).filter(Boolean) : []),
+          description: we.description || we.responsibilities || "",
+        };
+      });
+      setExperiences(mapped);
+    } else {
+      setExperiences([]);
+    }
+  }, [user?.workExperiences, user?.experiences]);
 
   const openAddForm = () => {
     setEditingId(null);
@@ -131,6 +130,7 @@ export default function WorkExperienceTab() {
     setSkillsInput("");
     setDescription("");
     setFormError("");
+    setFieldErrors({});
     setIsFormOpen(true);
   };
 
@@ -140,75 +140,60 @@ export default function WorkExperienceTab() {
     setCompany(item.company);
     setEmploymentType(item.employmentType || "Full-time");
     setLocation(item.location);
-    setStartDate(item.startDate);
-    setEndDate(item.currentRole ? "" : item.endDate);
+    setStartDate(toDateInputValue(item.startDate));
+    setEndDate(item.currentRole ? "" : toDateInputValue(item.endDate));
     setCurrentRole(item.currentRole);
     setSkillsInput(Array.isArray(item.skills) ? item.skills.join(", ") : "");
     setDescription(item.description || "");
     setFormError("");
+    setFieldErrors({});
     setIsFormOpen(true);
   };
 
-  const syncExperienceData = async (updatedList: WorkExperienceItem[]) => {
+  const syncExperienceData = async (updatedList: WorkExperienceItem[]): Promise<boolean> => {
     setSaving(true);
+    setFormError("");
     try {
-      // 1. Save to localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("candidate_work_experience", JSON.stringify(updatedList));
+      // Save directly to backend API (PUT /api/Candidate/profile/update)
+      await profileService.updateProfile({
+        workExperiences: updatedList.map((item) => ({
+          ...(isGuid(item.id) ? { id: item.id } : {}),
+          designation: item.role,
+          role: item.role,
+          title: item.role,
+          position: item.role,
+          jobTitle: item.role,
+          organization: item.company,
+          company: item.company,
+          companyName: item.company,
+          location: item.location,
+          employmentType: item.employmentType,
+          startDate: toDateInputValue(item.startDate) || item.startDate,
+          endDate: item.currentRole ? null : (toDateInputValue(item.endDate) || item.endDate || null),
+          currentRole: item.currentRole,
+          current: item.currentRole,
+          isCurrent: item.currentRole,
+          skills: item.skills,
+          description: item.description,
+        })),
+      });
 
-        // Sync to active resume if present
-        try {
-          const resumeRaw = localStorage.getItem("candidate_active_resume");
-          if (resumeRaw) {
-            const parsed = JSON.parse(resumeRaw);
-            if (parsed) {
-              parsed.workExperience = updatedList.map((item) => ({
-                id: item.id,
-                position: item.role,
-                company: item.company,
-                location: item.location,
-                startDate: item.startDate,
-                endDate: item.endDate,
-                current: item.currentRole,
-                skills: item.skills,
-                description: item.description,
-              }));
-              localStorage.setItem("candidate_active_resume", JSON.stringify(parsed));
-            }
-          }
-        } catch {}
-      }
+      await refreshProfile();
 
-      // 2. Save via profile service to backend API
-      try {
-        await profileService.updateProfile({
-          workExperiences: updatedList.map((item) => ({
-            id: item.id,
-            role: item.role,
-            title: item.role,
-            company: item.company,
-            organization: item.company,
-            location: item.location,
-            employmentType: item.employmentType,
-            startDate: item.startDate,
-            endDate: item.endDate,
-            currentRole: item.currentRole,
-            current: item.currentRole,
-            skills: item.skills,
-            description: item.description,
-          })),
-        });
-        await refreshProfile();
-      } catch (apiErr) {
-        console.warn("Backend profile sync notice (local backup preserved):", apiErr);
-      }
-
-      // 3. Dispatch system-wide events
+      // Dispatch system-wide events
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("work_experience_updated", { detail: updatedList }));
         window.dispatchEvent(new Event("candidate_profile_updated"));
         window.dispatchEvent(new Event("storage"));
       }
+
+      return true;
+    } catch (apiErr: any) {
+      console.error("Backend profile sync error:", apiErr);
+      const friendlyMsg = getUserFriendlyErrorMessage(apiErr, "profile");
+      setFormError(friendlyMsg);
+      toast.error("Save Failed", friendlyMsg);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -218,24 +203,72 @@ export default function WorkExperienceTab() {
     const itemToDelete = experiences.find((e) => e.id === id);
     const updated = experiences.filter((e) => e.id !== id);
     setExperiences(updated);
-    await syncExperienceData(updated);
-    toast.info("Experience Removed", `Removed "${itemToDelete?.role || "Entry"}" from your profile.`);
+    const ok = await syncExperienceData(updated);
+    if (ok) {
+      toast.info("Experience Removed", `Removed "${itemToDelete?.role || "Entry"}" from your profile.`);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
+    setFieldErrors({});
+
+    const errors: Record<string, string> = {};
 
     if (!role.trim()) {
-      setFormError("Job title / designation is required.");
-      return;
+      errors.role = "Job title / designation is required.";
+    } else if (role.trim().length < 2) {
+      errors.role = "Job title must be at least 2 characters long.";
+    } else if (role.trim().length > 100) {
+      errors.role = "Job title cannot exceed 100 characters.";
     }
+
     if (!company.trim()) {
-      setFormError("Company / organisation name is required.");
-      return;
+      errors.company = "Company / organisation name is required.";
+    } else if (company.trim().length < 2) {
+      errors.company = "Company name must be at least 2 characters long.";
+    } else if (company.trim().length > 150) {
+      errors.company = "Company name cannot exceed 150 characters.";
     }
+
+    if (location.trim().length > 100) {
+      errors.location = "Location cannot exceed 100 characters.";
+    }
+
     if (!startDate.trim()) {
-      setFormError("Start date is required.");
+      errors.startDate = "Please select a valid start date from the calendar.";
+    } else {
+      const startD = new Date(startDate);
+      const maxFuture = new Date();
+      maxFuture.setDate(maxFuture.getDate() + 30);
+      if (isNaN(startD.getTime())) {
+        errors.startDate = "Please enter a valid start date.";
+      } else if (startD > maxFuture) {
+        errors.startDate = "Start date cannot be in the future.";
+      }
+    }
+
+    if (!currentRole) {
+      if (!endDate.trim()) {
+        errors.endDate = "Please select an end date or check 'Currently working here'.";
+      } else {
+        const endD = new Date(endDate);
+        if (isNaN(endD.getTime())) {
+          errors.endDate = "Please enter a valid end date.";
+        } else if (startDate.trim() && endD < new Date(startDate)) {
+          errors.endDate = "End date cannot be earlier than start date.";
+        }
+      }
+    }
+
+    if (description.trim().length > 2000) {
+      errors.description = "Description cannot exceed 2000 characters.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setFormError("Please fix the highlighted errors before saving.");
       return;
     }
 
@@ -264,14 +297,26 @@ export default function WorkExperienceTab() {
       updatedList = [newItem, ...experiences];
     }
 
-    setExperiences(updatedList);
-    await syncExperienceData(updatedList);
-
-    setIsFormOpen(false);
-    toast.success(
-      editingId ? "Experience Updated" : "Experience Added",
-      `"${newItem.role}" at ${newItem.company} has been saved to your profile.`
-    );
+    const ok = await syncExperienceData(updatedList);
+    if (ok) {
+      setExperiences(updatedList);
+      setIsFormOpen(false);
+      setEditingId(null);
+      setRole("");
+      setCompany("");
+      setLocation("");
+      setStartDate("");
+      setEndDate("");
+      setCurrentRole(false);
+      setSkillsInput("");
+      setDescription("");
+      setFormError("");
+      setFieldErrors({});
+      toast.success(
+        editingId ? "Experience Updated" : "Experience Added",
+        `"${newItem.role}" at ${newItem.company} has been saved to your profile.`
+      );
+    }
   };
 
   return (
@@ -325,10 +370,17 @@ export default function WorkExperienceTab() {
                 <input
                   type="text"
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  maxLength={100}
+                  onChange={(e) => {
+                    setRole(e.target.value);
+                    if (fieldErrors.role) setFieldErrors((prev) => ({ ...prev, role: "" }));
+                  }}
                   placeholder="e.g. Senior Full Stack Developer"
-                  className="h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#2f54eb] transition"
+                  className={`h-10 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none transition ${
+                    fieldErrors.role ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                 />
+                {fieldErrors.role && <p className="mt-1 text-[11px] text-rose-500 font-medium">{fieldErrors.role}</p>}
               </div>
 
               {/* Company Name */}
@@ -339,10 +391,17 @@ export default function WorkExperienceTab() {
                 <input
                   type="text"
                   value={company}
-                  onChange={(e) => setCompany(e.target.value)}
+                  maxLength={150}
+                  onChange={(e) => {
+                    setCompany(e.target.value);
+                    if (fieldErrors.company) setFieldErrors((prev) => ({ ...prev, company: "" }));
+                  }}
                   placeholder="e.g. Voctrum Technologies"
-                  className="h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#2f54eb] transition"
+                  className={`h-10 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none transition ${
+                    fieldErrors.company ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                 />
+                {fieldErrors.company && <p className="mt-1 text-[11px] text-rose-500 font-medium">{fieldErrors.company}</p>}
               </div>
 
               {/* Employment Type */}
@@ -366,15 +425,22 @@ export default function WorkExperienceTab() {
               {/* Location */}
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Location / Workplace
+                  Location / Workplace <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  maxLength={100}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    if (fieldErrors.location) setFieldErrors((prev) => ({ ...prev, location: "" }));
+                  }}
                   placeholder="e.g. New York, NY or Remote"
-                  className="h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#2f54eb] transition"
+                  className={`h-10 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none transition ${
+                    fieldErrors.location ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                 />
+                {fieldErrors.location && <p className="mt-1 text-[11px] text-rose-500 font-medium">{fieldErrors.location}</p>}
               </div>
 
               {/* Start Date */}
@@ -382,47 +448,71 @@ export default function WorkExperienceTab() {
                 <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
                   Start Date <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  placeholder="e.g. Jan 2022 or 2022-01"
-                  className="h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#2f54eb] transition"
-                />
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      if (fieldErrors.startDate) setFieldErrors((prev) => ({ ...prev, startDate: "" }));
+                    }}
+                    className={`h-10 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none transition [color-scheme:light] dark:[color-scheme:dark] cursor-pointer ${
+                      fieldErrors.startDate ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                    }`}
+                  />
+                </div>
+                {fieldErrors.startDate && <p className="mt-1 text-[11px] text-rose-500 font-medium">{fieldErrors.startDate}</p>}
               </div>
 
               {/* End Date with Present toggle */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                    End Date
+                    End Date {!currentRole && <span className="text-red-500">*</span>}
                   </label>
                   <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={currentRole}
-                      onChange={(e) => setCurrentRole(e.target.checked)}
+                      onChange={(e) => {
+                        setCurrentRole(e.target.checked);
+                        if (e.target.checked) {
+                          setEndDate("");
+                          if (fieldErrors.endDate) setFieldErrors((prev) => ({ ...prev, endDate: "" }));
+                        }
+                      }}
                       className="rounded border-slate-300 text-[#2f54eb] focus:ring-[#2f54eb]"
                     />
                     <span className="font-medium text-[#2f54eb] dark:text-blue-400">Currently working here</span>
                   </label>
                 </div>
-                <input
-                  type="text"
-                  value={currentRole ? "Present" : endDate}
-                  disabled={currentRole}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  placeholder="e.g. Dec 2024 or Present"
-                  className={`h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#2f54eb] transition ${
-                    currentRole ? "bg-slate-50 dark:bg-slate-900/60 opacity-60 cursor-not-allowed" : ""
-                  }`}
-                />
+                {currentRole ? (
+                  <div className="h-10 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 px-3.5 flex items-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                    Present (Current Role)
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={endDate}
+                      min={startDate || undefined}
+                      onChange={(e) => {
+                        setEndDate(e.target.value);
+                        if (fieldErrors.endDate) setFieldErrors((prev) => ({ ...prev, endDate: "" }));
+                      }}
+                      className={`h-10 w-full rounded-lg border bg-white dark:bg-[#1a1a1a] px-3.5 text-xs text-slate-900 dark:text-white outline-none transition [color-scheme:light] dark:[color-scheme:dark] cursor-pointer ${
+                        fieldErrors.endDate ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                      }`}
+                    />
+                  </div>
+                )}
+                {fieldErrors.endDate && <p className="mt-1 text-[11px] text-rose-500 font-medium">{fieldErrors.endDate}</p>}
               </div>
 
               {/* Skills Used */}
               <div className="sm:col-span-2">
                 <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Key Skills & Technologies Used (comma-separated)
+                  Key Skills & Technologies Used <span className="text-slate-400 font-normal">(Comma-separated, optional)</span>
                 </label>
                 <input
                   type="text"
@@ -435,16 +525,28 @@ export default function WorkExperienceTab() {
 
               {/* Description & Responsibilities */}
               <div className="sm:col-span-2">
-                <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Roles, Responsibilities & Accomplishments
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Roles, Responsibilities & Accomplishments <span className="text-slate-400 font-normal">(Optional)</span>
+                  </label>
+                  <span className={`text-[11px] ${description.length > 1900 ? "text-amber-500 font-semibold" : "text-slate-400"}`}>
+                    {description.length}/2000
+                  </span>
+                </div>
                 <textarea
                   rows={4}
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  maxLength={2000}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    if (fieldErrors.description) setFieldErrors((prev) => ({ ...prev, description: "" }));
+                  }}
                   placeholder="Describe your daily responsibilities, architecture design contributions, leadership, or major impact on projects..."
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] p-3 text-xs text-slate-900 dark:text-white outline-none focus:border-[#2f54eb] transition resize-y"
+                  className={`w-full rounded-lg border bg-white dark:bg-[#1a1a1a] p-3 text-xs text-slate-900 dark:text-white outline-none transition resize-y ${
+                    fieldErrors.description ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
                 />
+                {fieldErrors.description && <p className="mt-1 text-[11px] text-rose-500 font-medium">{fieldErrors.description}</p>}
               </div>
             </div>
 
@@ -452,7 +554,12 @@ export default function WorkExperienceTab() {
             <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800/80 pt-4">
               <button
                 type="button"
-                onClick={() => setIsFormOpen(false)}
+                onClick={() => {
+                  setIsFormOpen(false);
+                  setEditingId(null);
+                  setFormError("");
+                  setFieldErrors({});
+                }}
                 disabled={saving}
                 className="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer disabled:opacity-60"
               >
@@ -505,7 +612,9 @@ export default function WorkExperienceTab() {
                     .join("")
                     .toUpperCase()
                 : "WE";
-              const durationStr = `${item.startDate}${item.endDate ? ` - ${item.endDate}` : ""}`;
+              const displayStart = formatDateDisplay(item.startDate);
+              const displayEnd = item.currentRole || item.endDate === "Present" ? "Present" : formatDateDisplay(item.endDate);
+              const durationStr = displayStart ? `${displayStart} — ${displayEnd || "Present"}` : (item.currentRole ? "Current Role" : "");
 
               return (
                 <div

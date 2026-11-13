@@ -231,9 +231,24 @@ function LoginForm({ onForgot, companyName }: { onForgot: () => void; companyNam
     try {
       const res = await authService.login({ email, password });
       if (res && res.payload && res.payload.token) {
-        localStorage.setItem("candidate_token", res.payload.token);
-        if (res.payload.candidateId) {
-          localStorage.setItem("candidate_id", res.payload.candidateId);
+        if (typeof window !== "undefined") {
+          const prevId = localStorage.getItem("candidate_id");
+          if (prevId && res.payload.candidateId && prevId !== res.payload.candidateId) {
+            localStorage.removeItem("candidate_active_resume_id");
+            localStorage.removeItem("candidate_active_resume_name");
+            localStorage.removeItem("candidate_active_resume_url");
+            localStorage.removeItem("candidate_active_resume");
+            localStorage.removeItem("candidate_active_resume_owner_id");
+            localStorage.removeItem("candidate_about_me");
+            localStorage.removeItem("candidate_work_experience");
+            localStorage.removeItem("candidate_address");
+          }
+          localStorage.setItem("candidate_token", res.payload.token);
+          if (res.payload.candidateId) {
+            localStorage.setItem("candidate_id", res.payload.candidateId);
+          }
+          window.dispatchEvent(new CustomEvent("candidate_profile_updated"));
+          window.dispatchEvent(new Event("storage"));
         }
         toast.success("Welcome Back!", `You have successfully signed in to ${companyName}.`);
         router.push("/dashboard");

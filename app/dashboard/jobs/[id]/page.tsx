@@ -10,6 +10,7 @@ import { JobDetailSkeleton } from "../../../components/Skeleton";
 import { toast } from "../../../components/Toast";
 import { jobsService } from "../../../../services/jobs";
 import { useAuth } from "../../../../context/AuthContext";
+import JobOverviewRenderer, { isHtml } from "../../../components/JobOverviewRenderer";
 
 function mapApiJobToJobListing(apiJob: any) {
   if (!apiJob) return null;
@@ -31,6 +32,29 @@ function mapApiJobToJobListing(apiJob: any) {
     apiJob.education || "Graduate"
   ].filter(Boolean);
 
+  const overviewText = apiJob.jobDescription || apiJob.overview || "We are looking for a passionate and detail-oriented candidate to join our team.";
+  const hasHtml = isHtml(overviewText);
+
+  const responsibilitiesList = Array.isArray(apiJob.responsibilities) && apiJob.responsibilities.length > 0
+    ? apiJob.responsibilities
+    : hasHtml
+      ? []
+      : [
+          "Collaborate with product and engineering teams to design and build scalable features.",
+          "Write clean, testable, and maintainable code adhering to modern best practices.",
+          "Participate in code reviews, architectural planning, and continuous product improvement."
+        ];
+
+  const qualificationsList = Array.isArray(apiJob.qualifications) && apiJob.qualifications.length > 0
+    ? apiJob.qualifications
+    : hasHtml
+      ? []
+      : [
+          apiJob.education ? `Degree or relevant education in ${apiJob.education}` : "Bachelor's degree or equivalent practical experience",
+          apiJob.experience ? `${apiJob.experience}+ years of relevant industry experience` : "Solid understanding of software development principles",
+          "Strong communication and collaborative problem-solving skills"
+        ];
+
   return {
     id: String(apiJob.jobId || apiJob.id),
     tenantId: apiJob.tenant?.normalizedTenantId || apiJob.tenantId || apiJob.normalizedTenantId || 'dotnetapi',
@@ -41,17 +65,9 @@ function mapApiJobToJobListing(apiJob: any) {
     postedDate: apiJob.createdAt ? `Posted ${new Date(apiJob.createdAt).toLocaleDateString()}` : "Posted recently",
     applyByDate: apiJob.lastApplicationDate ? `Apply by ${new Date(apiJob.lastApplicationDate).toLocaleDateString()}` : "Apply by 30 April",
     salaryRange: apiJob.salaryRange ? (apiJob.salaryRange.includes("$") || apiJob.salaryRange.includes("₹") ? apiJob.salaryRange : `₹${apiJob.salaryRange}k/yr`) : "Negotiable",
-    overview: apiJob.jobDescription || apiJob.overview || "We are looking for a passionate and detail-oriented candidate to join our team.",
-    responsibilities: Array.isArray(apiJob.responsibilities) && apiJob.responsibilities.length > 0 ? apiJob.responsibilities : [
-      "Collaborate with product and engineering teams to design and build scalable features.",
-      "Write clean, testable, and maintainable code adhering to modern best practices.",
-      "Participate in code reviews, architectural planning, and continuous product improvement."
-    ],
-    qualifications: Array.isArray(apiJob.qualifications) && apiJob.qualifications.length > 0 ? apiJob.qualifications : [
-      apiJob.education ? `Degree or relevant education in ${apiJob.education}` : "Bachelor's degree or equivalent practical experience",
-      apiJob.experience ? `${apiJob.experience}+ years of relevant industry experience` : "Solid understanding of software development principles",
-      "Strong communication and collaborative problem-solving skills"
-    ],
+    overview: overviewText,
+    responsibilities: responsibilitiesList,
+    qualifications: qualificationsList,
     keySkills: skillsList.length > 0 ? skillsList : ["React", "TypeScript", "Node.js"],
     aboutCompany: apiJob.aboutCompany || "Software Development • 51-200 employees\n\nWe are a product-driven company focused on building impactful digital experiences. Our team values innovation, collaboration, and user-centric design to create solutions that make a real difference."
   };
@@ -266,42 +282,58 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
         <h2 className="text-2xl font-black text-slate-900 dark:text-white">About the Job</h2>
 
         <SectionHeading title="Overview" />
-        <p className="text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">{job.overview}</p>
+        <JobOverviewRenderer content={job.overview} />
 
-        <SectionHeading title="Responsibilities" />
-        <ul className="ml-4 list-disc space-y-3 text-[15px] text-slate-500 dark:text-slate-400 marker:text-slate-400">
-          {responsibilities.map((item: string, idx: number) => (
-            <li key={idx} className="pl-2">
-              {item}
-            </li>
-          ))}
-        </ul>
+        {responsibilities.length > 0 && (
+          <>
+            <SectionHeading title="Responsibilities" />
+            <ul className="ml-4 list-disc space-y-3 text-[15px] text-slate-500 dark:text-slate-400 marker:text-slate-400">
+              {responsibilities.map((item: string, idx: number) => (
+                <li key={idx} className="pl-2">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
 
-        <SectionHeading title="Qualifications" />
-        <ul className="ml-4 list-disc space-y-3 text-[15px] text-slate-500 dark:text-slate-400 marker:text-slate-400">
-          {qualifications.map((item: string, idx: number) => (
-            <li key={idx} className="pl-2">
-              {item}
-            </li>
-          ))}
-        </ul>
+        {qualifications.length > 0 && (
+          <>
+            <SectionHeading title="Qualifications" />
+            <ul className="ml-4 list-disc space-y-3 text-[15px] text-slate-500 dark:text-slate-400 marker:text-slate-400">
+              {qualifications.map((item: string, idx: number) => (
+                <li key={idx} className="pl-2">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
 
-        <SectionHeading title="Key Skills" />
-        <div className="flex flex-wrap items-center gap-2">
-          {keySkills.map((skill: string) => (
-            <span
-              key={skill}
-              className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:bg-[#1a1a1a] dark:text-slate-300"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
+        {keySkills.length > 0 && (
+          <>
+            <SectionHeading title="Key Skills" />
+            <div className="flex flex-wrap items-center gap-2">
+              {keySkills.map((skill: string) => (
+                <span
+                  key={skill}
+                  className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:bg-[#1a1a1a] dark:text-slate-300"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
 
-        <SectionHeading title="About Company" />
-        <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">
-          {aboutText}
-        </p>
+        {aboutText && (
+          <>
+            <SectionHeading title="About Company" />
+            <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">
+              {aboutText}
+            </p>
+          </>
+        )}
       </div>
 
       <hr className="my-14 border-slate-200 dark:border-slate-700" />

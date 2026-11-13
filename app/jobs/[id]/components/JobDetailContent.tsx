@@ -1,4 +1,5 @@
 import { JobListing } from '../../data';
+import JobOverviewRenderer from '../../../components/JobOverviewRenderer';
 
 export default function JobDetailContent({ job }: { job: JobListing }) {
   const responsibilities = Array.isArray(job.responsibilities) ? job.responsibilities : [];
@@ -14,9 +15,7 @@ export default function JobDetailContent({ job }: { job: JobListing }) {
         {/* Overview */}
         <div>
           <h3 className="text-[15px] font-bold text-slate-800 dark:text-slate-200">Overview</h3>
-          <p className="mt-3 text-[14px] leading-relaxed text-slate-500 dark:text-slate-400">
-            {job.overview}
-          </p>
+          <JobOverviewRenderer content={job.overview} className="mt-3" />
         </div>
 
         {/* Responsibilities */}

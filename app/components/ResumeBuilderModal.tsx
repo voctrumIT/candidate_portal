@@ -266,7 +266,7 @@ export default function ResumeBuilderModal({
         user?.jobTitle ||
         "";
       const profileSummary =
-        payload?.about || payload?.summary || payload?.bio || user?.about || "";
+        payload?.aboutMe || payload?.about || payload?.summary || payload?.bio || user?.aboutMe || user?.about || "";
       const profileWebsite = payload?.website || user?.website || "";
       const profileLinkedin = payload?.linkedin || user?.linkedin || "";
       const profileGithub = payload?.github || user?.github || "";
@@ -1082,6 +1082,7 @@ export default function ResumeBuilderModal({
         if (uploadedDocUrl) {
           localStorage.setItem("candidate_active_resume_url", uploadedDocUrl);
         }
+        localStorage.setItem("candidate_active_resume_owner_id", localStorage.getItem("candidate_id") || "");
         localStorage.setItem("candidate_active_resume_updated_at", new Date().toISOString());
 
         // Dispatch events so profile resume tab and job application modals sync instantly

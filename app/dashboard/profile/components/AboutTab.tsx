@@ -1,43 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pencil, Sparkles, Check, Loader2, UserCheck } from "lucide-react";
+import { Pencil, Sparkles, Check, Loader2, UserCheck, AlertCircle } from "lucide-react";
 import { useAuth } from "../../../../context/AuthContext";
+import { profileService } from "../../../../services/profile";
 import { toast } from "../../../components/Toast";
+import { getUserFriendlyErrorMessage } from "../../../../lib/errorUtils";
 
 export default function AboutTab() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [aboutText, setAboutText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("candidate_about_me");
-      if (stored) {
-        setAboutText(stored);
-        return;
-      }
-
-      // Fallback to active resume summary if available
-      try {
-        const resumeRaw = localStorage.getItem("candidate_active_resume");
-        if (resumeRaw) {
-          const parsed = JSON.parse(resumeRaw);
-          if (parsed?.personalInfo?.summary) {
-            setAboutText(parsed.personalInfo.summary);
-            return;
-          }
-        }
-      } catch {}
-
-      // Fallback to user bio/about if available
-      if (user?.bio || user?.about || user?.summary) {
-        setAboutText(user.bio || user.about || user.summary);
-      }
+    if (!isEditing) {
+      const summaryText = user?.aboutMe || user?.about || user?.summary || user?.bio || "";
+      setAboutText(summaryText);
     }
-  }, [user]);
+  }, [user?.aboutMe, user?.about, user?.summary, user?.bio, isEditing]);
 
   const handleGenerateAI = () => {
     setIsGenerating(true);
@@ -55,32 +38,38 @@ export default function AboutTab() {
     }, 600);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setErrorMsg("");
+    const trimmed = aboutText.trim();
+    if (trimmed.length > 2000) {
+      setErrorMsg("Summary cannot exceed 2000 characters.");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const trimmed = aboutText.trim();
+      // Call backend API PUT /api/Candidate/profile/update directly
+      await profileService.updateProfile({
+        aboutMe: trimmed,
+        summary: trimmed,
+        about: trimmed,
+        bio: trimmed,
+      });
+      await refreshProfile();
+
+      setAboutText(trimmed);
+      setIsEditing(false);
+
       if (typeof window !== "undefined") {
-        localStorage.setItem("candidate_about_me", trimmed);
-
-        // Keep active resume in sync if present
-        try {
-          const resumeRaw = localStorage.getItem("candidate_active_resume");
-          if (resumeRaw) {
-            const parsed = JSON.parse(resumeRaw);
-            if (parsed && parsed.personalInfo) {
-              parsed.personalInfo.summary = trimmed;
-              localStorage.setItem("candidate_active_resume", JSON.stringify(parsed));
-            }
-          }
-        } catch {}
-
-        window.dispatchEvent(new CustomEvent("candidate_profile_updated", { detail: { about: trimmed } }));
+        window.dispatchEvent(new CustomEvent("candidate_profile_updated", { detail: { aboutMe: trimmed, about: trimmed } }));
+        window.dispatchEvent(new Event("storage"));
       }
 
-      setIsEditing(false);
-      toast.success("About Me Saved", "Your professional summary has been saved successfully.");
+      toast.success("About Me Saved", "Your professional summary has been saved successfully to your profile.");
     } catch (err: any) {
-      toast.error("Save Failed", "Could not save your summary. Please try again.");
+      const friendlyMsg = getUserFriendlyErrorMessage(err, "profile");
+      setErrorMsg(friendlyMsg);
+      toast.error("Save Failed", friendlyMsg);
     } finally {
       setIsSaving(false);
     }
@@ -109,20 +98,31 @@ export default function AboutTab() {
       <div className="mt-6">
         {isEditing ? (
           <div>
+            {errorMsg && (
+              <div className="mb-4 flex items-center gap-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 p-3 text-xs text-rose-700 dark:text-rose-300">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between mb-2">
               <span className="text-[12px] font-medium text-slate-500 dark:text-slate-400">
                 Write a brief summary of your expertise and accomplishments
               </span>
-              <span className={`text-[12px] font-medium ${aboutText.length > 1000 ? 'text-red-500' : 'text-slate-400'}`}>
-                {aboutText.length}/1000 characters
+              <span className={`text-[12px] font-medium ${aboutText.length > 2000 ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                {aboutText.length}/2000 characters
               </span>
             </div>
             <textarea
               value={aboutText}
-              onChange={(e) => setAboutText(e.target.value.slice(0, 1000))}
+              onChange={(e) => {
+                setAboutText(e.target.value);
+                if (errorMsg) setErrorMsg("");
+              }}
               placeholder="Highlight your key skills, career achievements, and the value you bring to potential employers..."
               rows={6}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a1a1a] p-4 text-[14px] leading-relaxed text-slate-900 dark:text-white outline-none focus:border-[#2f54eb] focus:ring-1 focus:ring-[#2f54eb] resize-none transition shadow-inner"
+              className={`w-full rounded-xl border bg-white dark:bg-[#1a1a1a] p-4 text-[14px] leading-relaxed text-slate-900 dark:text-white outline-none resize-none transition shadow-inner ${
+                errorMsg ? "border-rose-400 focus:border-rose-500" : "border-slate-200 dark:border-slate-800 focus:border-[#2f54eb]"
+              }`}
             />
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <button
