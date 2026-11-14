@@ -14,7 +14,12 @@ export default function HeroSection() {
   const [token, setToken] = useState<string | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-  const [logoSrc, setLogoSrc] = useState<string>('/common/logo.png');
+  const [logoSrc, setLogoSrc] = useState<string>(() => {
+    if (tenant?.logoUrl && tenant.logoUrl.startsWith('http')) {
+      return tenant.logoUrl;
+    }
+    return '/common/logo.png';
+  });
 
   useEffect(() => {
     const checkToken = () => {
