@@ -73,8 +73,8 @@ const AuthContext = createContext<AuthContextType>({
   tenant: null,
   tenantLoading: true,
   loading: true,
-  refreshProfile: async () => {},
-  logout: () => {},
+  refreshProfile: async () => { },
+  logout: () => { },
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const cached = localStorage.getItem("candidate_profile_cache");
         if (cached) return JSON.parse(cached);
-      } catch {}
+      } catch { }
     }
     return null;
   });
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const cached = localStorage.getItem("candidate_tenant_data");
         if (cached) return JSON.parse(cached);
-      } catch {}
+      } catch { }
     }
     return {
       companyName: "Voctrum",
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       location: "Global / Remote",
     };
   });
-  const [tenantLoading, setTenantLoading] = useState(true);
+  const [tenantLoading, setTenantLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -129,10 +129,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const activeTenant = localStorage.getItem("tenant_id") || "dotnetapi";
       let tenantData: TenantInfo = {};
 
-      // 1. Fetch from GET /api/Candidate/tenants/{tenantId}/jobs
-      try {
-        const jobsRes = await fetchApi(`/api/Candidate/tenants/${encodeURIComponent(activeTenant)}/jobs`);
-        const jobsPayload = jobsRes?.payload || jobsRes;
+      // Fetch tenant jobs and tenant profile in parallel to load logo and tenant details instantly
+      const [jobsSettled, tenantSettled] = await Promise.allSettled([
+        fetchApi(`/api/Candidate/tenants/${encodeURIComponent(activeTenant)}/jobs`),
+        fetchApi("/api/Candidate/tenant", {
+          headers: { "X-Tenant-ID": activeTenant },
+        }),
+      ]);
+
+      if (jobsSettled.status === "fulfilled" && jobsSettled.value) {
+        const jobsPayload = jobsSettled.value?.payload || jobsSettled.value;
         if (jobsPayload?.tenant) {
           const t = jobsPayload.tenant;
           const totalJobs = jobsPayload?.pagination?.total ?? (Array.isArray(jobsPayload?.jobs) ? jobsPayload.jobs.length : 0);
@@ -147,16 +153,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             description: t.description,
           };
         }
-      } catch (err) {
-        console.warn("Tenant jobs fetch notice:", err);
       }
 
-      // 2. Fetch full tenant profile for description, addresses, and phone
-      try {
-        const res = await fetchApi("/api/Candidate/tenant", {
-          headers: { "X-Tenant-ID": activeTenant },
-        });
-        const data = res?.payload || res;
+      if (tenantSettled.status === "fulfilled" && tenantSettled.value) {
+        const data = tenantSettled.value?.payload || tenantSettled.value;
         if (data) {
           const primaryAddr = Array.isArray(data.addresses)
             ? data.addresses.find((a: any) => a.isPrimary) || data.addresses[0]
@@ -171,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               data.description && data.description.trim()
                 ? data.description
                 : tenantData.description ||
-                  `Explore thousands of job opportunities tailored to your unique skills, experience, and career aspirations at ${tenantData.companyName || "Voctrum"}.`,
+                `Explore thousands of job opportunities tailored to your unique skills, experience, and career aspirations at ${tenantData.companyName || "Voctrum"}.`,
             logoUrl:
               tenantData.logoUrl && tenantData.logoUrl !== "/common/logo.png"
                 ? tenantData.logoUrl
@@ -191,8 +191,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             githubUrl: data.githubUrl || data.github || null,
           };
         }
-      } catch (err) {
-        console.warn("Failed to fetch tenant info:", err);
       }
 
       if (!tenantData.companyName) {
@@ -251,7 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (cached) {
                 addr = { ...JSON.parse(cached), ...addr };
               }
-            } catch {}
+            } catch { }
           }
 
           const candidateId = payload.candidateId || localStorage.getItem("candidate_id") || undefined;
@@ -260,7 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (candidateId) localStorage.setItem("candidate_id", candidateId);
               if (payload.name) localStorage.setItem("candidate_name", payload.name);
               if (payload.contactNumber) localStorage.setItem("candidate_contact", payload.contactNumber);
-            } catch {}
+            } catch { }
           }
 
           const candidateAbout = payload.aboutMe || payload.about || payload.summary || payload.bio || "";
@@ -268,34 +266,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const rawExp = payload.workExperiences || payload.experiences || payload.experience || [];
           const candidateExperiences: any[] = Array.isArray(rawExp)
             ? rawExp.map((we: any, i: number) => {
-                const isCurrent = Boolean(
-                  we.current ||
-                  we.currentRole ||
-                  we.isCurrent ||
-                  String(we.endDate || "").toLowerCase() === "present" ||
-                  !we.endDate
-                );
-                const roleTitle = (we.designation || we.role || we.title || we.position || we.jobTitle || "").trim();
-                const compName = (we.organization || we.company || we.companyName || "").trim();
-                return {
-                  id: we.id || `we-${i}`,
-                  role: roleTitle || "Professional",
-                  designation: roleTitle || "Professional",
-                  title: roleTitle || "Professional",
-                  company: compName || "",
-                  organization: compName || "",
-                  companyName: compName || "",
-                  location: we.location || "",
-                  employmentType: we.employmentType || "Full-time",
-                  startDate: we.startDate || "",
-                  endDate: isCurrent ? null : (we.endDate || null),
-                  currentRole: isCurrent,
-                  current: isCurrent,
-                  isCurrent: isCurrent,
-                  skills: Array.isArray(we.skills) ? we.skills : [],
-                  description: we.description || we.responsibilities || "",
-                };
-              })
+              const isCurrent = Boolean(
+                we.current ||
+                we.currentRole ||
+                we.isCurrent ||
+                String(we.endDate || "").toLowerCase() === "present" ||
+                !we.endDate
+              );
+              const roleTitle = (we.designation || we.role || we.title || we.position || we.jobTitle || "").trim();
+              const compName = (we.organization || we.company || we.companyName || "").trim();
+              return {
+                id: we.id || `we-${i}`,
+                role: roleTitle || "Professional",
+                designation: roleTitle || "Professional",
+                title: roleTitle || "Professional",
+                company: compName || "",
+                organization: compName || "",
+                companyName: compName || "",
+                location: we.location || "",
+                employmentType: we.employmentType || "Full-time",
+                startDate: we.startDate || "",
+                endDate: isCurrent ? null : (we.endDate || null),
+                currentRole: isCurrent,
+                current: isCurrent,
+                isCurrent: isCurrent,
+                skills: Array.isArray(we.skills) ? we.skills : [],
+                description: we.description || we.responsibilities || "",
+              };
+            })
             : [];
 
           const fullProfile: UserProfile = {
@@ -328,7 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (typeof window !== "undefined") {
             try {
               localStorage.setItem("candidate_profile_cache", JSON.stringify(fullProfile));
-            } catch {}
+            } catch { }
           }
         } else if (!token) {
           setUser(null);

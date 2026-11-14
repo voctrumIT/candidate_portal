@@ -41,13 +41,12 @@ export default function Navbar() {
       <nav className="mx-auto flex h-20 max-w-[1360px] items-center justify-between px-5 md:px-10 lg:px-16">
         <Link href="/" aria-label="Home" className="flex items-center">
           <div className="rounded-xl dark:bg-white dark:px-3.5 dark:py-1.5 dark:shadow-xs inline-flex items-center justify-center transition-colors">
-            {tenantLoading ? (
-              <div className="h-9 w-32 animate-pulse rounded-md bg-slate-200/70 dark:bg-slate-200" />
-            ) : tenant?.logoUrl ? (
+            {tenant?.logoUrl ? (
               <img
                 src={tenant.logoUrl}
                 alt={tenant.companyName || "Logo"}
                 className="h-9 w-auto object-contain max-w-[160px]"
+                loading="eager"
               />
             ) : (
               <Image

@@ -49,27 +49,27 @@ export default function Footer() {
     <footer className="bg-[#172a78] px-5 py-16 text-white md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1300px]">
         <div className="flex flex-col justify-between gap-12 lg:flex-row lg:gap-24">
-          
+
           {/* Left Side: Logo & Subscribe */}
           <div className="max-w-[420px]">
             <Link href="/" title="Home" className="inline-block">
-              <div className="rounded-2xl bg-white px-4 py-2.5 inline-flex items-center justify-center gap-3 shadow-sm">
+              <div className="rounded-2xl bg-white px-5 py-3 inline-flex items-center justify-center gap-3.5 shadow-md">
                 {tenant?.logoUrl ? (
                   <img
                     src={tenant.logoUrl}
                     alt={companyName}
-                    className="h-9 w-auto object-contain max-w-[130px] shrink-0"
+                    className="h-10 w-auto object-contain max-w-[140px] shrink-0"
                   />
                 ) : (
                   <Image
                     src="/common/logo.png"
                     alt={companyName}
-                    width={110}
-                    height={34}
-                    className="h-9 w-auto object-contain shrink-0"
+                    width={180}
+                    height={48}
+                    className="h-10 w-auto object-contain shrink-0"
                   />
                 )}
-                <span className="text-[17px] font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
+                <span className="text-[40px] font-black text-slate-900 tracking-tight whitespace-nowrap">
                   {companyName}
                 </span>
               </div>
@@ -77,7 +77,7 @@ export default function Footer() {
             <p className="mt-4 text-[14px] font-medium text-[#b4c4e5]">
               Connecting talent with the right opportunities at {companyName}
             </p>
-            
+
             <div className="mt-8 flex gap-3">
               <input
                 aria-label="Email for job alerts"
@@ -111,17 +111,17 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-20 flex flex-col items-center justify-between gap-6 rounded-full bg-white dark:bg-[#1a1a1a] px-8 py-4 text-[14px] md:flex-row shadow-sm">
-          
+
           <div className="flex items-center font-medium text-[#71717a] dark:text-slate-400">
             <Link href="/about" className="transition hover:text-slate-900 dark:hover:text-white">Terms of Service</Link>
             <span className="mx-3 text-[#d4d4d8] dark:text-slate-700">|</span>
             <Link href="/about" className="transition hover:text-slate-900 dark:hover:text-white">Privacy Policy</Link>
           </div>
-          
+
           <div className="text-[#a1a1aa] dark:text-slate-400">
             © 2026 <span className="font-bold text-[#71717a] dark:text-slate-300">{companyName}.</span> All rights reserved
           </div>
-          
+
           <TenantSocialLinks iconSize="md" />
 
         </div>
