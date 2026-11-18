@@ -15,6 +15,20 @@ export const authService = {
     });
   },
 
+  sendOtp: async (data: { email: string }) => {
+    return fetchApi('/api/Candidate/send-otp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  verifyOtp: async (data: { email: string; otp: string }) => {
+    return fetchApi('/api/Candidate/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   forgotPassword: async (data: any) => {
     return fetchApi('/api/Candidate/forgot-password', {
       method: 'POST',

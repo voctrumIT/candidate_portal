@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ChangeEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertCircle,
+  ArrowLeft,
   Briefcase,
   CalendarDays,
   Check,
@@ -14,19 +16,21 @@ import {
   EyeOff,
   FileText,
   GraduationCap,
+  KeyRound,
   Link as LinkIcon,
+  Loader2,
   Lock,
   LogIn,
   Mail,
   MapPin,
   Plus,
+  RefreshCw,
   Search,
+  ShieldCheck,
   Trash2,
   Upload,
   User,
   Users,
-  Loader2,
-  AlertCircle,
 } from "lucide-react";
 import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
@@ -71,6 +75,25 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [stepLoading, setStepLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // OTP Verification state (Redis 5min TTL)
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpTimeLeft, setOtpTimeLeft] = useState(300); // 5 minutes in seconds
+  const [resendCooldown, setResendCooldown] = useState(60);
+  const [resendingOtp, setResendingOtp] = useState(false);
+
+  // Timer effect for OTP expiry and resend cooldown
+  useEffect(() => {
+    if (!otpSent) return;
+
+    const interval = setInterval(() => {
+      setOtpTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [otpSent]);
 
   // Step 1: Employment
   const [employment, setEmployment] = useState<string[]>([]);
@@ -152,10 +175,56 @@ export default function RegisterPage() {
     return Object.keys(errs).length === 0;
   };
 
-  // Step 0 handler: Initial Register + initial profile update
-  const handleInitialRegister = async () => {
+  // Step 0: Send OTP to Candidate Email
+  const handleSendOtp = async (isResend = false) => {
     setError("");
     if (!validateStep0()) {
+      return;
+    }
+
+    if (isResend) {
+      setResendingOtp(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      await authService.sendOtp({ email: email.trim() });
+      setOtpSent(true);
+      setOtpTimeLeft(300); // 5-minute Redis TTL
+      setResendCooldown(60);
+      setOtp("");
+      toast.success(
+        isResend ? "Code Resent!" : "Verification Code Sent!",
+        `We sent a 6-digit code to ${email.trim()}. Valid for 5 minutes.`
+      );
+    } catch (err: any) {
+      const errorMsg = getUserFriendlyErrorMessage(err, "register");
+      setError(errorMsg);
+      toast.error("Verification Notice", errorMsg);
+    } finally {
+      if (isResend) {
+        setResendingOtp(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Step 0: Verify OTP & Complete Register
+  const handleInitialRegister = async () => {
+    setError("");
+    const cleanOtp = otp.trim();
+    if (!cleanOtp) {
+      setError("Please enter the 6-digit verification code sent to your email.");
+      return;
+    }
+    if (cleanOtp.length !== 6) {
+      setError("Please enter a valid 6-digit verification code.");
+      return;
+    }
+    if (otpTimeLeft === 0) {
+      setError("Your verification code has expired. Please click 'Resend Code' to request a new one.");
       return;
     }
 
@@ -165,6 +234,7 @@ export default function RegisterPage() {
         name: name.trim(),
         email: email.trim(),
         password,
+        otp: cleanOtp,
       });
 
       if (res && res.payload && res.payload.token) {
@@ -430,6 +500,19 @@ export default function RegisterPage() {
             setAgreedToTerms(v);
             if (fieldErrors.terms) setFieldErrors((prev) => ({ ...prev, terms: "" }));
           }}
+          otp={otp}
+          setOtp={setOtp}
+          otpSent={otpSent}
+          onSendOtp={() => handleSendOtp(false)}
+          onResendOtp={() => handleSendOtp(true)}
+          onBackToForm={() => {
+            setOtpSent(false);
+            setOtp("");
+            setError("");
+          }}
+          otpTimeLeft={otpTimeLeft}
+          resendCooldown={resendCooldown}
+          resendingOtp={resendingOtp}
           fieldErrors={fieldErrors}
           loading={loading}
           error={error}
@@ -575,24 +658,139 @@ function RegisterBackground() {
   return <div className="pointer-events-none absolute inset-0 opacity-80 [background-image:linear-gradient(46deg,transparent_0%,transparent_52%,rgba(47,84,235,0.035)_52.4%,transparent_64%),linear-gradient(132deg,transparent_0%,transparent_58%,rgba(47,84,235,0.03)_58.4%,transparent_70%)]" />;
 }
 
+function formatTimer(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+function OtpInput({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  disabled?: boolean;
+}) {
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const digits = useMemo(() => {
+    const arr = value.split("").slice(0, 6);
+    while (arr.length < 6) arr.push("");
+    return arr;
+  }, [value]);
+
+  const handleChange = (index: number, char: string) => {
+    if (disabled) return;
+    const clean = char.replace(/\D/g, "");
+    if (!clean) {
+      const newDigits = [...digits];
+      newDigits[index] = "";
+      onChange(newDigits.join(""));
+      return;
+    }
+
+    const lastChar = clean.slice(-1);
+    const newDigits = [...digits];
+    newDigits[index] = lastChar;
+    const newVal = newDigits.join("");
+    onChange(newVal);
+
+    if (index < 5 && lastChar) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (disabled) return;
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    onChange(pasted);
+    const focusIdx = Math.min(pasted.length, 5);
+    inputRefs.current[focusIdx]?.focus();
+  };
+
+  return (
+    <div className="my-5 flex items-center justify-center gap-2 sm:gap-3">
+      {[0, 1, 2, 3, 4, 5].map((idx) => (
+        <input
+          key={idx}
+          ref={(el) => {
+            inputRefs.current[idx] = el;
+          }}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={1}
+          value={digits[idx] || ""}
+          disabled={disabled}
+          onChange={(e) => handleChange(idx, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(idx, e)}
+          onPaste={handlePaste}
+          className="h-12 w-10 sm:h-14 sm:w-12 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1a1a1a] text-center text-xl sm:text-2xl font-extrabold text-[#101828] dark:text-white shadow-2xs outline-none transition focus:border-[#2f54eb] focus:ring-2 focus:ring-[#2f54eb]/20 disabled:opacity-50"
+          autoFocus={idx === 0}
+        />
+      ))}
+    </div>
+  );
+}
+
 function GetStarted({
   onRegister,
-  name = "", setName,
-  email = "", setEmail,
-  password = "", setPassword,
-  contactNumber = "", setContactNumber,
-  agreedToTerms = false, setAgreedToTerms,
+  onSendOtp,
+  onResendOtp,
+  onBackToForm,
+  name = "",
+  setName,
+  email = "",
+  setEmail,
+  password = "",
+  setPassword,
+  contactNumber = "",
+  setContactNumber,
+  agreedToTerms = false,
+  setAgreedToTerms,
+  otp = "",
+  setOtp,
+  otpSent = false,
+  otpTimeLeft = 300,
+  resendCooldown = 60,
+  resendingOtp = false,
   fieldErrors = {},
-  loading, error
+  loading,
+  error,
 }: {
   onRegister: () => void;
-  name?: string; setName?: (v: string) => void;
-  email?: string; setEmail?: (v: string) => void;
-  password?: string; setPassword?: (v: string) => void;
-  contactNumber?: string; setContactNumber?: (v: string) => void;
-  agreedToTerms?: boolean; setAgreedToTerms?: (v: boolean) => void;
+  onSendOtp: () => void;
+  onResendOtp: () => void;
+  onBackToForm: () => void;
+  name?: string;
+  setName?: (v: string) => void;
+  email?: string;
+  setEmail?: (v: string) => void;
+  password?: string;
+  setPassword?: (v: string) => void;
+  contactNumber?: string;
+  setContactNumber?: (v: string) => void;
+  agreedToTerms?: boolean;
+  setAgreedToTerms?: (v: boolean) => void;
+  otp?: string;
+  setOtp?: (v: string) => void;
+  otpSent?: boolean;
+  otpTimeLeft?: number;
+  resendCooldown?: number;
+  resendingOtp?: boolean;
   fieldErrors?: Record<string, string>;
-  loading?: boolean; error?: string;
+  loading?: boolean;
+  error?: string;
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -643,140 +841,243 @@ function GetStarted({
       </aside>
 
       <section className="flex items-center justify-center px-8 py-12 lg:px-14">
-        <form className="w-full max-w-[520px]" onSubmit={(event) => { event.preventDefault(); onRegister(); }}>
-          <div className="mb-6 text-center">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#101828] dark:text-white">Get Started</h2>
-            <p className="mt-2 text-sm text-[#98a2b3]">Register to start exploring jobs and build your career</p>
-          </div>
+        <form
+          className="w-full max-w-[520px]"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (otpSent) {
+              onRegister();
+            } else {
+              onSendOtp();
+            }
+          }}
+        >
+          {otpSent ? (
+            <div className="w-full">
+              <button
+                type="button"
+                onClick={onBackToForm}
+                className="mb-5 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2f54eb] hover:underline"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Back to details
+              </button>
 
-          {/* Registration Progress Indicator */}
-          <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-[#f8faff] dark:bg-slate-900/60 p-3.5 shadow-2xs">
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="text-slate-700 dark:text-slate-300">Registration Progress</span>
-              <span className={formPercentage === 100 ? "text-emerald-600 dark:text-emerald-400" : "text-[#2f54eb]"}>
-                {formPercentage}% Complete
-              </span>
-            </div>
-            <div className="mt-2 h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-300 ${
-                  formPercentage === 100 ? "bg-emerald-500" : "bg-[#2f54eb]"
-                }`}
-                style={{ width: `${formPercentage}%` }}
-              />
-            </div>
-          </div>
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-[#2f54eb] shadow-2xs border border-blue-100 dark:border-blue-900">
+                  <ShieldCheck className="h-7 w-7" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#101828] dark:text-white">Verify Your Email</h2>
+                <p className="mt-2 text-sm text-[#667085] dark:text-slate-400">
+                  We sent a 6-digit verification code to
+                </p>
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-3.5 py-1 text-xs font-bold text-[#101828] dark:text-white border border-slate-200 dark:border-slate-700">
+                  <Mail className="h-3.5 w-3.5 text-[#2f54eb]" />
+                  <span>{email}</span>
+                </div>
+              </div>
 
-          {error && (
-            <div className="mb-4 rounded-lg bg-rose-50 dark:bg-rose-950/40 p-3.5 text-xs text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-medium">
-              {error}
-            </div>
-          )}
+              {error && (
+                <div className="mb-4 rounded-lg bg-rose-50 dark:bg-rose-950/40 p-3.5 text-xs text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-medium">
+                  {error}
+                </div>
+              )}
 
-          {/* Full Name */}
-          <div className="mt-4">
-            <LineInput
-              icon={<User className="h-5 w-5" />}
-              placeholder="Full Name *"
-              value={name}
-              onChange={(e) => setName?.(e.target.value)}
-            />
-            {fieldErrors.name && (
-              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.name}</p>
-            )}
-          </div>
+              <div className="my-6">
+                <label className="block text-xs font-semibold text-[#344054] dark:text-slate-300 text-center mb-1">
+                  Enter 6-Digit Verification Code
+                </label>
+                <OtpInput value={otp} onChange={(val) => setOtp?.(val)} disabled={loading} />
 
-          {/* Email Address */}
-          <div className="mt-4">
-            <LineInput
-              icon={<Mail className="h-5 w-5" />}
-              placeholder="Email Address *"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail?.(e.target.value)}
-            />
-            {fieldErrors.email && (
-              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.email}</p>
-            )}
-          </div>
+                {/* Expiry & Resend Cooldown */}
+                <div className="mt-3 flex items-center justify-between text-xs font-medium text-[#667085] dark:text-slate-400 px-1">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className={`h-4 w-4 ${otpTimeLeft === 0 ? "text-rose-500" : "text-[#2f54eb]"}`} />
+                    {otpTimeLeft > 0 ? (
+                      <span>Code expires in <strong className="text-[#101828] dark:text-white font-mono">{formatTimer(otpTimeLeft)}</strong></span>
+                    ) : (
+                      <span className="text-rose-500 font-semibold">Code expired (5 min limit)</span>
+                    )}
+                  </div>
+                  <div>
+                    {resendCooldown > 0 ? (
+                      <span className="text-slate-400">Resend in {resendCooldown}s</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={onResendOtp}
+                        disabled={resendingOtp}
+                        className="inline-flex items-center gap-1 font-semibold text-[#2f54eb] hover:underline disabled:opacity-50"
+                      >
+                        {resendingOtp ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                        Resend Code
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-          {/* Password */}
-          <div className="mt-4">
-            <LineInput
-              icon={<Lock className="h-5 w-5" />}
-              placeholder="Password (min 6 characters) *"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword?.(e.target.value)}
-              trailing={
+              <button
+                type="submit"
+                disabled={loading || otp.trim().length !== 6 || otpTimeLeft === 0}
+                className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#2f54eb] text-base sm:text-lg font-bold text-white transition hover:bg-[#2447d8] disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" /> Verifying &amp; Creating Account...
+                  </>
+                ) : (
+                  "Verify & Complete Registration"
+                )}
+              </button>
+
+              <p className="mt-6 text-center text-xs text-[#667085] dark:text-slate-400">
+                Entered the wrong email?{" "}
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-slate-400 hover:text-slate-600 focus:outline-none"
-                  tabIndex={-1}
+                  onClick={onBackToForm}
+                  className="font-semibold text-[#2f54eb] hover:underline"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  Edit details
                 </button>
-              }
-            />
-            {fieldErrors.password && (
-              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.password}</p>
-            )}
-            {password && (
-              <div className="mt-1.5 flex items-center justify-between text-[11px] px-1">
-                <div className="flex gap-1.5 flex-1 max-w-[120px]">
-                  <span className={`h-1 flex-1 rounded-full ${passwordStrength.level >= 1 ? passwordStrength.color : "bg-slate-200"}`} />
-                  <span className={`h-1 flex-1 rounded-full ${passwordStrength.level >= 2 ? passwordStrength.color : "bg-slate-200"}`} />
-                  <span className={`h-1 flex-1 rounded-full ${passwordStrength.level >= 3 ? passwordStrength.color : "bg-slate-200"}`} />
-                </div>
-                <span className={`font-semibold ${passwordStrength.labelColor}`}>{passwordStrength.text}</span>
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-6 text-center">
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-[#101828] dark:text-white">Get Started</h2>
+                <p className="mt-2 text-sm text-[#98a2b3]">Register to start exploring jobs and build your career</p>
               </div>
-            )}
-          </div>
 
-          {/* Contact Number */}
-          <div className="mt-4">
-            <LineInput
-              icon={<User className="h-5 w-5" />}
-              placeholder="Contact Number (e.g. +1 555-0199 or 9876543210) *"
-              type="tel"
-              value={contactNumber}
-              onChange={(e) => setContactNumber?.(e.target.value)}
-            />
-            {fieldErrors.contactNumber && (
-              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.contactNumber}</p>
-            )}
-          </div>
+              {/* Registration Progress Indicator */}
+              <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-[#f8faff] dark:bg-slate-900/60 p-3.5 shadow-2xs">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-slate-700 dark:text-slate-300">Registration Progress</span>
+                  <span className={formPercentage === 100 ? "text-emerald-600 dark:text-emerald-400" : "text-[#2f54eb]"}>
+                    {formPercentage}% Complete
+                  </span>
+                </div>
+                <div className="mt-2 h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      formPercentage === 100 ? "bg-emerald-500" : "bg-[#2f54eb]"
+                    }`}
+                    style={{ width: `${formPercentage}%` }}
+                  />
+                </div>
+              </div>
 
-          {/* Terms Checkbox */}
-          <div className="mt-6">
-            <label className="flex items-center gap-3 text-xs sm:text-sm text-[#475467] dark:text-slate-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreedToTerms}
-                onChange={(e) => setAgreedToTerms?.(e.target.checked)}
-                className="h-4 w-4 rounded border-[#d0d5dd] accent-[#2f54eb]"
-              />
-              <span>I agree to the Terms &amp; Privacy Policy</span>
-            </label>
-            {fieldErrors.terms && (
-              <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.terms}</p>
-            )}
-          </div>
+              {error && (
+                <div className="mb-4 rounded-lg bg-rose-50 dark:bg-rose-950/40 p-3.5 text-xs text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-medium">
+                  {error}
+                </div>
+              )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-7 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#2f54eb] text-base sm:text-lg font-bold text-white transition hover:bg-[#2447d8] disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" /> Creating Account...
-              </>
-            ) : (
-              "Register & Continue"
-            )}
-          </button>
+              {/* Full Name */}
+              <div className="mt-4">
+                <LineInput
+                  icon={<User className="h-5 w-5" />}
+                  placeholder="Full Name *"
+                  value={name}
+                  onChange={(e) => setName?.(e.target.value)}
+                />
+                {fieldErrors.name && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.name}</p>
+                )}
+              </div>
+
+              {/* Email Address */}
+              <div className="mt-4">
+                <LineInput
+                  icon={<Mail className="h-5 w-5" />}
+                  placeholder="Email Address *"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail?.(e.target.value)}
+                />
+                {fieldErrors.email && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.email}</p>
+                )}
+              </div>
+
+              {/* Password */}
+              <div className="mt-4">
+                <LineInput
+                  icon={<Lock className="h-5 w-5" />}
+                  placeholder="Password (min 6 characters) *"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword?.(e.target.value)}
+                  trailing={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-slate-400 hover:text-slate-600 focus:outline-none"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  }
+                />
+                {fieldErrors.password && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.password}</p>
+                )}
+                {password && (
+                  <div className="mt-1.5 flex items-center justify-between text-[11px] px-1">
+                    <div className="flex gap-1.5 flex-1 max-w-[120px]">
+                      <span className={`h-1 flex-1 rounded-full ${passwordStrength.level >= 1 ? passwordStrength.color : "bg-slate-200"}`} />
+                      <span className={`h-1 flex-1 rounded-full ${passwordStrength.level >= 2 ? passwordStrength.color : "bg-slate-200"}`} />
+                      <span className={`h-1 flex-1 rounded-full ${passwordStrength.level >= 3 ? passwordStrength.color : "bg-slate-200"}`} />
+                    </div>
+                    <span className={`font-semibold ${passwordStrength.labelColor}`}>{passwordStrength.text}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Contact Number */}
+              <div className="mt-4">
+                <LineInput
+                  icon={<User className="h-5 w-5" />}
+                  placeholder="Contact Number (e.g. +1 555-0199 or 9876543210) *"
+                  type="tel"
+                  value={contactNumber}
+                  onChange={(e) => setContactNumber?.(e.target.value)}
+                />
+                {fieldErrors.contactNumber && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.contactNumber}</p>
+                )}
+              </div>
+
+              {/* Terms Checkbox */}
+              <div className="mt-6">
+                <label className="flex items-center gap-3 text-xs sm:text-sm text-[#475467] dark:text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms?.(e.target.checked)}
+                    className="h-4 w-4 rounded border-[#d0d5dd] accent-[#2f54eb]"
+                  />
+                  <span>I agree to the Terms &amp; Privacy Policy</span>
+                </label>
+                {fieldErrors.terms && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium pl-1">{fieldErrors.terms}</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-7 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#2f54eb] text-base sm:text-lg font-bold text-white transition hover:bg-[#2447d8] disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" /> Sending Verification Code...
+                  </>
+                ) : (
+                  "Verify Email & Continue"
+                )}
+              </button>
+            </>
+          )}
         </form>
       </section>
     </section>
