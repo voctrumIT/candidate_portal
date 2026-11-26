@@ -58,7 +58,10 @@ export interface CandidateApplicationDto {
   currentStep: number;
   badgeClass: string;
   dotColor: string;
+  currentCtc?: string;
   expectedCtc?: string;
+  currentSalary?: string;
+  expectedSalary?: string;
   noticePeriod?: string;
 }
 
@@ -247,6 +250,9 @@ export const jobsService = {
     tenantId?: string;
     resumeLink?: string;
     note?: string;
+    noticePeriod?: string;
+    currentCtc?: string;
+    expectedCtc?: string;
     candidateId?: string;
   }) => {
     let candidateId = data.candidateId || getCandidateId();
@@ -272,7 +278,10 @@ export const jobsService = {
     }
 
     // Ensure note is trimmed to ASP.NET [MaxLength(200)] limit
-    const note = (data.note || 'Applied from Voctrum Candidate Portal').slice(0, 190);
+    const note = (data.note || 'Applied from Voctrum Candidate Portal').trim().slice(0, 195);
+    const noticePeriod = (data.noticePeriod || '').trim();
+    const currentCtc = (data.currentCtc || '').trim();
+    const expectedCtc = (data.expectedCtc || '').trim();
 
     const safeJobId = String(data.jobId || '').trim();
 
@@ -289,6 +298,9 @@ export const jobsService = {
               applyDate: new Date().toISOString().split('T')[0],
               applicationStatus: 'applied',
               note,
+              noticePeriod,
+              currentCtc,
+              expectedCtc,
             });
             localStorage.setItem('candidate_local_applications', JSON.stringify(localApps));
           }
@@ -323,21 +335,21 @@ export const jobsService = {
       tenantId,
       resumeLink,
       note,
+      noticePeriod,
+      currentCtc,
+      expectedCtc,
+      currentSalary: currentCtc,
+      expectedSalary: expectedCtc,
     };
 
     if (candidateId) {
       payload.candidateId = candidateId;
     }
 
-    let res: any = null;
-    try {
-      res = await fetchApi('/api/Candidate/jobs/apply', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-    } catch (e) {
-      console.warn('Backend apply notice, caching locally:', e);
-    }
+    const res = await fetchApi('/api/Candidate/jobs/apply', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
 
     if (typeof window !== 'undefined') {
       try {
@@ -350,6 +362,9 @@ export const jobsService = {
             applyDate: new Date().toISOString().split('T')[0],
             applicationStatus: 'applied',
             note,
+            noticePeriod,
+            currentCtc,
+            expectedCtc,
           });
           localStorage.setItem('candidate_local_applications', JSON.stringify(localApps));
         }
@@ -434,6 +449,7 @@ export const jobsService = {
               applyDate: meta?.appliedAt ? new Date(meta.appliedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
               applicationStatus: 'applied',
               note: meta?.note || 'Application submitted via Candidate Portal',
+              currentCtc: meta?.currentCtc,
               expectedCtc: meta?.expectedCtc,
               noticePeriod: meta?.noticePeriod,
               job: dummy
@@ -536,6 +552,9 @@ export const jobsService = {
         currentStep: statusInfo.currentStep,
         badgeClass: statusInfo.badgeClass,
         dotColor: statusInfo.dotColor,
+        currentCtc: item.currentSalary || item.currentCtc,
+        expectedCtc: item.expectedSalary || item.expectedCtc,
+        noticePeriod: item.noticePeriod,
       };
     });
   },
@@ -709,7 +728,8 @@ export const jobsService = {
           currentStep: statusInfo.currentStep,
           badgeClass: statusInfo.badgeClass,
           dotColor: statusInfo.dotColor,
-          expectedCtc: metaDetails?.expectedCtc || match.expectedCtc,
+          currentCtc: metaDetails?.currentCtc || match.currentSalary || match.currentCtc,
+          expectedCtc: metaDetails?.expectedCtc || match.expectedSalary || match.expectedCtc,
           noticePeriod: metaDetails?.noticePeriod || match.noticePeriod,
           note: overrideNote || match.note,
         };
@@ -736,6 +756,7 @@ export const jobsService = {
           currentStep: statusInfo.currentStep,
           badgeClass: statusInfo.badgeClass,
           dotColor: statusInfo.dotColor,
+          currentCtc: metaDetails?.currentCtc,
           expectedCtc: metaDetails?.expectedCtc,
           noticePeriod: metaDetails?.noticePeriod,
           note: overrideNote,

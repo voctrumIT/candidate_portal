@@ -580,6 +580,17 @@ export default function ApplicationDetailPage({
                   </p>
                 </div>
 
+                {/* Submitted Current CTC */}
+                <div className="rounded-xl border border-slate-100 bg-[#fafbfc] p-3 dark:border-slate-800 dark:bg-[#1f1f23]">
+                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <DollarSign className="h-3 w-3" />
+                    Current CTC
+                  </span>
+                  <p className="mt-0.5 text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {meta?.currentCtc || application.currentCtc || "Not disclosed"}
+                  </p>
+                </div>
+
                 {/* Submitted Expected CTC */}
                 <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 dark:border-emerald-950/40 dark:bg-emerald-950/20">
                   <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
