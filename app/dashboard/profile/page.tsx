@@ -10,8 +10,9 @@ import SkillsTab from "./components/SkillsTab";
 import EducationTab from "./components/EducationTab";
 import WorkExperienceTab from "./components/WorkExperienceTab";
 import SettingsTab from "./components/SettingsTab";
+import AppliedJobsTab from "./components/AppliedJobsTab";
 
-type TabType = "Basic Details" | "Resume" | "About" | "Skill" | "Education" | "Work Experience" | "Settings";
+type TabType = "Basic Details" | "Resume" | "About" | "Skill" | "Education" | "Work Experience" | "Applied Jobs" | "Settings";
 
 const TABS: TabType[] = [
   "Basic Details",
@@ -20,6 +21,7 @@ const TABS: TabType[] = [
   "Skill",
   "Education",
   "Work Experience",
+  "Applied Jobs",
   "Settings",
 ];
 
@@ -326,6 +328,7 @@ export default function ProfilePage() {
         {activeTab === "Skill" && <SkillsTab />}
         {activeTab === "Education" && <EducationTab />}
         {activeTab === "Work Experience" && <WorkExperienceTab />}
+        {activeTab === "Applied Jobs" && <AppliedJobsTab />}
         {activeTab === "Settings" && <SettingsTab />}
       </div>
     </div>

@@ -10,12 +10,14 @@ import { useAuth } from '../../../../context/AuthContext';
 import { jobsService } from '../../../../services/jobs';
 import { documentsService } from '../../../../services/documents';
 import { toast } from '../../../components/Toast';
+import ApplyJobModal from '../../../components/ApplyJobModal';
 
 export default function JobDetailHeader({ job }: { job: JobListing }) {
   const router = useRouter();
   const { user, tenant } = useAuth();
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
   const [message, setMessage] = useState("");
   const [isSaved, setIsSaved] = useState(false);
 
@@ -64,43 +66,8 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
     }
 
     if (applying || applied) return;
-    setApplying(true);
-    setMessage("");
 
-    try {
-      // 1. Fetch user documents to find a resume
-      const docs = await documentsService.getDocuments();
-      const resume = docs && Array.isArray(docs) ? docs.find((d: any) => (d.name || d.fileName || "")?.toLowerCase().match(/\.(pdf|doc|docx)$/)) || docs[0] : null;
-      
-      const resumeLink = resume?.fileUrl || resume?.url || "https://dotnetapi.voctrum.com/resumes/default-candidate-resume.pdf";
-      const activeTenantId = (job as any).tenantId || (job as any).tenant?.normalizedTenantId || tenant?.normalizedTenantId || (typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null) || 'dotnetapi';
-
-      // 2. Apply for job
-      await jobsService.applyForJob({
-        jobId: job.id,
-        tenantId: activeTenantId,
-        resumeLink,
-        note: `Applied for ${job.title} at ${job.company}`,
-        candidateId: user?.candidateId || (typeof window !== 'undefined' ? localStorage.getItem('candidate_id') || undefined : undefined),
-      });
-
-      setApplied(true);
-      setMessage("Successfully applied!");
-      toast.success("Application Submitted!", `Your application for ${job.title} at ${job.company} was submitted.`);
-    } catch (err: any) {
-      const errMsg = err?.message || "Failed to apply. Please try again.";
-      if (errMsg.toLowerCase().includes("already applied")) {
-        setApplied(true);
-        setMessage("You have already applied for this job.");
-        toast.info("Already Applied", `You have already submitted an application for ${job.title}.`);
-      } else {
-        console.error("Apply error:", err);
-        setMessage(errMsg);
-        toast.error("Application Failed", errMsg);
-      }
-    } finally {
-      setApplying(false);
-    }
+    setShowApplyModal(true);
   };
 
   const handleToggleSave = async () => {
@@ -223,6 +190,21 @@ export default function JobDetailHeader({ job }: { job: JobListing }) {
           </p>
         )}
       </div>
+
+      {/* Professional Job Application Modal */}
+      <ApplyJobModal
+        isOpen={showApplyModal}
+        onClose={() => setShowApplyModal(false)}
+        jobId={job.id}
+        jobTitle={job.title}
+        jobCompany={job.company}
+        salaryRange={job.salaryRange}
+        location={job.location}
+        onSuccess={() => {
+          setApplied(true);
+          setMessage("Successfully applied!");
+        }}
+      />
     </div>
   );
 }

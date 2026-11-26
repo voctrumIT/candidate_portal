@@ -65,6 +65,20 @@ export function getUserFriendlyErrorMessage(
     return 'An account with this email address already exists. Please sign in instead.';
   }
 
+  // OTP / Verification code errors
+  if (lower.includes('otp') || lower.includes('verification code')) {
+    if (lower.includes('expired')) {
+      return 'Your verification code has expired. Please request a new code.';
+    }
+    if (lower.includes('invalid') || lower.includes('incorrect') || lower.includes('wrong') || lower.includes('not match')) {
+      return 'The verification code entered is incorrect. Please check the 6-digit code and try again.';
+    }
+    if (cleaned && cleaned.length > 5 && !lower.includes('deserialization')) {
+      return formatSentence(cleaned);
+    }
+    return 'The verification code is invalid or has expired. Please try again.';
+  }
+
   // 3. Login / Authentication failures (Non-existing email, incorrect credentials, forbidden/unauthorized)
   if (context === 'login') {
     if (

@@ -16,10 +16,12 @@ import {
   ChevronRight,
   AlertCircle,
   Sparkles,
+  Mail,
+  DollarSign,
+  Hourglass,
 } from "lucide-react";
 import { jobsService, parseApplicationStatus } from "../../../../services/jobs";
 import { useAuth } from "../../../../context/AuthContext";
-import { toast } from "../../../components/Toast";
 import { stripHtml } from "../../../components/JobOverviewRenderer";
 
 export default function ApplicationDetailPage({
@@ -33,6 +35,7 @@ export default function ApplicationDetailPage({
 
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<any>(null);
+  const [meta, setMeta] = useState<any>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -56,6 +59,54 @@ export default function ApplicationDetailPage({
       isMounted = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const rawMeta = localStorage.getItem("candidate_application_meta");
+        if (rawMeta) {
+          const parsed = JSON.parse(rawMeta);
+          const cleanId = String(id).replace(/^app-/i, "");
+          const appMeta =
+            parsed[id] ||
+            parsed[cleanId] ||
+            parsed[application?.jobId] ||
+            parsed[application?.id] ||
+            null;
+          if (appMeta) setMeta(appMeta);
+        }
+      } catch {}
+    }
+  }, [id, application]);
+
+  useEffect(() => {
+    const handleStatusUpdate = (e: any) => {
+      const updatedId = e.detail?.applicationId;
+      if (
+        String(updatedId) === String(id) ||
+        String(updatedId) === String(application?.jobId) ||
+        String(updatedId) === String(application?.jobApplicationId)
+      ) {
+        setApplication((prev: any) => {
+          if (!prev) return prev;
+          const newStatusInfo = parseApplicationStatus(e.detail.newStatus);
+          return {
+            ...prev,
+            applicationStatus: newStatusInfo.rawStatus,
+            rawStatus: newStatusInfo.rawStatus,
+            statusLabel: newStatusInfo.statusLabel,
+            statusNote: e.detail.statusNote || newStatusInfo.statusNote,
+            currentStep: newStatusInfo.currentStep,
+            badgeClass: newStatusInfo.badgeClass,
+            dotColor: newStatusInfo.dotColor,
+          };
+        });
+      }
+    };
+    window.addEventListener("application_status_updated", handleStatusUpdate);
+    return () =>
+      window.removeEventListener("application_status_updated", handleStatusUpdate);
+  }, [id, application]);
 
   if (loading) {
     return (
@@ -291,51 +342,54 @@ export default function ApplicationDetailPage({
               </div>
 
               {/* VERTICAL BAR STEPPER */}
-              <div className="relative pl-6 sm:pl-8">
-                {/* Continuous Vertical Connecting Bar */}
-                <div className="absolute bottom-6 left-6 top-6 w-[3px] -translate-x-1/2 bg-slate-200 dark:bg-slate-800 sm:left-8" />
-                
-                {/* Active Colored Portion of the Vertical Bar */}
-                <div
-                  className="absolute left-6 top-6 w-[3px] -translate-x-1/2 bg-gradient-to-b from-[#2f54eb] via-indigo-600 to-blue-500 transition-all duration-700 sm:left-8"
-                  style={{
-                    height: `${Math.min(((currentStep - 1) / 4) * 100, 100)}%`,
-                  }}
-                />
-
-                <div className="space-y-8">
-                  {stages.map((stage) => {
+              <div className="relative">
+                <div>
+                  {stages.map((stage, idx) => {
                     const isCompleted = stage.id < currentStep;
                     const isCurrent = stage.id === currentStep;
-                    const isUpcoming = stage.id > currentStep;
+                    const isLast = idx === stages.length - 1;
 
                     return (
-                      <div key={stage.id} className="relative flex items-start gap-4 sm:gap-6">
-                        {/* Node Icon on the Vertical Bar */}
-                        <div
-                          className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all ${
-                            isCompleted
-                              ? "bg-[#2f54eb] text-white shadow-md ring-4 ring-blue-500/15"
-                              : isCurrent
-                              ? "border-2 border-[#2f54eb] bg-white text-[#2f54eb] shadow-lg ring-4 ring-blue-500/25 dark:bg-[#18181b]"
-                              : "border-2 border-slate-200 bg-white text-slate-400 dark:border-slate-800 dark:bg-[#18181b]"
-                          }`}
-                        >
-                          {isCompleted ? (
-                            <CheckCircle2 className="h-5 w-5" />
-                          ) : isCurrent ? (
-                            <span className="relative flex h-3 w-3">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2f54eb] opacity-75" />
-                              <span className="relative inline-flex h-3 w-3 rounded-full bg-[#2f54eb]" />
-                            </span>
-                          ) : (
-                            <span>{stage.id}</span>
+                      <div key={stage.id} className="relative flex items-stretch gap-4 sm:gap-5">
+                        {/* Left Column: Centered Node Icon + Connecting Line */}
+                        <div className="flex w-10 shrink-0 flex-col items-center">
+                          <div
+                            className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all ${
+                              isCompleted
+                                ? "bg-[#2f54eb] text-white shadow-md ring-4 ring-blue-500/15"
+                                : isCurrent
+                                ? "border-2 border-[#2f54eb] bg-white text-[#2f54eb] shadow-lg ring-4 ring-blue-500/25 dark:bg-[#18181b]"
+                                : "border-2 border-slate-200 bg-white text-slate-400 dark:border-slate-800 dark:bg-[#18181b]"
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <CheckCircle2 className="h-5 w-5" />
+                            ) : isCurrent ? (
+                              <span className="relative flex h-3 w-3">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2f54eb] opacity-75" />
+                                <span className="relative inline-flex h-3 w-3 rounded-full bg-[#2f54eb]" />
+                              </span>
+                            ) : (
+                              <span>{stage.id}</span>
+                            )}
+                          </div>
+
+                          {!isLast && (
+                            <div
+                              className={`my-1 w-[3px] flex-1 rounded-full transition-colors duration-500 ${
+                                isCompleted
+                                  ? "bg-gradient-to-b from-[#2f54eb] to-indigo-600"
+                                  : "bg-slate-200 dark:bg-slate-800"
+                              }`}
+                            />
                           )}
                         </div>
 
                         {/* Stage Details Content */}
                         <div
                           className={`flex-1 rounded-xl border p-4.5 transition-all ${
+                            !isLast ? "mb-6" : ""
+                          } ${
                             isCurrent
                               ? "border-blue-200 bg-blue-50/30 shadow-xs dark:border-blue-900/40 dark:bg-blue-950/10"
                               : "border-slate-100 bg-[#fafbfc] dark:border-slate-800/80 dark:bg-[#1f1f23]"
@@ -525,6 +579,42 @@ export default function ApplicationDetailPage({
                     {user?.currentLocation || user?.city || location || "Not specified"}
                   </p>
                 </div>
+
+                {/* Submitted Expected CTC */}
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 dark:border-emerald-950/40 dark:bg-emerald-950/20">
+                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                    <DollarSign className="h-3 w-3" />
+                    Expected CTC
+                  </span>
+                  <p className="mt-0.5 text-xs font-bold text-emerald-800 dark:text-emerald-200 truncate">
+                    {meta?.expectedCtc || application.expectedCtc || "Disclosed in application"}
+                  </p>
+                </div>
+
+                {/* Submitted Notice Period */}
+                <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3 dark:border-blue-950/40 dark:bg-blue-950/20">
+                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                    <Hourglass className="h-3 w-3" />
+                    Notice Period
+                  </span>
+                  <p className="mt-0.5 text-xs font-bold text-blue-800 dark:text-blue-200 truncate">
+                    {meta?.noticePeriod || application.noticePeriod || "Immediate / 30 Days"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Email Notification Status Pill */}
+              <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-100 bg-[#f8fafc] p-3 dark:border-slate-800 dark:bg-[#1f1f23]">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-[#2f54eb]" />
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Status Email Notifications
+                  </span>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Active
+                </span>
               </div>
 
               {/* Submitted Resume Pill */}
@@ -552,13 +642,13 @@ export default function ApplicationDetailPage({
                 </Link>
               </div>
 
-              {application.note && (
+              {(meta?.note || application.note) && (
                 <div className="mt-4 rounded-xl border border-slate-100 bg-[#fafbfc] p-3.5 dark:border-slate-800 dark:bg-[#1f1f23]">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Application Note / Cover Message
+                    Note to Recruiter / Cover Message
                   </span>
                   <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                    &ldquo;{application.note}&rdquo;
+                    &ldquo;{meta?.note || application.note}&rdquo;
                   </p>
                 </div>
               )}

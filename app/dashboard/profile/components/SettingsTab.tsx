@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "../../../components/Toast";
 import SupportTicketModal from "./SupportTicketModal";
+import ChangePasswordModal from "../../../components/ChangePasswordModal";
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -139,6 +140,7 @@ export default function SettingsTab() {
   const [mounted, setMounted] = useState(false);
   const [currentLang, setCurrentLang] = useState("en");
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -255,6 +257,7 @@ export default function SettingsTab() {
           title="Change password"
           subtitle="Update your password regularly to keep your account safe"
           action={<ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />}
+          onClick={() => setShowChangePasswordModal(true)}
           borderBottom={false}
         />
       </SettingsCard>
@@ -276,6 +279,14 @@ export default function SettingsTab() {
       {/* Support Ticket Modal */}
       {showSupportModal && (
         <SupportTicketModal onClose={() => setShowSupportModal(false)} />
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <ChangePasswordModal
+          isOpen={showChangePasswordModal}
+          onClose={() => setShowChangePasswordModal(false)}
+        />
       )}
     </div>
   );

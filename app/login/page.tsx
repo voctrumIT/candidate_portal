@@ -15,8 +15,6 @@ import {
   TrendingUp,
   UserRound,
 } from "lucide-react";
-import { FaFacebookF } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
 import { useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getUserFriendlyErrorMessage } from "../../lib/errorUtils";
@@ -297,17 +295,6 @@ function LoginForm({ onForgot, companyName }: { onForgot: () => void; companyNam
       </div>
 
       <PrimaryButton type="submit" label={loading ? "Logging in..." : "Log In"} disabled={loading || !email || !password} />
-
-      <div className="my-8 flex items-center gap-4 text-xs text-[#98a2b3]">
-        <span className="h-px flex-1 bg-[#e4e7ec]" />
-        Or continue with
-        <span className="h-px flex-1 bg-[#e4e7ec]" />
-      </div>
-
-      <div className="flex justify-center gap-6">
-        <SocialButton label="Google" icon={<FcGoogle className="h-8 w-8" />} />
-        <SocialButton label="Facebook" icon={<FaFacebookF className="h-7 w-7 text-[#2f54eb]" />} />
-      </div>
     </form>
   );
 }
@@ -490,14 +477,6 @@ function PrimaryButton({ label, onClick, disabled, type = "button" }: { label: s
       className="mt-8 h-12 w-full rounded-lg bg-[#2f54eb] text-sm font-bold text-white shadow-sm transition hover:bg-[#2447d8] disabled:opacity-70 disabled:cursor-not-allowed"
     >
       {label}
-    </button>
-  );
-}
-
-function SocialButton({ label, icon }: { label: string; icon: React.ReactNode }) {
-  return (
-    <button type="button" aria-label={label} className="grid h-16 w-16 place-items-center rounded-lg border border-[#e4e7ec] bg-white dark:bg-[#1a1a1a] shadow-sm transition hover:border-[#d0d5dd] hover:shadow-md">
-      <span className="grid place-items-center">{icon}</span>
     </button>
   );
 }

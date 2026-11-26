@@ -283,10 +283,28 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
 
           {/* Action Links */}
           <div className="mt-5 flex flex-col gap-2">
+            <Link
+              href="/dashboard/profile"
+              onClick={onClose}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2f54eb] text-xs font-bold text-white transition hover:bg-[#2447d8] shadow-xs"
+            >
+              <User className="h-4 w-4" />
+              Manage Profile &amp; Resume
+            </Link>
+
+            <Link
+              href="/dashboard/my-jobs"
+              onClick={onClose}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#18181b] text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-2xs"
+            >
+              <Bookmark className="h-4 w-4 text-[#2f54eb]" />
+              My Saved &amp; Applied Jobs
+            </Link>
+
             <button
               type="button"
               onClick={handleSignOut}
-              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-red-200/80 bg-red-50/80 text-xs font-semibold text-red-600 transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-900/40 cursor-pointer"
+              className="mt-1 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-red-200/80 bg-red-50/80 text-xs font-semibold text-red-600 transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-900/40 cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
               Sign Out

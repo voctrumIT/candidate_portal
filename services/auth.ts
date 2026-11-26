@@ -1,5 +1,13 @@
 import { fetchApi } from '../lib/api';
 
+export interface CandidateRegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+  otp: string;
+  contactNumber?: string;
+}
+
 export const authService = {
   login: async (data: any) => {
     return fetchApi('/api/Candidate/login', {
@@ -8,7 +16,7 @@ export const authService = {
     });
   },
   
-  register: async (data: any) => {
+  register: async (data: CandidateRegisterPayload | Record<string, any>) => {
     return fetchApi('/api/Candidate/register', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -35,4 +43,12 @@ export const authService = {
       body: JSON.stringify(data),
     });
   },
+
+  changePassword: async (data: { email: string; oldPassword: string; newPassword: string }) => {
+    return fetchApi('/api/Candidate/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
 };
+

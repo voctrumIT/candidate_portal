@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
 import { toast } from "../../components/Toast";
+import ChangePasswordModal from "../../components/ChangePasswordModal";
 import {
   Lock,
   Key,
@@ -86,6 +87,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   const [toggles, setToggles] = useState({
     darkMode: false,
@@ -128,14 +130,27 @@ export default function SettingsPage() {
       <div className="mt-10 w-full max-w-[800px]">
         {/* Security */}
         <SettingsCard title="Security">
-          <SettingItem
-            icon={<Lock className="h-5 w-5" />}
-            iconBg="bg-[#eff2fe]"
-            iconColor="text-[#2f54eb]"
-            title="Change password"
-            subtitle="Update your password regularly to keep your account safe"
-            action={<ChevronRight className="h-5 w-5 text-slate-300" />}
-          />
+          <div
+            onClick={() => setShowChangePasswordModal(true)}
+            className="cursor-pointer transition hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-t-xl"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setShowChangePasswordModal(true);
+              }
+            }}
+          >
+            <SettingItem
+              icon={<Lock className="h-5 w-5" />}
+              iconBg="bg-[#eff2fe]"
+              iconColor="text-[#2f54eb]"
+              title="Change password"
+              subtitle="Update your password regularly to keep your account safe"
+              action={<ChevronRight className="h-5 w-5 text-slate-300" />}
+            />
+          </div>
           <SettingItem
             icon={<Key className="h-5 w-5" />}
             iconBg="bg-[#fff9e6]"
@@ -231,6 +246,12 @@ export default function SettingsPage() {
         </div>
 
       </div>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+      />
     </div>
   );
 }
