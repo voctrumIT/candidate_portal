@@ -59,9 +59,11 @@ export default function MyJobsPage() {
     };
 
     window.addEventListener("job_applied", handleJobApplied);
+    window.addEventListener("application_status_updated", handleJobApplied);
 
     return () => {
       window.removeEventListener("job_applied", handleJobApplied);
+      window.removeEventListener("application_status_updated", handleJobApplied);
     };
   }, []);
 

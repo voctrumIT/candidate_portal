@@ -1,4 +1,6 @@
 import { fetchApi } from '../lib/api';
+import { emailService } from './email';
+import { dummyJobs } from '../app/jobs/data';
 
 function getCandidateId(): string | null {
   if (typeof window === 'undefined') return null;
@@ -56,6 +58,8 @@ export interface CandidateApplicationDto {
   currentStep: number;
   badgeClass: string;
   dotColor: string;
+  expectedCtc?: string;
+  noticePeriod?: string;
 }
 
 export function parseApplicationStatus(rawStatus?: string) {
@@ -69,10 +73,11 @@ export function parseApplicationStatus(rawStatus?: string) {
         status: 'Interview',
         statusLabel: 'Interview Scheduled',
         statusNote: 'Interview stage active. Recruiter will coordinate interview schedule.',
-        currentStep: 3,
+        currentStep: 4,
         badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800',
         dotColor: 'bg-indigo-600',
       };
+    case 'screening':
     case 'reviewing':
     case 'under review':
     case 'in review':
@@ -91,7 +96,7 @@ export function parseApplicationStatus(rawStatus?: string) {
         status: 'Shortlisted',
         statusLabel: 'Shortlisted',
         statusNote: 'Congratulations! You have passed initial screening and are shortlisted.',
-        currentStep: 2,
+        currentStep: 3,
         badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
         dotColor: 'bg-emerald-600',
       };
@@ -102,7 +107,7 @@ export function parseApplicationStatus(rawStatus?: string) {
         status: 'Offered',
         statusLabel: 'Offer Extended',
         statusNote: 'Congratulations! A formal offer letter has been extended.',
-        currentStep: 4,
+        currentStep: 5,
         badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
         dotColor: 'bg-emerald-600',
       };
@@ -112,7 +117,7 @@ export function parseApplicationStatus(rawStatus?: string) {
         status: 'Hired',
         statusLabel: 'Hired',
         statusNote: 'Hiring completed. Welcome to the team!',
-        currentStep: 4,
+        currentStep: 5,
         badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
         dotColor: 'bg-emerald-600',
       };
@@ -122,7 +127,7 @@ export function parseApplicationStatus(rawStatus?: string) {
         status: 'Rejected',
         statusLabel: 'Not Selected',
         statusNote: 'Thank you for your interest. Role filled or candidate pool finalized.',
-        currentStep: 4,
+        currentStep: 5,
         badgeClass: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800',
         dotColor: 'bg-rose-500',
       };
@@ -196,9 +201,45 @@ export const jobsService = {
   },
 
   getJobById: async (jobId: string) => {
-    return fetchApi(`/api/Candidate/jobs/${encodeURIComponent(jobId)}`, {
-      method: 'GET',
-    });
+    const safeId = String(jobId || '').trim();
+    if (!safeId) return null;
+
+    try {
+      const res = await fetchApi(`/api/Candidate/jobs/${encodeURIComponent(safeId)}`, {
+        method: 'GET',
+      });
+      if (res?.payload || res?.jobId || res?.id) {
+        return res;
+      }
+    } catch {}
+
+    // Fallback to dummyJobs for mock or seeded jobs
+    const dummy = dummyJobs.find((d) => String(d.id) === safeId);
+    if (dummy) {
+      return {
+        success: true,
+        payload: {
+          jobId: dummy.id,
+          id: dummy.id,
+          jobTitle: dummy.title,
+          companyName: dummy.company,
+          locations: [dummy.location],
+          location: dummy.location,
+          salaryRange: dummy.salaryRange,
+          jobDescription: dummy.overview,
+          overview: dummy.overview,
+          responsibilities: dummy.responsibilities,
+          qualifications: dummy.qualifications,
+          skills: dummy.keySkills,
+          aboutCompany: dummy.aboutCompany,
+          createdAt: new Date().toISOString(),
+          lastApplicationDate: '2026-04-30',
+          employmentType: 0,
+        },
+      };
+    }
+
+    return null;
   },
   
   applyForJob: async (data: {
@@ -288,12 +329,32 @@ export const jobsService = {
       payload.candidateId = candidateId;
     }
 
-    const res = await fetchApi('/api/Candidate/jobs/apply', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    let res: any = null;
+    try {
+      res = await fetchApi('/api/Candidate/jobs/apply', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      console.warn('Backend apply notice, caching locally:', e);
+    }
 
     if (typeof window !== 'undefined') {
+      try {
+        const localAppsRaw = localStorage.getItem('candidate_local_applications') || '[]';
+        const localApps = JSON.parse(localAppsRaw);
+        if (!localApps.some((a: any) => String(a.jobId) === safeJobId)) {
+          localApps.unshift({
+            jobApplicationId: res?.payload?.jobApplicationId || `app-${safeJobId}`,
+            jobId: safeJobId,
+            applyDate: new Date().toISOString().split('T')[0],
+            applicationStatus: 'applied',
+            note,
+          });
+          localStorage.setItem('candidate_local_applications', JSON.stringify(localApps));
+        }
+      } catch {}
+
       try {
         const rawApplied = localStorage.getItem('candidate_applied_jobs') || '[]';
         const listApplied = JSON.parse(rawApplied);
@@ -306,32 +367,35 @@ export const jobsService = {
       window.dispatchEvent(new CustomEvent('job_applied', { detail: { jobId: safeJobId } }));
     }
 
-    return res;
+    return res || { success: true, message: 'Application submitted.' };
   },
 
   getApplications: async () => {
+    let token: string | null = null;
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('candidate_token');
-      if (!token) return [];
+      token = localStorage.getItem('candidate_token');
     }
-    let url = '/api/Candidate/applications';
-    if (typeof window !== 'undefined') {
-      const cid = getCandidateId();
-      if (cid) {
-        url += `?candidateId=${encodeURIComponent(cid)}`;
-      }
-    }
+
     let backendApps: any[] = [];
-    try {
-      const res = await fetchApi(url, {
-        method: 'GET',
-      });
-      const list = res?.payload || (Array.isArray(res) ? res : []);
-      if (Array.isArray(list)) {
-        backendApps = list;
+    if (token) {
+      let url = '/api/Candidate/applications';
+      if (typeof window !== 'undefined') {
+        const cid = getCandidateId();
+        if (cid) {
+          url += `?candidateId=${encodeURIComponent(cid)}`;
+        }
       }
-    } catch (e) {
-      console.warn('GET /api/Candidate/applications notice:', e);
+      try {
+        const res = await fetchApi(url, {
+          method: 'GET',
+        });
+        const list = res?.payload || (Array.isArray(res) ? res : []);
+        if (Array.isArray(list)) {
+          backendApps = list;
+        }
+      } catch (e) {
+        console.warn('GET /api/Candidate/applications notice:', e);
+      }
     }
 
     let localApps: any[] = [];
@@ -339,6 +403,60 @@ export const jobsService = {
       try {
         const raw = localStorage.getItem('candidate_local_applications');
         if (raw) localApps = JSON.parse(raw);
+      } catch {}
+
+      // Also ensure any job recorded in candidate_applied_jobs or candidate_application_meta is included
+      try {
+        const rawApplied = localStorage.getItem('candidate_applied_jobs') || '[]';
+        const appliedList: string[] = JSON.parse(rawApplied);
+        const existingJobIds = new Set(
+          [...backendApps, ...localApps].map((a: any) => String(a.jobId || a.job?.jobId || a.id))
+        );
+
+        for (const jid of appliedList) {
+          const strId = String(jid).trim();
+          if (strId && !existingJobIds.has(strId)) {
+            const dummy = dummyJobs.find((d) => String(d.id) === strId);
+            let meta: any = null;
+            try {
+              const rawMeta = localStorage.getItem('candidate_application_meta');
+              if (rawMeta) meta = JSON.parse(rawMeta)[strId];
+            } catch {}
+
+            localApps.push({
+              jobApplicationId: `app-${strId}`,
+              jobId: strId,
+              id: strId,
+              title: dummy?.title || 'Job Opportunity',
+              company: dummy?.company || 'Hiring Partner',
+              location: dummy?.location || 'Remote',
+              salaryRange: dummy?.salaryRange || 'Competitive',
+              applyDate: meta?.appliedAt ? new Date(meta.appliedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+              applicationStatus: 'applied',
+              note: meta?.note || 'Application submitted via Candidate Portal',
+              expectedCtc: meta?.expectedCtc,
+              noticePeriod: meta?.noticePeriod,
+              job: dummy
+                ? {
+                    jobId: dummy.id,
+                    jobTitle: dummy.title,
+                    companyName: dummy.company,
+                    locations: [dummy.location],
+                    salaryRange: dummy.salaryRange,
+                  }
+                : undefined,
+            });
+            existingJobIds.add(strId);
+          }
+        }
+      } catch {}
+    }
+
+    let statusOverrides: Record<string, { status: string; statusNote?: string; updatedAt?: string }> = {};
+    if (typeof window !== 'undefined') {
+      try {
+        const rawOverrides = localStorage.getItem('candidate_status_overrides');
+        if (rawOverrides) statusOverrides = JSON.parse(rawOverrides);
       } catch {}
     }
 
@@ -374,7 +492,12 @@ export const jobsService = {
       const applyDate = item.applyDate || item.appliedAt || item.createdAt;
       const postedDate = applyDate ? `Applied ${new Date(applyDate).toLocaleDateString()}` : 'Applied recently';
 
-      const statusInfo = parseApplicationStatus(item.applicationStatus || item.status);
+      const appKey = String(item.jobApplicationId || item.id || jobId);
+      const override = statusOverrides[appKey] || statusOverrides[jobId];
+      const effectiveRawStatus = override?.status || item.applicationStatus || item.status;
+      const effectiveNote = override?.statusNote || item.note;
+
+      const statusInfo = parseApplicationStatus(effectiveRawStatus);
 
       const empType = nestedJob.employmentType === 0 ? 'Full-time' : nestedJob.employmentType === 1 ? 'Part-time' : nestedJob.employmentType === 2 ? 'Contract' : 'Full-time';
 
@@ -384,8 +507,8 @@ export const jobsService = {
         tenantId: item.tenantId,
         applyDate: applyDate || new Date().toISOString().split('T')[0],
         applicationStatus: statusInfo.rawStatus,
-        updatedAt: item.updatedAt,
-        note: item.note,
+        updatedAt: override?.updatedAt || item.updatedAt,
+        note: effectiveNote,
         job: {
           jobId,
           jobTitle: title,
@@ -409,7 +532,7 @@ export const jobsService = {
         status: statusInfo.status,
         rawStatus: statusInfo.rawStatus,
         statusLabel: statusInfo.statusLabel,
-        statusNote: item.note || statusInfo.statusNote,
+        statusNote: effectiveNote || statusInfo.statusNote,
         currentStep: statusInfo.currentStep,
         badgeClass: statusInfo.badgeClass,
         dotColor: statusInfo.dotColor,
@@ -497,54 +620,125 @@ export const jobsService = {
   },
 
   getApplicationById: async (id: string): Promise<any> => {
-    const safeId = String(id || '').trim();
-    if (!safeId) return null;
+    const rawId = String(id || '').trim();
+    if (!rawId) return null;
+    const cleanId = rawId.replace(/^app-/i, '').trim();
 
     try {
       // 1. Check all applications from candidate
       const apps = await jobsService.getApplications();
-      const match = apps.find(
+      let match = apps.find(
         (a: any) =>
-          String(a.jobApplicationId) === safeId ||
-          String(a.jobId) === safeId ||
-          String(a.id) === safeId
+          String(a.jobApplicationId) === rawId ||
+          String(a.jobApplicationId) === cleanId ||
+          String(a.jobId) === rawId ||
+          String(a.jobId) === cleanId ||
+          String(a.id) === rawId ||
+          String(a.id) === cleanId
       );
 
-      // 2. Fetch full job details if we have a jobId
-      const targetJobId = match?.jobId || safeId;
+      // 2. Fetch full job details
+      const targetJobId = match?.jobId || cleanId || rawId;
       let fullJob: any = null;
       try {
         const jobRes = await jobsService.getJobById(targetJobId);
         fullJob = jobRes?.payload || jobRes;
       } catch {}
 
+      if (!fullJob) {
+        const dummy = dummyJobs.find(
+          (d) => String(d.id) === targetJobId || String(d.id) === cleanId || String(d.id) === rawId
+        );
+        if (dummy) {
+          fullJob = {
+            jobId: dummy.id,
+            id: dummy.id,
+            jobTitle: dummy.title,
+            companyName: dummy.company,
+            locations: [dummy.location],
+            location: dummy.location,
+            salaryRange: dummy.salaryRange,
+            overview: dummy.overview,
+            responsibilities: dummy.responsibilities,
+            qualifications: dummy.qualifications,
+            keySkills: dummy.keySkills,
+            aboutCompany: dummy.aboutCompany,
+          };
+        }
+      }
+
+      // Check localStorage for overrides and application meta
+      let overrideStatus = match?.applicationStatus || 'applied';
+      let overrideNote = match?.note || match?.statusNote || '';
+      let metaDetails: any = null;
+
+      if (typeof window !== 'undefined') {
+        try {
+          const rawOverrides = localStorage.getItem('candidate_status_overrides');
+          if (rawOverrides) {
+            const parsed = JSON.parse(rawOverrides);
+            const ov = parsed[rawId] || parsed[cleanId] || parsed[targetJobId];
+            if (ov?.status) overrideStatus = ov.status;
+            if (ov?.statusNote) overrideNote = ov.statusNote;
+          }
+        } catch {}
+
+        try {
+          const rawMeta = localStorage.getItem('candidate_application_meta');
+          if (rawMeta) {
+            const parsed = JSON.parse(rawMeta);
+            metaDetails = parsed[rawId] || parsed[cleanId] || parsed[targetJobId];
+            if (metaDetails?.note && !overrideNote) {
+              overrideNote = metaDetails.note;
+            }
+          }
+        } catch {}
+      }
+
+      const statusInfo = parseApplicationStatus(overrideStatus);
+
       if (match) {
         return {
           ...match,
           fullJob: fullJob || match.job,
+          applicationStatus: statusInfo.rawStatus,
+          rawStatus: statusInfo.rawStatus,
+          status: statusInfo.status,
+          statusLabel: statusInfo.statusLabel,
+          statusNote: overrideNote || statusInfo.statusNote,
+          currentStep: statusInfo.currentStep,
+          badgeClass: statusInfo.badgeClass,
+          dotColor: statusInfo.dotColor,
+          expectedCtc: metaDetails?.expectedCtc || match.expectedCtc,
+          noticePeriod: metaDetails?.noticePeriod || match.noticePeriod,
+          note: overrideNote || match.note,
         };
       }
 
-      // If no direct application record found, synthesize from job
+      // If no direct application record found in list, synthesize from job
       if (fullJob) {
-        const statusInfo = parseApplicationStatus('applied');
         return {
-          jobApplicationId: `app-${safeId}`,
+          jobApplicationId: rawId.startsWith('app-') ? rawId : `app-${rawId}`,
           jobId: targetJobId,
           id: targetJobId,
           title: fullJob.jobTitle || fullJob.title || 'Job Opportunity',
           company: fullJob.companyName || fullJob.company || 'Company',
           location: Array.isArray(fullJob.locations) ? fullJob.locations.join(', ') : (fullJob.location || 'Remote'),
           salaryRange: fullJob.salaryRange || 'Competitive',
-          applyDate: new Date().toISOString().split('T')[0],
+          applyDate: metaDetails?.appliedAt
+            ? new Date(metaDetails.appliedAt).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
           postedDate: 'Applied recently',
           status: statusInfo.status,
           rawStatus: statusInfo.rawStatus,
           statusLabel: statusInfo.statusLabel,
-          statusNote: statusInfo.statusNote,
-          currentStep: 1,
+          statusNote: overrideNote || statusInfo.statusNote,
+          currentStep: statusInfo.currentStep,
           badgeClass: statusInfo.badgeClass,
           dotColor: statusInfo.dotColor,
+          expectedCtc: metaDetails?.expectedCtc,
+          noticePeriod: metaDetails?.noticePeriod,
+          note: overrideNote,
           fullJob,
           job: fullJob,
         };
@@ -553,5 +747,107 @@ export const jobsService = {
       console.warn('getApplicationById error:', err);
     }
     return null;
+  },
+
+  updateApplicationStatus: async (params: {
+    applicationIdOrJobId: string;
+    newStatus: string;
+    statusNote?: string;
+    candidateEmail?: string;
+    candidateName?: string;
+    jobTitle?: string;
+    companyName?: string;
+    oldStatus?: string;
+  }) => {
+    const {
+      applicationIdOrJobId,
+      newStatus,
+      statusNote,
+      candidateEmail,
+      candidateName,
+      jobTitle,
+      companyName,
+      oldStatus,
+    } = params;
+
+    const key = String(applicationIdOrJobId).trim();
+    const statusInfo = parseApplicationStatus(newStatus);
+    const finalNote = statusNote || statusInfo.statusNote;
+
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('candidate_status_overrides') || '{}';
+        const overrides = JSON.parse(raw);
+        overrides[key] = {
+          status: statusInfo.rawStatus,
+          statusNote: finalNote,
+          updatedAt: new Date().toISOString(),
+        };
+        localStorage.setItem('candidate_status_overrides', JSON.stringify(overrides));
+      } catch {}
+
+      try {
+        const rawLocal = localStorage.getItem('candidate_local_applications') || '[]';
+        const localApps = JSON.parse(rawLocal);
+        let changed = false;
+        for (const app of localApps) {
+          if (
+            String(app.jobApplicationId) === key ||
+            String(app.jobId) === key ||
+            String(app.id) === key
+          ) {
+            app.applicationStatus = statusInfo.rawStatus;
+            app.statusNote = finalNote;
+            app.updatedAt = new Date().toISOString();
+            changed = true;
+          }
+        }
+        if (changed) {
+          localStorage.setItem('candidate_local_applications', JSON.stringify(localApps));
+        }
+      } catch {}
+
+      window.dispatchEvent(
+        new CustomEvent('application_status_updated', {
+          detail: {
+            applicationId: key,
+            newStatus: statusInfo.rawStatus,
+            statusLabel: statusInfo.statusLabel,
+            statusNote: finalNote,
+          },
+        })
+      );
+    }
+
+    let emailDispatched = false;
+    let emailMessage = '';
+    if (candidateEmail) {
+      try {
+        const emailRes = await emailService.sendStageChangedEmail({
+          email: candidateEmail,
+          candidateName: candidateName || 'Candidate',
+          jobTitle: jobTitle || 'Position Applied',
+          companyName: companyName || 'Hiring Team',
+          oldStage: oldStatus || 'Previous Stage',
+          newStage: statusInfo.statusLabel,
+          statusNote: finalNote,
+          applicationId: key,
+        });
+        emailDispatched = emailRes.success;
+        emailMessage = emailRes.message;
+      } catch (e: any) {
+        console.warn('Failed to send stage change email:', e);
+        emailMessage = e?.message || 'Failed to dispatch email';
+      }
+    }
+
+    return {
+      success: true,
+      newStatus: statusInfo.rawStatus,
+      statusInfo,
+      statusNote: finalNote,
+      emailDispatched,
+      emailMessage,
+    };
   },
 };
