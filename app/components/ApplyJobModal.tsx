@@ -58,6 +58,7 @@ export default function ApplyJobModal({
 }: ApplyJobModalProps) {
   const { user, tenant } = useAuth();
 
+  const [currentCtc, setCurrentCtc] = useState("");
   const [expectedCtc, setExpectedCtc] = useState("");
   const [noticePeriod, setNoticePeriod] = useState("30 Days (1 Month)");
   const [note, setNote] = useState("");
@@ -68,6 +69,7 @@ export default function ApplyJobModal({
   const [loading, setLoading] = useState(false);
   const [generalError, setGeneralError] = useState("");
 
+  const currentCtcId = useId();
   const ctcId = useId();
   const noticeId = useId();
   const noteId = useId();
@@ -122,6 +124,11 @@ export default function ApplyJobModal({
   const validate = () => {
     const errs: Record<string, string> = {};
 
+    const cleanCurrentCtc = currentCtc.trim();
+    if (!cleanCurrentCtc) {
+      errs.currentCtc = "Current CTC is required.";
+    }
+
     const cleanCtc = expectedCtc.trim();
     if (!cleanCtc) {
       errs.expectedCtc = "Expected CTC is required.";
@@ -170,15 +177,15 @@ export default function ApplyJobModal({
       const finalResumeLink =
         resumeUrl || "https://dotnetapi.voctrum.com/resumes/default-candidate-resume.pdf";
 
-      // Build structured application note combining CTC, Notice Period, and user's note
-      const formattedNote = `[Expected CTC: ${expectedCtc.trim()} | Notice Period: ${noticePeriod.trim()}]\n\n${note.trim()}`;
-
-      // Submit application
+      // Submit application with noticePeriod, note, currentCtc, and expectedCtc
       await jobsService.applyForJob({
         jobId,
         tenantId: activeTenantId,
         resumeLink: finalResumeLink,
-        note: formattedNote.slice(0, 195),
+        note: note.trim(),
+        noticePeriod: noticePeriod.trim(),
+        currentCtc: currentCtc.trim(),
+        expectedCtc: expectedCtc.trim(),
         candidateId,
       });
 
@@ -191,6 +198,7 @@ export default function ApplyJobModal({
             jobId: String(jobId),
             jobTitle,
             companyName: jobCompany,
+            currentCtc: currentCtc.trim(),
             expectedCtc: expectedCtc.trim(),
             noticePeriod: noticePeriod.trim(),
             note: note.trim(),
@@ -215,6 +223,7 @@ export default function ApplyJobModal({
               salaryRange: salaryRange || "Competitive",
               applyDate: new Date().toISOString().split("T")[0],
               applicationStatus: "applied",
+              currentCtc: currentCtc.trim(),
               expectedCtc: expectedCtc.trim(),
               noticePeriod: noticePeriod.trim(),
               note: note.trim(),
@@ -340,43 +349,83 @@ export default function ApplyJobModal({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="mt-5 space-y-5">
-          {/* 1. Expected CTC */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label
-                htmlFor={ctcId}
-                className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
-              >
-                Expected CTC (Annual Salary) <span className="text-red-500">*</span>
-              </label>
-              <span className="text-[11px] text-slate-400">Gross annual remuneration</span>
+          {/* 1. Current CTC & Expected CTC */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor={currentCtcId}
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+                >
+                  Current CTC <span className="text-red-500">*</span>
+                </label>
+                <span className="text-[11px] text-slate-400">Annual</span>
+              </div>
+
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                  <IndianRupee className="h-4 w-4 text-[#2f54eb]" />
+                </div>
+                <input
+                  id={currentCtcId}
+                  type="text"
+                  value={currentCtc}
+                  onChange={(e) => {
+                    setCurrentCtc(e.target.value);
+                    if (fieldErrors.currentCtc) {
+                      setFieldErrors((prev) => ({ ...prev, currentCtc: "" }));
+                    }
+                  }}
+                  placeholder="e.g. 8 LPA or 0 (Fresher)"
+                  className={`h-11 w-full rounded-xl border bg-white dark:bg-[#1f1f23] pl-10 pr-4 text-sm text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-[#2f54eb]/20 ${
+                    fieldErrors.currentCtc
+                      ? "border-rose-400 focus:border-rose-500"
+                      : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
+                />
+              </div>
+              {fieldErrors.currentCtc && (
+                <p className="mt-1 text-xs font-medium text-rose-500 pl-1">{fieldErrors.currentCtc}</p>
+              )}
             </div>
 
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                <IndianRupee className="h-4 w-4 text-[#2f54eb]" />
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor={ctcId}
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+                >
+                  Expected CTC <span className="text-red-500">*</span>
+                </label>
+                <span className="text-[11px] text-slate-400">Annual</span>
               </div>
-              <input
-                id={ctcId}
-                type="text"
-                value={expectedCtc}
-                onChange={(e) => {
-                  setExpectedCtc(e.target.value);
-                  if (fieldErrors.expectedCtc) {
-                    setFieldErrors((prev) => ({ ...prev, expectedCtc: "" }));
-                  }
-                }}
-                placeholder="e.g. 12 LPA or ₹ 12,00,000 / year"
-                className={`h-11 w-full rounded-xl border bg-white dark:bg-[#1f1f23] pl-10 pr-4 text-sm text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-[#2f54eb]/20 ${
-                  fieldErrors.expectedCtc
-                    ? "border-rose-400 focus:border-rose-500"
-                    : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
-                }`}
-              />
+
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                  <IndianRupee className="h-4 w-4 text-[#2f54eb]" />
+                </div>
+                <input
+                  id={ctcId}
+                  type="text"
+                  value={expectedCtc}
+                  onChange={(e) => {
+                    setExpectedCtc(e.target.value);
+                    if (fieldErrors.expectedCtc) {
+                      setFieldErrors((prev) => ({ ...prev, expectedCtc: "" }));
+                    }
+                  }}
+                  placeholder="e.g. 12 LPA or ₹ 12,00,000"
+                  className={`h-11 w-full rounded-xl border bg-white dark:bg-[#1f1f23] pl-10 pr-4 text-sm text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-[#2f54eb]/20 ${
+                    fieldErrors.expectedCtc
+                      ? "border-rose-400 focus:border-rose-500"
+                      : "border-slate-200 dark:border-slate-700 focus:border-[#2f54eb]"
+                  }`}
+                />
+              </div>
+              {fieldErrors.expectedCtc && (
+                <p className="mt-1 text-xs font-medium text-rose-500 pl-1">{fieldErrors.expectedCtc}</p>
+              )}
             </div>
-            {fieldErrors.expectedCtc && (
-              <p className="mt-1 text-xs font-medium text-rose-500 pl-1">{fieldErrors.expectedCtc}</p>
-            )}
           </div>
 
           {/* 2. Notice Period */}
